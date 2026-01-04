@@ -213,11 +213,16 @@ sync_cursor_settings() {
     cursor_user="$appdata/Cursor/User"
     vscode_user="$appdata/Code/User"
     
+    # Remove existing symlinks/files in Cursor (they might be dangling symlinks)
+    rm -f "$cursor_user/settings.json" 2>/dev/null
+    rm -f "$cursor_user/keybindings.json" 2>/dev/null
+    rm -rf "$cursor_user/snippets" 2>/dev/null
+    
     # Create directories
     mkdir -p "$cursor_user/snippets"
     mkdir -p "$vscode_user"
     
-    # Copy to Cursor (actual files)
+    # Copy to Cursor (actual files) - .jsonc → .json
     cp "ide/cursor/settings.jsonc" "$cursor_user/settings.json"
     cp "ide/cursor/keybindings.jsonc" "$cursor_user/keybindings.json"
     cp "ide/cursor/Master of Snippets.code-snippets" "$cursor_user/snippets/"
