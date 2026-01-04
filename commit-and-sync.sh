@@ -10,7 +10,7 @@ main() {
     sync_ide_repo
     sync_ubuntu
     sync_zed_settings
-    sync_cursor_settings
+    # sync_cursor_settings
 }
 
 commit_user_repo() {

@@ -16,7 +16,7 @@ alias git-updatecurrentbranch='updateCurrentBranch'
 alias git-mergemaintocurrentbranch='updateCurrentBranch'
 alias git-getupdatesfrommain='updateCurrentBranch'
 
-readonly USER_REPO_URL="https://raw.githubusercontent.com/judigot/user/main"
+[ -z "$USER_REPO_URL" ] && readonly USER_REPO_URL="https://raw.githubusercontent.com/judigot/user/main"
 
 syncDotfiles() {
     while IFS= read -r file; do
