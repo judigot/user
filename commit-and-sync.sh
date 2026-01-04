@@ -44,18 +44,31 @@ sync_ai_folder() {
     
     printf '%s\n' "Syncing ai folder to ~/ai..."
     
-    # Preserve .git, delete everything else, copy fresh
-    mv "$HOME/ai/.git" "$HOME/ai-git-tmp"
+    # Preserve .git if it exists
+    if [ -d "$HOME/ai/.git" ]; then
+        mv "$HOME/ai/.git" "$HOME/ai-git-tmp"
+    fi
+    
     rm -rf "$HOME/ai"
     cp -r ai "$HOME/ai"
     rm -rf "$HOME/ai/.git" 2>/dev/null
-    mv "$HOME/ai-git-tmp" "$HOME/ai/.git"
+    
+    # Restore .git if it was preserved
+    if [ -d "$HOME/ai-git-tmp" ]; then
+        mv "$HOME/ai-git-tmp" "$HOME/ai/.git"
+    fi
     
     printf '%s\n' "AI folder sync complete"
 }
 
 commit_ai_repo() {
     cd "$HOME/ai" || exit 1
+    
+    # Check if it's a git repo
+    if [ ! -d ".git" ]; then
+        printf '%s\n' "~/ai is not a git repo, skipping commit"
+        return 0
+    fi
     
     if [ -z "$(git status --porcelain)" ]; then
         printf '%s\n' "No changes to commit in ai repo"
