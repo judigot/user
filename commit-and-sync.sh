@@ -44,7 +44,12 @@ sync_ai_folder() {
     
     printf '%s\n' "Syncing ai folder to ~/ai..."
     
-    rsync -av --delete --exclude='.git' ai/ "$HOME/ai/"
+    # Preserve .git, delete everything else, copy fresh
+    mv "$HOME/ai/.git" "$HOME/ai-git-tmp"
+    rm -rf "$HOME/ai"
+    cp -r ai "$HOME/ai"
+    rm -rf "$HOME/ai/.git" 2>/dev/null
+    mv "$HOME/ai-git-tmp" "$HOME/ai/.git"
     
     printf '%s\n' "AI folder sync complete"
 }
