@@ -98,24 +98,46 @@ sync_cursor_repo() {
     
     printf '%s\n' "Syncing cursor files to judigot/cursor..."
     
-    # Clone cursor repo to temp dir
-    rm -rf /tmp/cursor-sync
-    git clone --depth 1 git@github.com:judigot/cursor.git /tmp/cursor-sync
+    cursor_local="$HOME/.apportable/cursor"
     
-    # Remove old files (keep .git)
-    cd /tmp/cursor-sync || exit 1
-    find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+    # Fresh install: doesn't exist
+    if [ ! -d "$cursor_local" ]; then
+        mkdir -p "$HOME/.apportable"
+        git clone git@github.com:judigot/cursor.git "$cursor_local"
+    fi
     
-    # Copy cursor files from user repo
-    cp -r "$PROJECT_DIRECTORY/.cursor" .
-    cp -r "$PROJECT_DIRECTORY/agents" .
-    cp "$PROJECT_DIRECTORY/AGENTS.md" .
-    cp "$PROJECT_DIRECTORY/CLAUDE.md" .
+    # Preserve .git, sync files
+    if [ -d "$cursor_local/.git" ]; then
+        mv "$cursor_local/.git" "$HOME/.apportable/cursor-git-tmp"
+    fi
+    
+    rm -rf "$cursor_local"
+    mkdir -p "$cursor_local"
+    
+    while read -r item; do
+        [ -n "$item" ] && cp -r "$PROJECT_DIRECTORY/$item" "$cursor_local/"
+    done < "$PROJECT_DIRECTORY/CURSOR"
+    
+    if [ -d "$HOME/.apportable/cursor-git-tmp" ]; then
+        mv "$HOME/.apportable/cursor-git-tmp" "$cursor_local/.git"
+    fi
     
     # Commit and push
+    cd "$cursor_local" || exit 1
+    
+    if [ ! -d ".git" ]; then
+        git init
+        git remote add origin git@github.com:judigot/cursor.git
+        git add -A
+        git commit -m "chore: initial sync from user repo"
+        git branch -M main
+        git push -u origin main --force
+        printf '%s\n' "Cursor repo initialized and pushed"
+        return 0
+    fi
+    
     if [ -z "$(git status --porcelain)" ]; then
         printf '%s\n' "No changes to commit in cursor repo"
-        rm -rf /tmp/cursor-sync
         return 0
     fi
     
@@ -123,7 +145,6 @@ sync_cursor_repo() {
     git commit -m "chore: sync from user repo"
     git push
     
-    rm -rf /tmp/cursor-sync
     printf '%s\n' "Cursor repo synced and pushed"
 }
 
