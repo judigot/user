@@ -1,0 +1,45 @@
+{
+  "description": "Global hooks for all projects - loads local rules and enforces coding standards",
+  "SessionStart": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "cat ${CLAUDE_PLUGIN_ROOT}/settings/rules.md"
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Before writing files: Verify this change follows the coding standards (no console.log, use unknown instead of any, interfaces prefixed with 'I', handle null/undefined explicitly, use braces for void arrow functions)."
+        }
+      ]
+    },
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Before running bash: Use MSYS2 bash terminal, not PowerShell. Use POSIX-compliant sh syntax. Prefer awk over grep."
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Before finishing: Ensure commit messages are short and semantic. Verify no console.log statements were added."
+        }
+      ]
+    }
+  ]
+}
