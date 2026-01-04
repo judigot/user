@@ -211,6 +211,26 @@ alias downloadrepo='downloadGithubRepo'
 alias ghget='downloadGithubRepo'
 
 # ==============================================================================
+# TERMUX (Mobile Development)
+# ==============================================================================
+
+termuxInstallUbuntu() {
+    pkg update -y && pkg upgrade -y
+    pkg install -y proot-distro
+    proot-distro install ubuntu
+}
+alias termuxinstallubuntu='termuxInstallUbuntu'
+alias termuxubuntu='termuxInstallUbuntu'
+alias termuxsetup='termuxInstallUbuntu'
+
+termuxLoginUbuntu() {
+    proot-distro login ubuntu
+}
+alias termuxloginubuntu='termuxLoginUbuntu'
+alias termuxlogin='termuxLoginUbuntu'
+alias termuxubuntulogin='termuxLoginUbuntu'
+
+# ==============================================================================
 # AGENT ALIASES (AI agents only - optimized for token efficiency)
 # ==============================================================================
 
