@@ -8,9 +8,9 @@ main() {
     sync_ai_repo
     sync_cursor_repo
     sync_ide_repo
-    sync_cursor_settings
-    sync_zed_settings
     sync_ubuntu
+    sync_zed_settings
+    sync_cursor_settings
 }
 
 commit_user_repo() {
