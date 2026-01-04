@@ -120,14 +120,26 @@ alias usesnippets='loadSnippets'
 alias usesnippetssrc='loadSnippets'
 
 installClaudeCode() {
-    powershell.exe -Command '
-        $GCS_BUCKET = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
-        $version = Invoke-RestMethod -Uri "$GCS_BUCKET/stable"
-        $platform = "win32-x64"
-        New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.local\bin" | Out-Null
-        Invoke-WebRequest -Uri "$GCS_BUCKET/$version/$platform/claude.exe" -OutFile "$env:USERPROFILE\.local\bin\claude.exe"
-        Write-Host "Installed claude.exe to ~/.local/bin/"
-    '
+    case "$(uname -s)" in
+        Linux*|Darwin*)
+            curl -fsSL https://claude.ai/install.sh | bash
+            ;;
+        MINGW*|MSYS*|CYGWIN*)
+            # Windows workaround (official installer is corrupted)
+            powershell.exe -Command '
+                $GCS_BUCKET = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
+                $version = Invoke-RestMethod -Uri "$GCS_BUCKET/stable"
+                $platform = "win32-x64"
+                New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.local\bin" | Out-Null
+                Invoke-WebRequest -Uri "$GCS_BUCKET/$version/$platform/claude.exe" -OutFile "$env:USERPROFILE\.local\bin\claude.exe"
+                Write-Host "Installed claude.exe to ~/.local/bin/"
+            '
+            ;;
+        *)
+            echo "Unsupported OS: $(uname -s)"
+            return 1
+            ;;
+    esac
 }
 alias installai='installClaudeCode'
 alias installclaude='installClaudeCode'
