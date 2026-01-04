@@ -5,7 +5,7 @@ function bash {
     param([string]$command)
     $env:HOME = $env:USERPROFILE
     $env:BASH_ENV = "$env:HOME\.bashrc"
-    & C:/apportable/Programming/msys64/usr/bin/bash.exe --login -c $command
+    & C:/apportable/Programming/msys64/usr/bin/bash.exe --login -c "shopt -s expand_aliases && eval '$command'"
 }
 
 function Update-PathCache {
@@ -68,7 +68,7 @@ $env:JAVA_HOME = "C:\apportable\Programming\jdk"
 
 $env:SDKMAN_DIR = "C:\apportable\Programming\sdkman"
 
-function Invoke-UpdateUserEnv { bash "source ~/.snippetsrc && shopt -s expand_aliases && eval updateUserEnv" }
+function Invoke-UpdateUserEnv { bash "updateUserEnv" }
 Set-Alias -Name updateuserenv -Value Invoke-UpdateUserEnv
 Set-Alias -Name updater -Value Invoke-UpdateUserEnv
 Set-Alias -Name updaterc -Value Invoke-UpdateUserEnv
