@@ -6,7 +6,7 @@
 #<SNIPPETS/>
 
 # Configuration
-PATH_REMOTE_URL="https://raw.githubusercontent.com/judigot/references/main/PATH"
+PATH_REMOTE_URL="https://raw.githubusercontent.com/judigot/user/main/PATH"
 PATH_LOCAL_FILE="$HOME/PATH"
 
 # Function to update path cache asynchronously
@@ -117,6 +117,6 @@ if [[ "$IS_UBUNTU" == "true" ]]; then
 fi
 
 # Auto-update terminal files (commented out for manual control)
-# curl -sL https://raw.githubusercontent.com/judigot/references/main/.bashrc -o "$HOME/.bashrc" || { echo "Failed to download .bashrc"; return 1; }
-# curl -sL https://raw.githubusercontent.com/judigot/references/main/.zshrc -o "$HOME/.zshrc" || { echo "Failed to download .zshrc"; return 1; }
-# curl -sL https://raw.githubusercontent.com/judigot/references/main/.snippetsrc -o "$HOME/.snippetsrc" || { echo "Failed to download .snippetsrc"; return 1; }
+# curl -sL https://raw.githubusercontent.com/judigot/user/main/.bashrc -o "$HOME/.bashrc" || { echo "Failed to download .bashrc"; return 1; }
+# curl -sL https://raw.githubusercontent.com/judigot/user/main/.zshrc -o "$HOME/.zshrc" || { echo "Failed to download .zshrc"; return 1; }
+# curl -sL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc" || { echo "Failed to download .snippetsrc"; return 1; }

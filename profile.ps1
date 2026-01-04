@@ -1,4 +1,4 @@
-$PATH_REMOTE_URL = "https://raw.githubusercontent.com/judigot/references/main/PATH"
+$PATH_REMOTE_URL = "https://raw.githubusercontent.com/judigot/user/main/PATH"
 $PATH_LOCAL_FILE = "$env:USERPROFILE\PATH"
 
 function bash {

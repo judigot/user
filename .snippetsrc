@@ -17,9 +17,9 @@ alias git-mergemaintocurrentbranch='updateCurrentBranch'
 alias git-getupdatesfrommain='updateCurrentBranch'
 
 updateRCFiles() {
-    curl -sL https://raw.githubusercontent.com/judigot/references/main/.bashrc -o "$HOME/.bashrc" || { echo "Failed to download .bashrc"; return 1; }
-    curl -sL https://raw.githubusercontent.com/judigot/references/main/.zshrc -o "$HOME/.zshrc" || { echo "Failed to download .zshrc"; return 1; }
-    curl -sL https://raw.githubusercontent.com/judigot/references/main/.snippetsrc -o "$HOME/.snippetsrc" || { echo "Failed to download .snippetsrc"; return 1; }
+    curl -sL https://raw.githubusercontent.com/judigot/user/main/.bashrc -o "$HOME/.bashrc" || { echo "Failed to download .bashrc"; return 1; }
+    curl -sL https://raw.githubusercontent.com/judigot/user/main/.zshrc -o "$HOME/.zshrc" || { echo "Failed to download .zshrc"; return 1; }
+    curl -sL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc" || { echo "Failed to download .snippetsrc"; return 1; }
 
     # Source the appropriate configuration based on the current shell
     if [[ "$0" == *"zsh"* ]]; then
@@ -42,14 +42,14 @@ alias updatercfiles='updateRCFiles'
 alias updatebashsnippets='updateRCFiles'
 
 bigBangVite() {
-    curl -L "https://raw.githubusercontent.com/judigot/references/main/BigBangVite.sh" | bash
+    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangVite.sh" | bash
 }
 alias bbvite='bigBangVite'
 alias bigbangvite='bigBangVite'
 alias newprojectvite='bigBangVite'
 
 bigBangLaravel() {
-    curl -L "https://raw.githubusercontent.com/judigot/references/main/BigBangLaravel.sh" | bash
+    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangLaravel.sh" | bash
 }
 alias bblaravel='bigBangLaravel'
 alias bigbanglaravel='bigBangLaravel'

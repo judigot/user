@@ -23,7 +23,7 @@ function main {
 }
 
 function load_path_from_github {
-    $PATH_REMOTE_URL = "https://raw.githubusercontent.com/judigot/references/main/PATH"
+    $PATH_REMOTE_URL = "https://raw.githubusercontent.com/judigot/user/main/PATH"
     $PATH_LOCAL_FILE = "$env:USERPROFILE\PATH"
     
     if (Test-Path -Path $PATH_LOCAL_FILE) {
@@ -67,7 +67,7 @@ function load_path_from_github {
 
 #==========POWERSHELL PROFILE==========#
 function setup_powershell_profile {
-    $url = "https://raw.githubusercontent.com/judigot/references/main/profile.ps1"
+    $url = "https://raw.githubusercontent.com/judigot/user/main/profile.ps1"
     $dest = "$env:USERPROFILE\profile.ps1"
     Invoke-WebRequest -Uri $url -OutFile $dest
     Write-Host "Downloaded profile.ps1 to $dest"
@@ -142,10 +142,10 @@ function run_apportable {
         } else {
             Write-Host "Apportable.sh not found at: $apportableShPath" -ForegroundColor Red
             Write-Host "Falling back to GitHub version..." -ForegroundColor Yellow
-            curl.exe -L "https://raw.githubusercontent.com/judigot/references/main/Apportable.sh" | & $bashPath
+            curl.exe -L "https://raw.githubusercontent.com/judigot/user/main/Apportable.sh" | & $bashPath
         }
     } else {
-        curl.exe -L "https://raw.githubusercontent.com/judigot/references/main/Apportable.sh" | & $bashPath
+        curl.exe -L "https://raw.githubusercontent.com/judigot/user/main/Apportable.sh" | & $bashPath
     }
 }
 #==========RUN APPORTABLE==========#
