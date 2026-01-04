@@ -124,6 +124,8 @@
             "args": [
                 "--login",
                 "-i",
+
+                // -c means run a command before starting the terminal
                 "-c",
                 "source /c/Users/${env:USERNAME}/.bashrc; exec bash"
             ],
