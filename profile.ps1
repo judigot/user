@@ -2,9 +2,10 @@ $PATH_REMOTE_URL = "https://raw.githubusercontent.com/judigot/user/main/PATH"
 $PATH_LOCAL_FILE = "$env:USERPROFILE\PATH"
 
 function bash {
+    param([string]$command)
     $env:HOME = $env:USERPROFILE
     $env:BASH_ENV = "$env:HOME\.bashrc"
-    & C:/apportable/Programming/msys64/usr/bin/bash.exe --login -c "$args"
+    & C:/apportable/Programming/msys64/usr/bin/bash.exe --login -c $command
 }
 
 function Update-PathCache {
@@ -67,7 +68,7 @@ $env:JAVA_HOME = "C:\apportable\Programming\jdk"
 
 $env:SDKMAN_DIR = "C:\apportable\Programming\sdkman"
 
-function updateUserEnv { bash "updateUserEnv" }
+function updateUserEnv { bash "source ~/.snippetsrc && updateUserEnv" }
 Set-Alias -Name updateuserenv -Value updateUserEnv
 Set-Alias -Name updater -Value updateUserEnv
 Set-Alias -Name updaterc -Value updateUserEnv
