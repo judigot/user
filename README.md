@@ -34,7 +34,7 @@ user/                          ← judigot/user (source of truth)
 │   ├── settings/rules.md
 │   └── skills/
 ├── .cursor/                   ─┐
-├── agents/                     │→ pushes to judigot/cursor
+├── agents/                     │→ syncs to ~/.apportable/cursor → pushes to judigot/cursor
 ├── AGENTS.md                   │
 ├── CLAUDE.md                  ─┘
 ├── .bashrc                    ─┐
@@ -45,16 +45,30 @@ user/                          ← judigot/user (source of truth)
 ├── PATH                        │
 ├── Apportable.ps1              │
 ├── Apportable.sh              ─┘
+├── DOTFILES                   ← manifest: files to sync to ~/
+├── CURSOR                     ← manifest: files to sync to cursor repo
 └── commit-and-sync.sh         ← runs all syncs
 ```
+
+## Manifest Files
+
+These files act as single sources of truth for file lists:
+
+| File | Purpose | Used By |
+|------|---------|---------|
+| `DOTFILES` | List of files to sync to `~/` | `Apportable.sh`, `commit-and-sync.sh` |
+| `CURSOR` | List of files to sync to cursor repo | `commit-and-sync.sh` |
+| `PATH` | List of PATH entries | `.bashrc` |
+
+**To add/remove a file from sync:** Edit the manifest file - scripts pick up changes automatically.
 
 ## Sync Destinations
 
 | Source | Destination | Also Pushed To |
 |--------|-------------|----------------|
-| Root dotfiles | `~/` | - |
+| Files in `DOTFILES` | `~/` | - |
 | `ai/` | `~/ai` | `judigot/ai` |
-| `.cursor/`, `agents/`, `AGENTS.md`, `CLAUDE.md` | - | `judigot/cursor` |
+| Files in `CURSOR` | `~/.apportable/cursor` | `judigot/cursor` |
 
 ## Files
 
@@ -81,7 +95,7 @@ user/                          ← judigot/user (source of truth)
 | `ai/settings/rules.md` | Coding standards and rules |
 | `ai/skills/` | Specialized skills (lint-master, test-master) |
 
-### Cursor Templates (push to `judigot/cursor`)
+### Cursor Templates (sync to `~/.apportable/cursor` → `judigot/cursor`)
 
 | File | Description |
 |------|-------------|
@@ -100,9 +114,9 @@ user/                          ← judigot/user (source of truth)
 
 This will:
 1. Commit & push changes to `judigot/user`
-2. Sync dotfiles to `~/`
+2. Sync files listed in `DOTFILES` to `~/`
 3. Sync `ai/` to `~/ai` → commit & push to `judigot/ai`
-4. Push cursor files to `judigot/cursor`
+4. Sync files listed in `CURSOR` to `~/.apportable/cursor` → push to `judigot/cursor`
 
 ### Add Cursor Boilerplate to a Project
 
@@ -163,4 +177,4 @@ See `ai/README.md` for details.
 |------------|---------|-------------|
 | [judigot/user](https://github.com/judigot/user) | Monorepo (source of truth) | - |
 | [judigot/ai](https://github.com/judigot/ai) | Claude Code plugin (standalone) | `user/ai/` |
-| [judigot/cursor](https://github.com/judigot/cursor) | Cursor IDE template (standalone) | `user/.cursor/`, `user/agents/` |
+| [judigot/cursor](https://github.com/judigot/cursor) | Cursor IDE template (standalone) | Files in `CURSOR` |
