@@ -1,0 +1,67 @@
+{
+  "agent": {
+    "inline_assistant_model": {
+      "provider": "zed.dev",
+      "model": "gpt-5-nano",
+    },
+    "play_sound_when_agent_done": true,
+    "default_model": {
+      "provider": "zed.dev",
+      "model": "claude-opus-4-5-thinking",
+    },
+    "model_parameters": [],
+  },
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/node_modules",
+    "**/.terraform/**",
+    "**/.terraform.lock.hcl/**",
+    "**/terraform.tfstate/**",
+    "**/terraform.tfstate.backup/**",
+    "**/src/.next/**",
+    "**/.history",
+  ],
+  "terminal": {
+    "shell": {
+      "with_arguments": {
+        "program": "C:/apportable/Programming/msys64/usr/bin/bash.exe",
+        "args": ["--login", "-i"],
+      },
+    },
+    "env": {
+      "PATH": "${env:PATH}:/c/apportable/Programming/PortableGit/cmd:/c/apportable/Programming/deno:/c/apportable/Programming/nvm:/c/apportable/Programming/nodejs:/c/apportable/Programming/nodejs/node_modules/npm/bin:/c/apportable/Programming/jdk/bin:/c/apportable/Programming/sqlite:/c/apportable/Programming/terraform:/c/apportable/Programming/pulumi/bin:/c/Users/${env:USERNAME}/AppData/Local/Programs/Microsoft VS Code/bin:/c/Program Files/Docker/Docker/resources/bin:/c/ProgramData/DockerDesktop/version-bin:",
+      "HOME": "C:/Users/Jude", // Uses the .bashrc located at C:/Users/${env:USERNAME}
+      "MSYSTEM": "MSYS",
+      "CHERE_INVOKING": "1", // Start the terminal in the directory from which it was launched
+    },
+    "max_scroll_history_lines": 1000,
+  },
+  "project_panel": {
+    "auto_reveal_entries": false,
+    "auto_fold_dirs": false,
+  },
+  "show_signature_help_after_edits": true,
+  "auto_signature_help": true,
+  "buffer_font_family": "Fira Code",
+  "file_types": {
+    "json": ["*.code-snippets"],
+    "yaml": ["compose*.yml", "docker-compose*.yml"],
+    "scss": ["*.scss"],
+    "html": ["*.erb"],
+    "css": ["*.css"],
+  },
+  "linked_edits": true,
+  "base_keymap": "Cursor",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)",
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "Ayu Dark",
+  },
+}

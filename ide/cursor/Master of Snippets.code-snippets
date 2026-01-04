@@ -1,0 +1,2581 @@
+{
+    "Remove Character": {
+        "prefix": "removeCharacter",
+        "body": ["${TM_SELECTED_TEXT/[_]//g}"]
+    },
+    "Snippetter: Snippet Helper": {
+        "prefix": "snippetter",
+        "body": ["\"${TM_SELECTED_TEXT/([\"$])/\\\\$1/g}\","]
+    },
+    "Escape Double Quotes": {
+        "prefix": "escapeDoubleQuotes",
+        "body": ["${TM_SELECTED_TEXT/([\"])/\\\\$1/g}"]
+    },
+    "Convert Backslash to Forwardslash": {
+        "prefix": "convertBackslashToForwardslash",
+        "body": ["${TM_SELECTED_TEXT/[\\\\]/\\//g}"]
+    },
+    //====================MARKDOWN====================//
+    "Section Break (Markdown)": {
+        "prefix": "# =====================================",
+        "body": [
+            "",
+            "# =====================================",
+            "",
+            "",
+            "# ${1:Section Name}",
+            "",
+            ""
+        ],
+        "scope": "markdown"
+    },
+    "Plain Text (Markdown)": {
+        "prefix": "```",
+        "body": ["```", "$1", "```"],
+        "scope": "markdown"
+    },
+    "Bash Code (Markdown)": {
+        "prefix": "```bash",
+        "body": ["```bash", "$1", "```"],
+        "scope": "markdown"
+    },
+    "TypeScript/JavaScript Code (Markdown)": {
+        "prefix": "```tsx",
+        "body": ["```tsx", "$1", "```"],
+        "scope": "markdown"
+    },
+    //====================MARKDOWN====================//
+    //====================PYTHON====================//
+    "String Variable (Python)": {
+        "prefix": "varText; stringVariable",
+        "body": ["${1:stringVariable} = ${3:\"${2:Hello, World!}\"}"],
+        "scope": "python"
+    },
+    "Integer Number Variable (Python)": {
+        "prefix": "varNumber; numberIntegerVariable",
+        "body": ["${1:numberIntegerVariable} = ${2:100}"],
+        "scope": "python"
+    },
+    "Float Number Variable (Python)": {
+        "prefix": "varDecimal; numberFloatVariable",
+        "body": ["${1:numberFloatVariable} = ${2:3.14}"],
+        "scope": "python"
+    },
+    "Boolean Variable (Python)": {
+        "prefix": "varBoolean; booleanVariable",
+        "body": ["${1:booleanVariable} = ${2:True}"],
+        "scope": "python"
+    },
+    "Object Variable (Python)": {
+        "prefix": "varObject; objectVariable",
+        "body": [
+            "${1:objectVariable} = {",
+            "    'key1': 1,",
+            "    'key2': 'Value',",
+            "}"
+        ],
+        "scope": "python"
+    },
+    "Object Literal Variable (Python)": {
+        "prefix": "varEnum; objectLiteralVariable; constant; objectConstant",
+        "body": [
+            "${1:objectLiteralVariable} = {",
+            "    ${2:KEY_1}: '${3:Value 1}',",
+            "    ${4:KEY_2}: '${5:Value 2}',",
+            "}"
+        ],
+        "scope": "python"
+    },
+    "String Array Variable (Python)": {
+        "prefix": "varArrayOfText; arrayOfStringsVariable",
+        "body": ["${1:arrayOfStringsVariable} = ['${2:Hello}', '${3:World!}']"],
+        "scope": "python"
+    },
+    "Number Array Variable (Python)": {
+        "prefix": "varArrayOfNumbers; arrayOfNumbersVariable",
+        "body": [
+            "${1:arrayOfNumbersVariable} = [${2:1}, ${3:2}, ${4:3}, ${5:4}]"
+        ],
+        "scope": "python"
+    },
+    "Object Array Variable (Python)": {
+        "prefix": "varArrayOfObjects; arrayOfObjectsVariable",
+        "body": [
+            "${1:arrayOfObjectsVariable} = [",
+            "    {",
+            "        'key1': 1,",
+            "        'key2': 'Value 1',",
+            "    },",
+            "    {",
+            "        'key1': 2,",
+            "        'key2': 'Value 2',",
+            "    },",
+            "]"
+        ],
+        "scope": "python"
+    },
+    "Class (Python)": {
+        "prefix": "class",
+        "body": [
+            "class ${1:Person}:",
+            "    # Properties",
+            "    def __init__(self, initialPrivateValue: str, initialPublicValue: int):",
+            "        self._privateProperty = initialPrivateValue",
+            "        self.publicProperty = initialPublicValue",
+            "",
+            "    # Methods",
+            "    def getPrivateProperty(self) -> str:",
+            "        return self._privateProperty",
+            "",
+            "    def setPrivateProperty(self, newValue: str):",
+            "        self._privateProperty = newValue",
+            "",
+            "    def getPublicProperty(self) -> int:",
+            "        return self.publicProperty",
+            "",
+            "    def setPublicProperty(self, newValue: int):",
+            "        self.publicProperty = newValue",
+            "",
+            "    # Static method",
+            "    @staticmethod",
+            "    def staticMethod() -> str:",
+            "        return 'This is a static method'",
+            "",
+            "#==========USAGE==========#",
+            "# myInstance = ${1:Person}('Initial Private Value', 42)",
+            "# print(myInstance.getPrivateProperty()) # Output: Initial Private Value",
+            "# print(myInstance.getPublicProperty()) # Output: 42",
+            "# myInstance.setPrivateProperty('New Private Value')",
+            "# myInstance.setPublicProperty(99)",
+            "# print(myInstance.getPrivateProperty()) # Output: New Private Value",
+            "# print(myInstance.getPublicProperty()) # Output: 99",
+            "# print(${1:Person}.staticMethod()) # Output: This is a static method"
+        ],
+        "scope": "python"
+    },
+    "Function (Python)": {
+        "prefix": "function",
+        "body": [
+            "def ${1:functionName}(${2:param1: int, key1: int, key2: str}) -> bool:",
+            "    return True"
+        ],
+        "scope": "python"
+    },
+    "If Condition (Python)": {
+        "prefix": "ifStatement",
+        "body": ["if ${1:condition}:", "    pass"],
+        "scope": "python"
+    },
+    "Multiple If Conditions (Python)": {
+        "prefix": "ifStatements",
+        "body": [
+            "if ${1:condition1}:",
+            "    pass",
+            "",
+            "if ${2:condition2}:",
+            "    pass"
+        ],
+        "scope": "python"
+    },
+    "If-Else Statement (Python)": {
+        "prefix": "ifElseStatement",
+        "body": ["if ${1:condition}:", "    pass", "else:", "    pass"],
+        "scope": "python"
+    },
+    "Switch Case (Python)": {
+        "prefix": "switchCase",
+        "body": [
+            "# Python doesn't have a switch-case construct",
+            "# The following is a way to simulate it using a dictionary:",
+            "switch = {",
+            "    ${2:'Case 1'}: lambda: None, # Case 1 implementation",
+            "    ${3:'Case 2'}: lambda: None, # Case 2 implementation",
+            "}",
+            "result = switch.get(${1:value}, lambda: None)() # Default implementation"
+        ],
+        "scope": "python"
+    },
+    "Try-Catch-Finally Block (Python)": {
+        "prefix": "tryCatchFinallyBlock",
+        "body": [
+            "try:",
+            "    # try block code",
+            "except ${1:Exception} as e:",
+            "    # catch block code",
+            "finally:",
+            "    # finally block code"
+        ],
+        "scope": "python"
+    },
+    "For Loop (Python)": {
+        "prefix": "forLoop",
+        "body": ["for i in range(len(${1:array})):", "    # code"],
+        "scope": "python"
+    },
+    "While Loop (Python)": {
+        "prefix": "whileLoop",
+        "body": ["while ${1:condition}:", "    # code"],
+        "scope": "python"
+    },
+    "Fetch (Python)": {
+        "prefix": "fetch",
+        "body": [
+            "# Python does not have a built-in 'fetch' function like JavaScript.",
+            "# You can use libraries like 'requests' for similar functionality.",
+            "import requests",
+            "response = requests.get(${1:'https://url.com/api/users'})",
+            "if response.status_code == 200:",
+            "    print(response.json())",
+            "else:",
+            "    print('Failed to fetch data')"
+        ],
+        "scope": "python"
+    },
+    "Iterate an Array (Python)": {
+        "prefix": "iterateArray",
+        "body": [
+            "for ${2:element} in ${1:arrayOfStringsVariable}:",
+            "    print(${2:element})"
+        ],
+        "scope": "python"
+    },
+    "Iterate Objects (Python)": {
+        "prefix": "iterateObjects",
+        "body": [
+            "for item in ${1:arrayOfObjectsVariable}:",
+            "    print(f'Item: {item}')"
+        ],
+        "scope": "python"
+    },
+    "Iterate Object Properties (Python)": {
+        "prefix": "iterateObjectProperties",
+        "body": [
+            "for key, value in ${1:objectVariable}.items():",
+            "    print(f'Key: {key}, Value: {value}')"
+        ],
+        "scope": "python"
+    },
+    "Compare Strings (Python)": {
+        "prefix": "compareStrings",
+        "body": ["${1:stringVariable1} == ${2:stringVariable2}"],
+        "scope": "python"
+    },
+    "Compare Numbers (Python)": {
+        "prefix": "compareNumbers",
+        "body": ["${1:numberVariable1} == ${2:numberVariable2}"],
+        "scope": "python"
+    },
+    "Compare Booleans (Python)": {
+        "prefix": "compareBooleans",
+        "body": ["${1:booleanVariable1} == ${2:booleanVariable2}"],
+        "scope": "python"
+    },
+    "Compare Arrays (Python)": {
+        "prefix": "compareArrays",
+        "body": ["${1:arrayVariable1} == ${2:arrayVariable2}"],
+        "scope": "python"
+    },
+    "Compare Objects (Python)": {
+        "prefix": "compareObjects",
+        "body": ["${1:objectVariable1} == ${2:objectVariable2}"],
+        "scope": "python"
+    },
+    "Print to Console (Python)": {
+        "prefix": "log",
+        "body": ["print(${2:\"${1:Hello, World!}\"})"],
+        "scope": "python"
+    },
+    "Print Red to Console (Python)": {
+        "prefix": "logRed",
+        "body": ["print(f\"\\033[91m${1:${2:Hello, World!}}\\033[0m\")"],
+        "scope": "python"
+    },
+    "Print Yellow to Console (Python)": {
+        "prefix": "logYellow",
+        "body": ["print(f\"\\033[93m${1:${2:Hello, World!}}\\033[0m\")"],
+        "scope": "python"
+    },
+    "Print Green to Console (Python)": {
+        "prefix": "logGreen",
+        "body": ["print(f\"\\033[92m${1:${2:Hello, World!}}\\033[0m\")"],
+        "scope": "python"
+    },
+    "Print Array/Object to Console (Python)": {
+        "prefix": "logArray; logObject",
+        "body": [
+            "import json",
+            "print(json.dumps(${1:arrayOfObjectsVariable}, indent=4))"
+        ],
+        "scope": "python"
+    },
+    "Print Object Property (Python)": {
+        "prefix": "logObjectProperty",
+        "body": ["print(${1:objectVariable}[${2:'key'}])"],
+        "scope": "python"
+    },
+    "Combine Strings (Python)": {
+        "prefix": "combineStrings",
+        "body": [
+            "combined_string = ${1:stringVariable1} + ${2:stringVariable2}"
+        ],
+        "scope": "python"
+    },
+    "Convert Array/Object to String (Python)": {
+        "prefix": "serialize; serializeData; stringer",
+        "body": [
+            "import json",
+            "json_string = json.dumps(${1:arrayOfObjectsVariable}, indent=4)"
+        ],
+        "scope": "python"
+    },
+    "String Interpolation (Python)": {
+        "prefix": "stringInterpolation",
+        "body": ["f\"Message: \\\"{stringVariable}\\\"\""],
+        "scope": "python"
+    },
+    "Debugger (Python)": {
+        "prefix": "debug",
+        "body": ["import pdb; pdb.set_trace()"],
+        "scope": "python"
+    },
+    "Lambda Expression (Python)": {
+        "prefix": "lambda",
+        "body": ["(lambda:", "    ${1}", ")"],
+        "scope": "python"
+    },
+    "IIFE (Immediately Invoked Function Expression) (Python)": {
+        "prefix": "IIFE; self-invoking expression; self-calling expression; self-invoking function; self-calling function;",
+        "body": ["(lambda:", "    ${1}", ")()"],
+        "scope": "python"
+    },
+    "Find Object Index (Python)": {
+        "prefix": "findObjectIndex",
+        "body": [
+            "object_index = next((i for i, obj in enumerate(${1:arrayOfObjectsVariable})",
+            "                    if obj.get('${2:key1}', None) == ${3:value}), None)",
+            "if object_index is not None:",
+            "    print(${1:arrayOfObjectsVariable}[object_index])"
+        ],
+        "scope": "python"
+    },
+    "Mutate Object (Python)": {
+        "prefix": "mutateObject",
+        "body": [
+            "mutated_object = {**${1:originalObject}, '${2:key}': '${3:newValue}'}"
+        ],
+        "scope": "python"
+    },
+    "Check if Value Exists in Array (Python)": {
+        "prefix": "existsInArray",
+        "body": ["${2:value} in ${1:array}"],
+        "scope": "python"
+    },
+    "Recursion (Python)": {
+        "prefix": "recursion; recursiveFunction",
+        "body": [
+            "def ${1:methodName}(param):",
+            "    # Base Case",
+            "    if param == 10:",
+            "        return param",
+            "    # Recursive Case",
+            "    return ${1:methodName}(param + 1)"
+        ],
+        "scope": "python"
+    },
+    "Get Object Keys (Python)": {
+        "prefix": "getObjectKeys",
+        "body": ["${1:objectVariable}.keys()"],
+        "scope": "python"
+    },
+    "Get Object Values (Python)": {
+        "prefix": "getObjectValues",
+        "body": ["${1:objectVariable}.values()"],
+        "scope": "python"
+    },
+    "Append to Array (Python)": {
+        "prefix": "appendToArray",
+        "body": ["${1:array}.append('${2:newValue}')"],
+        "scope": "python"
+    },
+    "Prepend to Array (Python)": {
+        "prefix": "prependToArray",
+        "body": ["${1:array}.insert(0, '${2:newValue}')"],
+        "scope": "python"
+    },
+    "Remove Array's First Element (Python)": {
+        "prefix": "removeFirstElementInArray",
+        "body": ["${1:array}.pop(0)"],
+        "scope": "python"
+    },
+    "Remove Array's Last Element (Python)": {
+        "prefix": "removeLastElementInArray",
+        "body": ["${1:array}.pop()"],
+        "scope": "python"
+    },
+    "Get Array Length (Python)": {
+        "prefix": "getArrayLength",
+        "body": ["len(${1:array})"],
+        "scope": "python"
+    },
+    "Get Object Length (Python)": {
+        "prefix": "getObjectLength",
+        "body": ["len(${1:objectVariable})"],
+        "scope": "python"
+    },
+    "Append to Object (Python)": {
+        "prefix": "appendToObject",
+        "body": ["${1:objectVariable}['${2:newKey}'] = '${3:newValue}'"],
+        "scope": "python"
+    },
+    "Prepend to Object (Python)": {
+        "prefix": "prependToObject",
+        "body": [
+            "${1:objectVariable} = {'${2:newKey}': '${3:newValue}', **${1:objectVariable}}"
+        ],
+        "scope": "python"
+    },
+    "Convert Array to CSV String (Python)": {
+        "prefix": "arrayToCSV",
+        "body": ["', '.join(map(str, ${1:array}))"],
+        "scope": "python"
+    },
+    "Multi-line String (Python)": {
+        "prefix": "multilineString",
+        "body": ["\"\"\"${1:Line 1", "Line 2", "Line 3}\"\"\""],
+        "scope": "python"
+    },
+    //====================PYTHON====================//
+    //====================JAVA====================//
+    "String Variable (Java)": {
+        "prefix": "varText; stringVariable",
+        "body": ["String ${1:stringVariable} = ${3:\"${2:Hello, World!}\"};"],
+        "scope": "java"
+    },
+    "Integer Number Variable (Java)": {
+        "prefix": "varNumber; numberIntegerVariable",
+        "body": ["int ${1:numberIntegerVariable} = ${2:100};"],
+        "scope": "java"
+    },
+    "Float Number Variable (Java)": {
+        "prefix": "varDecimal; numberFloatVariable",
+        "body": ["float ${1:numberFloatVariable} = ${2:3.14f};"],
+        "scope": "java"
+    },
+    "Boolean Variable (Java)": {
+        "prefix": "varBoolean; booleanVariable",
+        "body": ["boolean ${1:booleanVariable} = ${2:true};"],
+        "scope": "java"
+    },
+    "Object Variable (Java)": {
+        "prefix": "varObject; objectVariable",
+        "body": [
+            "HashMap<String, Object> ${1:objectVariable} = new HashMap<>();",
+            "${1:objectVariable}.put(\"key1\", 1);",
+            "${1:objectVariable}.put(\"key2\", \"Value\");"
+        ],
+        "scope": "java"
+    },
+    "Object Literal Variable (Java)": {
+        "prefix": "varEnum; objectLiteralVariable; constant; objectConstant",
+        "body": [
+            "Map<String, String> ${1:objectLiteralVariable}= new HashMap<>();",
+            "${1:objectLiteralVariable}.put(\"KEY_1\", \"Value 1\");",
+            "${1:objectLiteralVariable}.put(\"KEY_2\", \"Value 2\");"
+        ],
+        "scope": "java"
+    },
+    "String Array Variable (Java)": {
+        "prefix": "varArrayOfText; arrayOfStringsVariable",
+        "body": [
+            "String[] ${1:arrayOfStringsVariable} = new String[]{\"${2:Hello}\", \"${3:World!}\"};"
+        ],
+        "scope": "java"
+    },
+    "Number Array Variable (Java)": {
+        "prefix": "varArrayOfNumbers; arrayOfNumbersVariable",
+        "body": [
+            "int[] ${1:arrayOfNumbersVariable} = new int[]{${2:1}, ${3:2}, ${4:3}, ${5:4}};"
+        ],
+        "scope": "java"
+    },
+    "Object Array Variable (Java)": {
+        "prefix": "varArrayOfObjects; arrayOfObjectsVariable",
+        "body": [
+            "HashMap<String, Object>[] ${1:arrayOfObjectsVariable} = new HashMap[]{",
+            "  new HashMap<String, Object>() {{ put(\"key1\", 1); put(\"key2\", \"Value 1\"); }},",
+            "  new HashMap<String, Object>() {{ put(\"key1\", 2); put(\"key2\", \"Value 2\"); }}",
+            "};"
+        ],
+        "scope": "java"
+    },
+    "Class (Java)": {
+        "prefix": "class",
+        "body": [
+            "// Save this in Main.java",
+            "",
+            "public class Main {",
+            "    public static void main(String[] args) {",
+            "        // Usage",
+            "        Person myInstance = new Person(\"Initial Private Value\", 42);",
+            "        System.out.println(myInstance.getPrivateProperty()); // Output: Initial Private Value",
+            "        System.out.println(myInstance.getPublicProperty()); // Output: 42",
+            "        myInstance.setPrivateProperty(\"New Private Value\");",
+            "        myInstance.setPublicProperty(99);",
+            "        System.out.println(myInstance.getPrivateProperty()); // Output: New Private Value",
+            "        System.out.println(myInstance.getPublicProperty()); // Output: 99",
+            "        System.out.println(Person.staticMethod()); // Output: This is a static method",
+            "    }",
+            "}",
+            "",
+            "class ${1:Person} {",
+            "    // Properties",
+            "    private String privateProperty;",
+            "    public int publicProperty;",
+            "",
+            "    // Constructor",
+            "    public Person(String initialPrivateValue, int initialPublicValue) {",
+            "        this.privateProperty = initialPrivateValue;",
+            "        this.publicProperty = initialPublicValue;",
+            "    }",
+            "",
+            "    // Methods",
+            "    public String getPrivateProperty() {",
+            "        return this.privateProperty;",
+            "    }",
+            "",
+            "    public void setPrivateProperty(String newValue) {",
+            "        this.privateProperty = newValue;",
+            "    }",
+            "",
+            "    public int getPublicProperty() {",
+            "        return this.publicProperty;",
+            "    }",
+            "",
+            "    public void setPublicProperty(int newValue) {",
+            "        this.publicProperty = newValue;",
+            "    }",
+            "",
+            "    // Static method",
+            "    public static String staticMethod() {",
+            "        return \"This is a static method\";",
+            "    }",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Function (Java)": {
+        "prefix": "function",
+        "body": [
+            "public static boolean ${1:functionName}(${2:int param1, HashMap<String, Object> params}) {",
+            "  return true;",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "If Condition (Java)": {
+        "prefix": "ifStatement",
+        "body": ["if (${1:condition}) {", "  ", "}"],
+        "scope": "java"
+    },
+    "Multiple If Conditions (Java)": {
+        "prefix": "ifStatements",
+        "body": [
+            "if (${1:condition1}) {",
+            "  ",
+            "}",
+            "",
+            "if (${2:condition2}) {",
+            "  ",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "If-Else Statement (Java)": {
+        "prefix": "ifElseStatement",
+        "body": ["if (${1:condition}) {", "  ", "} else {", "    ", "}"],
+        "scope": "java"
+    },
+    "Switch Case (Java)": {
+        "prefix": "switchCase",
+        "body": [
+            "switch (${1:variable}) {",
+            "  case ${2:case1}:",
+            "    // Case 1 implementation",
+            "    break;",
+            "  case ${3:case2}:",
+            "    // Case 2 implementation",
+            "    break;",
+            "  default:",
+            "    // Default implementation",
+            "    break;",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Try-Catch-Finally Block (Java)": {
+        "prefix": "tryCatchFinallyBlock",
+        "body": [
+            "try {",
+            "  // try block code",
+            "} catch (${1:ExceptionType} ${2:exception}) {",
+            "  // catch block code",
+            "} finally {",
+            "  // finally block code",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "For Loop (Java)": {
+        "prefix": "forLoop",
+        "body": [
+            "for (int i = 0; i < ${1:array}.length; i++) {",
+            "  // code",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "While Loop (Java)": {
+        "prefix": "whileLoop",
+        "body": ["while (${1:condition}) {", "  // code", "}"],
+        "scope": "java"
+    },
+    "Fetch (Java)": {
+        "prefix": "fetch",
+        "body": [
+            "// Java does not have a built-in 'fetch' function like JavaScript.",
+            "// You can use libraries like HttpClient (Java 11+) or external libraries like OkHttp.",
+            "HttpClient client = HttpClient.newHttpClient();",
+            "HttpRequest request = HttpRequest.newBuilder()",
+            "  .uri(URI.create(${1:\"https://url.com/api/users\"}))",
+            "  .method(${2:\"GET\"}, HttpRequest.BodyPublishers.noBody())",
+            "  .build();",
+            "client.sendAsync(request, HttpResponse.BodyHandlers.ofString())",
+            "  .thenApply(HttpResponse::body)",
+            "  .thenAccept(System.out::println);"
+        ],
+        "scope": "java"
+    },
+    "Iterate an Array (Java)": {
+        "prefix": "iterateArray",
+        "body": [
+            "for (String ${2:element} : ${1:arrayOfStringsVariable}) {",
+            "  System.out.println(${2:element});",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Iterate Objects (Java)": {
+        "prefix": "iterateObjects",
+        "body": [
+            "for (Map<String, Object> item : ${1:arrayOfObjectsVariable}) {",
+            "  System.out.println(item);",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Iterate Object Properties (Java)": {
+        "prefix": "iterateObjectProperties",
+        "body": [
+            "for (Map.Entry<String, Object> entry : ${1:objectVariable}.entrySet()) {",
+            "  System.out.println(\"Key = \" + entry.getKey() + \", Value = \" + entry.getValue());",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Compare Strings (Java)": {
+        "prefix": "compareStrings",
+        "body": ["${1:stringVariable1}.equals(${2:stringVariable2})"],
+        "scope": "java"
+    },
+    "Compare Numbers (Java)": {
+        "prefix": "compareNumbers",
+        "body": ["${1:numberVariable1} == ${2:numberVariable2}"],
+        "scope": "java"
+    },
+    "Compare Booleans (Java)": {
+        "prefix": "compareBooleans",
+        "body": ["${1:booleanVariable1} == ${2:booleanVariable2}"],
+        "scope": "java"
+    },
+    "Compare Arrays (Java)": {
+        "prefix": "compareArrays",
+        "body": ["Arrays.equals(${1:arrayVariable1}, ${2:arrayVariable2})"],
+        "scope": "java"
+    },
+    "Compare Objects (Java)": {
+        "prefix": "compareObjects",
+        "body": ["${1:objectVariable1}.equals(${2:objectVariable2})"],
+        "scope": "java"
+    },
+    "Print to Console (Java)": {
+        "prefix": "log",
+        "body": ["System.out.println(${2:\"${1:Hello, World!}\"});"],
+        "scope": "java"
+    },
+    "Print Red to Console (Java)": {
+        "prefix": "logRed",
+        "body": [
+            "System.out.println((char)27 + \"[31m\" + ${2:\"${1:Hello, World!}\"} + (char)27 + \"[0m\");"
+        ],
+        "scope": "java"
+    },
+    "Print Yellow to Console (Java)": {
+        "prefix": "logYellow",
+        "body": [
+            "System.out.println((char)27 + \"[33m\" + ${2:\"${1:Hello, World!}\"} + (char)27 + \"[0m\");"
+        ],
+        "scope": "java"
+    },
+    "Print Green to Console (Java)": {
+        "prefix": "logGreen",
+        "body": [
+            "System.out.println((char)27 + \"[32m\" + ${2:\"${1:Hello, World!}\"} + (char)27 + \"[0m\");"
+        ],
+        "scope": "java"
+    },
+    "Print Array/Object to Console (Java)": {
+        "prefix": "logArray; logObject",
+        "body": [
+            "System.out.println(Arrays.toString(${1:arrayOfObjectsVariable}));"
+        ],
+        "scope": "java"
+    },
+    "Print Object Property (Java)": {
+        "prefix": "logObjectProperty",
+        "body": ["System.out.println(${1:objectVariable}.get(${2:\"key\"}));"],
+        "scope": "java"
+    },
+    "Combine Strings (Java)": {
+        "prefix": "combineStrings",
+        "body": [
+            "String combinedString = ${1:stringVariable1} + ${2:stringVariable2};"
+        ],
+        "scope": "java"
+    },
+    "Convert Array/Object to String (Java)": {
+        "prefix": "serialize; serializeData; stringer",
+        "body": ["String jsonString = Arrays.toString(${1:arrayOrObject});"],
+        "scope": "java"
+    },
+    "String Interpolation (Java)": {
+        "prefix": "stringInterpolation",
+        "body": ["\"Message: \\\"\" + stringVariable + \"\\\"\""],
+        "scope": "java"
+    },
+    "Debugger (Java)": {
+        "prefix": "debug",
+        "body": [
+            "// Java uses breakpoints for debugging, typically set in an IDE."
+        ],
+        "scope": "java"
+    },
+    "Lambda Expression (Java)": {
+        "prefix": "lambda",
+        "body": ["() -> {", "  // lambda body", "}"],
+        "scope": "java"
+    },
+    "IIFE (Immediately Invoked Function Expression) (Java)": {
+        "prefix": "IIFE; self-invoking expression; self-calling expression; self-invoking function; self-calling function;",
+        "body": [
+            "{",
+            "  // IIFE equivalent in Java using an anonymous class",
+            "  new Object() {",
+            "    void execute() {",
+            "      ${1:// code here}",
+            "    }",
+            "  }.execute();",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Find Object Index (Java)": {
+        "prefix": "findObjectIndex",
+        "body": [
+            "int objectIndex = IntStream.range(0, ${1:arrayOfObjectsVariable}.length)",
+            "  .filter(i -> ${1:arrayOfObjectsVariable}[i].get(${2:\"key\"}).equals(${3:\"value\"}))",
+            "  .findFirst()",
+            "  .orElse(-1);",
+            "if (objectIndex != -1) {",
+            "  // use objectIndex",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Mutate Object (Java)": {
+        "prefix": "mutateObject",
+        "body": [
+            "HashMap<String, Object> mutatedObject = new HashMap<>(${1:originalObject});",
+            "mutatedObject.put(${2:\"key\"}, ${3:\"newValue\"});"
+        ],
+        "scope": "java"
+    },
+    "Check if Value Exists in Array (Java)": {
+        "prefix": "existsInArray",
+        "body": ["Arrays.asList(${1:array}).contains(${2:value})"],
+        "scope": "java"
+    },
+    "Recursion (Java)": {
+        "prefix": "recursion; recursiveFunction",
+        "body": [
+            "public int ${1:methodName}(int param) {",
+            "  if (param == 10) {",
+            "    return param;",
+            "  }",
+            "  return ${1:methodName}(param + 1);",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Get Object Keys (Java)": {
+        "prefix": "getObjectKeys",
+        "body": [
+            "Set<String> keys = ${1:objectVariable}.keySet();",
+            "// use keys"
+        ],
+        "scope": "java"
+    },
+    "Get Object Values (Java)": {
+        "prefix": "getObjectValues",
+        "body": [
+            "Collection<Object> values = ${1:objectVariable}.values();",
+            "// use values"
+        ],
+        "scope": "java"
+    },
+    "Append to Array (Java)": {
+        "prefix": "appendToArray",
+        "body": [
+            "ArrayList<Object> list = new ArrayList<>(Arrays.asList(${1:array}));",
+            "list.add(${2:newElement});"
+        ],
+        "scope": "java"
+    },
+    "Prepend to Array (Java)": {
+        "prefix": "prependToArray",
+        "body": [
+            "ArrayList<Object> list = new ArrayList<>(Arrays.asList(${1:array}));",
+            "list.add(0, ${2:newElement});"
+        ],
+        "scope": "java"
+    },
+    "Remove Array's First Element (Java)": {
+        "prefix": "removeFirstElementInArray",
+        "body": [
+            "ArrayList<Object> list = new ArrayList<>(Arrays.asList(${1:array}));",
+            "if (!list.isEmpty()) {",
+            "  list.remove(0);",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Remove Array's Last Element (Java)": {
+        "prefix": "removeLastElementInArray",
+        "body": [
+            "ArrayList<Object> list = new ArrayList<>(Arrays.asList(${1:array}));",
+            "if (!list.isEmpty()) {",
+            "  list.remove(list.size() - 1);",
+            "}"
+        ],
+        "scope": "java"
+    },
+    "Get Array Length (Java)": {
+        "prefix": "getArrayLength",
+        "body": ["int length = ${1:array}.length;"],
+        "scope": "java"
+    },
+    "Get Object Length (Java)": {
+        "prefix": "getObjectLength",
+        "body": ["int length = ${1:objectVariable}.size();"],
+        "scope": "java"
+    },
+    "Append to Object (Java)": {
+        "prefix": "appendToObject",
+        "body": [
+            "${1:objectVariable}.put(${2:\"newKey\"}, ${3:\"newValue\"});"
+        ],
+        "scope": "java"
+    },
+    "Prepend to Object (Java)": {
+        "prefix": "prependToObject",
+        "body": [
+            "HashMap<String, Object> tempMap = new HashMap<>();",
+            "tempMap.put(${2:\"newKey\"}, ${3:\"newValue\"});",
+            "tempMap.putAll(${1:objectVariable});",
+            "${1:objectVariable} = tempMap;"
+        ],
+        "scope": "java"
+    },
+    "Convert Array to CSV String (Java)": {
+        "prefix": "arrayToCSV",
+        "body": [
+            "String csv = String.join(${2:\", \"}, Arrays.asList(${1:array}));"
+        ],
+        "scope": "java"
+    },
+    "Multi-line String (Java)": {
+        "prefix": "multilineString",
+        "body": ["\"\"\"", "${1:Line 1", "Line 2", "Line 3}", "\"\"\""],
+        "scope": "java"
+    },
+
+    //====================JAVA====================//
+    //====================BASH====================//
+    "Boilerplate (Shell)": {
+        "prefix": "boilerplate",
+        "body": [
+            "#!/bin/sh",
+            "",
+            "readonly ${1:GLOBAL_VARIABLE=\"Hello, World!\"}",
+            "",
+            "readonly PROJECT_DIRECTORY=$(cd \"$(dirname \"\\$0\")\" || exit 1; pwd) # Directory of this script",
+            "",
+            "main() {",
+            "    action1",
+            "    action2",
+            "}",
+            "",
+            "action1() {",
+            "    cd \"\\$PROJECT_DIRECTORY\" || exit 1",
+            "    printf '%s\\\\n' \"Action 1\"",
+            "}",
+            "",
+            "action2() {",
+            "    cd \"\\$PROJECT_DIRECTORY\" || exit 1",
+            "    printf '%s\\\\n' \"Action 2\"",
+            "}",
+            "",
+            "main \"\\$@\""
+        ],
+        "scope": "shellscript"
+    },
+    "Fetch (Shell)": {
+        "prefix": "fetchUsingBash",
+        "body": [
+            "result=\\$(",
+            "    URL=\"http://localhost:5000/api/v1/helloworld\"",
+            "    auth=\\$(printf \"admin:123\" | base64) # Java Spring Boot",
+            "    JWT_token=\"0123456789\"              # JSON Web Token",
+            "    response=\\$(",
+            "        curl -sL -X \\",
+            "            GET \\",
+            "            \"\\$URL\" \\",
+            "            -H \"Accept: application/json, text/plain, */*\" \\",
+            "            -H \"Content-Type: application/json\" \\",
+            "            -H \"Authorization: Basic \\$auth\" \\",
+            "            -H \"Authorization: Bearer \\$JWT_token\" \\",
+            "            -d '{\"key1\":\"value1\", \"key2\":\"value2\"}' # For POST, PATCH, and PUT requests",
+            "    )",
+            "    exitStatus=\\$?",
+            "    [ \\$exitStatus -ne 0 ] && echo -e \"\\e[31mError in curl request with exit status: \\$exitStatus\\e[0m\" >&2 && exit 1 || echo \\$response",
+            ")",
+            "echo \"\\$result\""
+        ],
+        "scope": "shellscript"
+    },
+    "String Array (Shell)": {
+        "prefix": "varArrayOfText; arrayOfStringsVariable",
+        "body": ["arrayOfStringsVariable=(\"Hello\" \"World!\")"],
+        "description": "String Array (Shell)",
+        "scope": "shellscript"
+    },
+    "Convert Array/Object to String (Shell)": {
+        "prefix": "serialize; serializeData; stringer",
+        "body": [
+            "json=\"{\"",
+            "for key in \"\\${!objectVariable[@]}\"; do",
+            "    value=\"\\${objectVariable[\\$key]}\"",
+            "    json+=\"\\\"\\$key\\\":\"",
+            "    [[ \"\\$value\" =~ ^[0-9]+\\$ ]] && json+=\"\\$value,\" || json+=\"\\\"\\$value\\\",\"",
+            "done",
+            "json=\"\\${json%,}}\"",
+            "echo \"\\$json\""
+        ],
+        "description": "Convert Array/Object to String (Shell)",
+        "scope": "shellscript"
+    },
+    "Load Remote Script (Shell)": {
+        "prefix": "importRemoteScriptFromGithub; loadImportScriptFromGithub; importScriptFromGithub; loadScriptFromGithub;",
+        "body": [
+            "source <(curl -fsSL \"https://raw.githubusercontent.com/user/repository/main/file.txt\")"
+        ],
+        "scope": "shellscript"
+    },
+    "Object Variable (Shell)": {
+        "prefix": "varObject; objectVariable",
+        "body": [
+            "declare -A objectVariable=(",
+            "    [key1]=1",
+            "    [key2]=\"Value\"",
+            ")"
+        ],
+        "scope": "shellscript"
+    },
+    "Pause (Shell)": {
+        "prefix": "pause",
+        "body": ["read -n 1 -s -r -p \"Press any key to continue...\""],
+        "scope": "shellscript"
+    },
+    "If-Else Statement (Shell)": {
+        "prefix": "ifElse",
+        "body": [
+            "if []; then",
+            "# if functionName \"parameter\"; then",
+            "    $1",
+            "    return 0 # True",
+            "else",
+            "    $2",
+            "    return 1 # False",
+            "fi"
+        ],
+        "scope": "shellscript"
+    },
+    "If Conditions (Shell)": {
+        "prefix": "ifConditions",
+        "body": [
+            "if []; then",
+            "    # if functionName \"parameter\"; then",
+            "    return 0 # True",
+            "fi",
+            "",
+            "if []; then",
+            "    # if functionName \"parameter\"; then",
+            "    return 1 # False",
+            "fi"
+        ],
+        "scope": "shellscript"
+    },
+    "Check File Existence": {
+        "prefix": "exists",
+        "body": [
+            "exists() {",
+            "    local fileOrDirectory=\"$1\"",
+            "    [ -e \"$fileOrDirectory\" ]",
+            "",
+            "    # Usage",
+            "    # if exists \".env\"; then",
+            "    #     echo -e \"\\e[32mIt exists!\\e[0m\" # Green",
+            "    # else",
+            "    #     echo -e \"\\e[31mIt doesn't exist!\\e[0m\" # Red",
+            "    # fi",
+            "}"
+        ],
+        "scope": "shellscript"
+    },
+    "Print to Console (Shell)": {
+        "prefix": "log",
+        "body": ["echo -e ${2:\"${1:Hello, World!}\"}"],
+        "scope": "shellscript"
+    },
+    "Print Red to Console (Shell)": {
+        "prefix": "logRed",
+        "body": ["echo -e \"\\e[31m${1:Hello, World!}\\e[0m\" # Red"],
+        "scope": "shellscript"
+    },
+    "Print Yellow to Console (Shell)": {
+        "prefix": "logYellow",
+        "body": ["echo -e \"\\e[33m${1:Hello, World!}\\e[0m\" # Yellow"],
+        "scope": "shellscript"
+    },
+    "Print Green to Console (Shell)": {
+        "prefix": "logGreen",
+        "body": ["echo -e \"\\e[32m${1:Hello, World!}\\e[0m\" # Green"],
+        "scope": "shellscript"
+    },
+    //====================BASH====================//
+    //====================RUBY====================//
+    "String Variable (Ruby)": {
+        "prefix": "varText; stringVariable",
+        "body": ["${1:stringVariable} = ${3:\"${2:Hello, World!}\"}"],
+        "scope": "ruby"
+    },
+    "Integer Number Variable (Ruby)": {
+        "prefix": "varNumber; numberIntegerVariable",
+        "body": ["${1:numberIntegerVariable} = ${2:100}"],
+        "scope": "ruby"
+    },
+    "Float Number Variable (Ruby)": {
+        "prefix": "varDecimal; numberFloatVariable",
+        "body": ["${1:numberFloatVariable} = ${2:3.14}"],
+        "scope": "ruby"
+    },
+    "Boolean Variable (Ruby)": {
+        "prefix": "varBoolean; booleanVariable",
+        "body": ["${1:booleanVariable} = ${2:true}"],
+        "scope": "ruby"
+    },
+    "Object Variable (Ruby)": {
+        "prefix": "varObject; objectVariable",
+        "body": [
+            "${1:objectVariable} = {",
+            "  ${2:key1}: ${3:1},",
+            "  ${4:key2}: '${5:Value}'",
+            "}"
+        ],
+        "scope": "ruby"
+    },
+    "Object Literal Variable (Ruby)": {
+        "prefix": "varEnum; objectLiteralVariable; constant; objectConstant",
+        "body": [
+            "${1:objectLiteralVariable} = {",
+            "  ${2:KEY_1}: '${3:Value 1}',",
+            "  ${4:KEY_2}: '${5:Value 2}'",
+            "}"
+        ],
+        "scope": "ruby"
+    },
+    "String Array Variable (Ruby)": {
+        "prefix": "varArrayOfText; arrayOfStringsVariable",
+        "body": ["${1:arrayOfStringsVariable} = ['${2:Hello}', '${3:World}!']"],
+        "scope": "ruby"
+    },
+    "Number Array Variable (Ruby)": {
+        "prefix": "varArrayOfNumbers; arrayOfNumbersVariable",
+        "body": [
+            "${1:arrayOfNumbersVariable} = [${2:1}, ${3:2}, ${4:3}, ${5:4}]"
+        ],
+        "scope": "ruby"
+    },
+    "Object Array Variable (Ruby)": {
+        "prefix": "varArrayOfObjects; arrayOfObjectsVariable",
+        "body": [
+            "${1:arrayOfObjectsVariable} = [",
+            "  {",
+            "    ${2:key1}: ${3:1},",
+            "    ${4:key2}: '${5:Value 1}'",
+            "  },",
+            "  {",
+            "    ${6:key1}: ${7:2},",
+            "    ${8:key2}: '${9:Value 2}'",
+            "  },",
+            "]"
+        ],
+        "scope": "ruby"
+    },
+    "Class (Ruby)": {
+        "prefix": "class",
+        "body": [
+            "class ${1:Person}",
+            "  # Constructor",
+            "  def initialize(initialPrivateValue, initialPublicValue)",
+            "    @privateProperty = initialPrivateValue",
+            "    @publicProperty = initialPublicValue",
+            "  end",
+            "",
+            "  # Public Methods",
+            "  def getPrivateProperty",
+            "    @privateProperty",
+            "  end",
+            "",
+            "  def setPrivateProperty(newValue)",
+            "    @privateProperty = newValue",
+            "  end",
+            "",
+            "  def getPublicProperty",
+            "    @publicProperty",
+            "  end",
+            "",
+            "  def setPublicProperty(newValue)",
+            "    @publicProperty = newValue",
+            "  end",
+            "",
+            "  # Class Method (Similar to Static Method)",
+            "  def self.staticMethod",
+            "    'This is a static method'",
+            "  end",
+            "end",
+            "# ========== USAGE ========== #",
+            "# myInstance = Person.new('Initial Private Value', 42)",
+            "# puts myInstance.getPrivateProperty # Output: Initial Private Value",
+            "# puts myInstance.getPublicProperty # Output: 42",
+            "# myInstance.setPrivateProperty('New Private Value')",
+            "# myInstance.setPublicProperty(99)",
+            "# puts myInstance.getPrivateProperty # Output: New Private Value",
+            "# puts myInstance.getPublicProperty # Output: 99",
+            "# puts Person.staticMethod # Output: This is a static method",
+            "# ========== USAGE ========== #"
+        ],
+        "scope": "ruby"
+    },
+    "Function (Ruby)": {
+        "prefix": "function",
+        "body": [
+            "def functionName(${2:param1, keys})",
+            "  ${2:key1 = keys[:key1]}",
+            "  ${2:key2 = keys[:key2]}",
+            "  # Return",
+            "  true",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "If Condition (Ruby)": {
+        "prefix": "ifStatement",
+        "body": ["if (${1:1})", "  # Implementation", "end"],
+        "scope": "ruby"
+    },
+    "Multiple If Conditions (Ruby)": {
+        "prefix": "ifStatements",
+        "body": [
+            "if (${1:1})",
+            "    ",
+            "end",
+            "",
+            "if (${2:2})",
+            "    ",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "If-Else Statement (Ruby)": {
+        "prefix": "ifElseStatement",
+        "body": ["if (${1:1})", "  ", "else", "  ", "end"],
+        "scope": "ruby"
+    },
+    "Switch Case (Ruby)": {
+        "prefix": "switchCase",
+        "body": [
+            "case ${1:value}",
+            "when ${2:'Case 1'}",
+            "  # Case 1 implementation",
+            "when ${3:'Case 2'}",
+            "  # Case 2 implementation",
+            "else",
+            "  # Default implementation",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "Try-Catch-Finally Block (Ruby)": {
+        "prefix": "tryCatchFinallyBlock",
+        "body": [
+            "begin",
+            "  # Define transaction methods",
+            "  start_transaction = -> { true }",
+            "  commit_transaction = -> {}",
+            "  rollback_transaction = -> {}",
+            "  clean_up = -> {}",
+            "",
+            "  # Start transaction",
+            "  result = start_transaction.call",
+            "",
+            "  # Perform transaction if there are no errors",
+            "  raise 'There was an error during the transaction' unless result",
+            "  commit_transaction.call",
+            "rescue => error",
+            "  # Handle errors",
+            "  puts \"Error: #{error.message}\"",
+            "",
+            "  # Roll back transaction",
+            "  rollback_transaction.call",
+            "ensure",
+            "  # Ensure cleanup, even if an exception occurred",
+            "  clean_up.call",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "For Loop (Ruby)": {
+        "prefix": "forLoop; loop",
+        "body": [
+            "for i in 0...${1:arrayOfStringsVariable}.length",
+            "  row = ${1:arrayOfStringsVariable}[i]",
+            "  # Implementation",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "While Loop (Ruby)": {
+        "prefix": "whileLoop; loop",
+        "body": ["while ${1:true}", "  # Implementation", "end"],
+        "scope": "ruby"
+    },
+    "Fetch (Ruby on Rails)": {
+        "prefix": "fetch",
+        "body": [
+            "require 'net/http'",
+            "require 'uri'",
+            "require 'json'",
+            "",
+            "uri = URI('${1:https://url.com/api/users}')",
+            "response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|",
+            "  request = Net::HTTP::${2:Get}.new(uri)",
+            "  request['Content-Type'] = 'application/json'",
+            "  request['Accept'] = 'application/json'",
+            "",
+            "  # For POST, PATCH, and PUT requests",
+            "  # request.body = JSON.generate({ key: 'value' })",
+            "",
+            "  http.request(request)",
+            "end",
+            "",
+            "case response",
+            "when Net::HTTPSuccess, Net::HTTPRedirection",
+            "  result = JSON.parse(response.body)",
+            "  # Handle successful response",
+            "else",
+            "  # Handle other cases",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+
+    "Iterate an Array (Ruby)": {
+        "prefix": "iterateArray",
+        "body": [
+            "${1:arrayOfStringsVariable}.each_with_index do |${2:element}, ${3:i}|",
+            "  ${2:element} = ${2:element}",
+            "  puts ${2:element}",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "Iterate an Array and Return New Array (Ruby)": {
+        "prefix": "iterateArrayAndReturnNewArray",
+        "body": [
+            "${1:newArray} = ${2:arrayOfStringsVariable}.map do |${3:element}|",
+            "  ${3:element} = ${3:element}",
+            "  puts ${3:element}",
+            "  ${3:element}  # You can modify and return the element here if needed",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "Iterate Objects (Ruby)": {
+        "prefix": "iterateObjects",
+        "body": [
+            "${1:arrayOfObjectsVariable}.each_with_index do |${2:element}, i|",
+            "  ${3:key1} = ${2:element}[:${3:key1}]",
+            "  ${4:key2} = ${2:element}[:${4:key2}]",
+            "  puts \"Index: #{i}, Property 1: #{${3:key1}}, Property 2: #{${4:key2}}\"",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "Iterate Object Properties (Ruby)": {
+        "prefix": "iterateObjectProperties",
+        "body": [
+            "${1:objectVariable}.each do |${1:key}, ${2:value}|",
+            "  puts \"Property Name: #{${1:key}}, Property Value: #{${2:value}}\"",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "Compare Strings (Ruby)": {
+        "prefix": "compareStrings",
+        "body": ["${1:stringVariable} == ${2:stringVariable2}"],
+        "scope": "ruby"
+    },
+    "Compare Numbers (Ruby)": {
+        "prefix": "compareNumbers",
+        "body": ["${1:numberVariable} == ${2:numberVariable2}"],
+        "scope": "ruby"
+    },
+    "Compare Booleans (Ruby)": {
+        "prefix": "compareBooleans",
+        "body": ["${1:booleanVariable} == ${2:booleanVariable2}"],
+        "scope": "ruby"
+    },
+    "Compare Arrays (Ruby)": {
+        "prefix": "compareArrays",
+        "body": ["${1:arrayVariable}.eql?(${2:arrayVariable2})"],
+        "scope": "ruby"
+    },
+    "Compare Objects (Ruby)": {
+        "prefix": "compareObjects",
+        "body": ["${1:objectVariable} == ${2:objectVariable2}"],
+        "scope": "ruby"
+    },
+
+    "Print to Console (Ruby)": {
+        "prefix": "log",
+        "body": ["puts ${2:\"${1:Hello, World!}\"}"],
+        "scope": "ruby"
+    },
+    "Print Red to Console (Ruby)": {
+        "prefix": "logRed",
+        "body": ["puts \"\\e[31m${1:Hello, World!}\\e[0m\""],
+        "scope": "ruby"
+    },
+    "Print Yellow to Console (Ruby)": {
+        "prefix": "logYellow",
+        "body": ["puts \"\\e[33m${1:Hello, World!}\\e[0m\""],
+        "scope": "ruby"
+    },
+    "Print Green to Console (Ruby)": {
+        "prefix": "logGreen",
+        "body": ["puts \"\\e[32m${1:Hello, World!}\\e[0m\""],
+        "scope": "ruby"
+    },
+    "Print Array/Object to Console (Ruby)": {
+        "prefix": "logArray; logObject",
+        "body": [
+            "require 'json'; puts JSON.pretty_generate(${1:arrayOfObjectsVariable})"
+        ],
+        "scope": "ruby"
+    },
+    "Print Object Property (Ruby)": {
+        "prefix": "logObjectProperty",
+        "body": ["puts ${1:arrayOfObjectsVariable}[${2:0}][:${3:key1}]"],
+        "scope": "ruby"
+    },
+    "Combine Strings (Ruby)": {
+        "prefix": "combineStrings; concatenateStrings; stringCombination",
+        "body": ["${1:stringVariable} + ${2:stringVariable2}"],
+        "scope": "ruby"
+    },
+    "Convert Array/Object to String (Ruby)": {
+        "prefix": "serialize; serializeData; stringer",
+        "body": ["JSON.pretty_generate(${1:arrayOfObjectsVariable})"],
+        "scope": "ruby"
+    },
+    "String Interpolation (Ruby)": {
+        "prefix": "stringInterpolation",
+        "body": ["\"Message: \\\"#{stringVariable}\\\"\""],
+        "scope": "ruby"
+    },
+    "Debugger (Ruby)": {
+        "prefix": "debug",
+        "body": ["binding.break"],
+        "scope": "ruby"
+    },
+    "Lambda Expression (Ruby)": {
+        "prefix": "lambda; anonymous function; lambda expression; arrow function body",
+        "body": ["->() {", "    ${1}", "}"],
+        "scope": "ruby"
+    },
+    "IIFE (Immediately Invoked Function Expression) (Ruby)": {
+        "prefix": "IIFE; self-invoking expression; self-calling expression; self-invoking function; self-calling function;",
+        "body": ["-> {", "    ${1}", "}.call()"],
+        "scope": "ruby"
+    },
+    "Find Object Index (Ruby)": {
+        "prefix": "findObjectIndex",
+        "body": [
+            "objectIndex = ${1:arrayOfObjectsVariable}.find_index { |object| object[:${2:key1}] ${3:== 1} }",
+            "",
+            "if objectIndex != -1",
+            "  targetObject = ${1:arrayOfObjectsVariable}[objectIndex]",
+            "  require 'json'; puts JSON.pretty_generate(targetObject)",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "Mutate Object (Ruby)": {
+        "prefix": "mutateObject",
+        "body": [
+            "mutatedObject = ${1:{",
+            "  key1: 1,",
+            "  key2: \"Value\"",
+            "\\}}.merge(${2:{",
+            "  key2: \"Mutated value\"",
+            "\\}})"
+        ],
+        "scope": "ruby"
+    },
+    "Check if Value Exists in Array (Ruby)": {
+        "prefix": "existsInArray; valueExistsInArray;",
+        "body": ["${1:[1, 2]}.include(${2:2})"],
+        "scope": "ruby"
+    },
+    "Recursion (Ruby)": {
+        "prefix": "recursion; recursiveFunction",
+        "body": [
+            "def ${1:recursion}(param)",
+            "    # Base Case",
+            "    if param == 10",
+            "      return param",
+            "    end",
+            "  ",
+            "    # Recursive Case",
+            "    puts \"Hello, World!\"",
+            "    return recursion(param + 1)",
+            "end"
+        ],
+        "scope": "ruby"
+    },
+    "Get Object Keys (Ruby)": {
+        "prefix": "getObjectKeys",
+        "body": ["${1:objectVariable}.keys"],
+        "scope": "ruby"
+    },
+    "Get Object Values (Ruby)": {
+        "prefix": "getObjectValues",
+        "body": ["${1:objectVariable}.values"],
+        "scope": "ruby"
+    },
+    "Append to Array (Ruby)": {
+        "prefix": "appendToArray",
+        "body": ["arrayOfStringsVariable << \"New value\""],
+        "scope": "ruby"
+    },
+    "Prepend to Array (Ruby)": {
+        "prefix": "prependToArray",
+        "body": ["arrayOfStringsVariable.unshift(\"New value\")"],
+        "scope": "ruby"
+    },
+    "Remove Array's First Element (Ruby)": {
+        "prefix": "removeFirstElementInArray",
+        "body": ["arrayOfStringsVariable.shift"],
+        "scope": "ruby"
+    },
+    "Remove Array's Last Element (Ruby)": {
+        "prefix": "removeLastElementInArray",
+        "body": ["arrayOfStringsVariable.pop"],
+        "scope": "ruby"
+    },
+    "Get Array Length (Ruby)": {
+        "prefix": "getArrayLength",
+        "body": ["arrayOfStringsVariable.length"],
+        "scope": "ruby"
+    },
+    "Get Object Length (Ruby)": {
+        "prefix": "getObjectLength",
+        "body": ["objectVariable.keys.length"],
+        "scope": "ruby"
+    },
+    "Append to Object (Ruby)": {
+        "prefix": "appendToObject",
+        "body": [
+            "# In Ruby, you can dynamically add properties to an object without a predefined type.",
+            "objectVariable[\"key3\"] = \"New Value\""
+        ],
+        "scope": "ruby"
+    },
+    "Prepend to Object (Ruby)": {
+        "prefix": "prependToObject",
+        "body": [
+            "# In Ruby, you can't directly prepend to an object, so we create a new one with the desired order.",
+            "objectWithPrependedValue = {",
+            "  \"key3\" => \"New Value\", # Add the new property first",
+            "  **objectVariable # Spread the existing properties after the new property",
+            "}"
+        ],
+        "scope": "ruby"
+    },
+    "Convert Array to CSV String (Ruby)": {
+        "prefix": "arrayToCSV",
+        "body": ["arrayOfStringsVariable.join(\", \")"],
+        "scope": "ruby"
+    },
+    "Multi-line String (Ruby)": {
+        "prefix": "multilineString",
+        "body": ["<<-STRING", "${1:Line 1", "Line 2", "Line 3}", "STRING"],
+        "scope": "ruby"
+    },
+
+    // Ruby Extras
+    "Type (Ruby)": {
+        "prefix": "type",
+        "body": ["${1:Type} = Struct.new(:key1, :key2)"],
+        "scope": "ruby"
+    },
+    //====================RUBY====================//
+    //====================TYPESCRIPT/JAVASCRIPT====================//
+    "String Variable (TypeScript/JavaScript)": {
+        "prefix": "varString; varText; stringVariable",
+        "body": ["const ${1:stringVariable} = ${3:'${2:Hello, World!}'};"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Integer Number Variable (TypeScript/JavaScript)": {
+        "prefix": "varNumber; varInt; numberIntegerVariable",
+        "body": ["const ${1:numberIntegerVariable} = ${2:100};"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Float Number Variable (TypeScript/JavaScript)": {
+        "prefix": "varDecimal; varFloat; numberFloatVariable",
+        "body": ["const ${1:numberFloatVariable} = ${2:3.14};"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Boolean Variable (TypeScript/JavaScript)": {
+        "prefix": "varBoolean; booleanVariable",
+        "body": ["const ${1:booleanVariable} = ${2:true};"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Variable (TypeScript/JavaScript)": {
+        "prefix": "varObject; objectVariable",
+        "body": [
+            "const ${1:objectVariable} = {",
+            "  key1: 1,",
+            "  key2: \"Value\",",
+            "};"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Literal Variable (TypeScript/JavaScript)": {
+        "prefix": "varEnum; objectLiteralVariable; constant; objectConstant",
+        "body": [
+            "const ${1:objectLiteralVariable} = {",
+            "  ${2:KEY_1}: \"${3:Value 1}\",",
+            "  ${4:KEY_2}: \"${5:Value 2}\",",
+            "} as const;"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "String Array Variable (TypeScript/JavaScript)": {
+        "prefix": "varArrayOfText; arrayOfStringsVariable",
+        "body": [
+            "const ${1:arrayOfStringsVariable}: string[] = [\"${2:Hello}\", \"${3:World}!\"];"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Number Array Variable (TypeScript/JavaScript)": {
+        "prefix": "varArrayOfNumbers; arrayOfNumbersVariable",
+        "body": [
+            "const ${1:arrayOfNumbersVariable}: number[] = [${2:1}, ${3:2}, ${4:3}, ${5:4}];"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Array Variable (TypeScript/JavaScript)": {
+        "prefix": "varArrayOfObjects; arrayOfObjectsVariable",
+        "body": [
+            "const ${1:arrayOfObjectsVariable} = [",
+            "  {",
+            "    key1: 1,",
+            "    key2: \"Value 1\",",
+            "  },",
+            "  {",
+            "    key1: 2,",
+            "    key2: \"Value 2\",",
+            "  },",
+            "];"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Class (TypeScript/JavaScript)": {
+        "prefix": "class",
+        "body": [
+            "export class ${1:Person} {",
+            "  // Properties",
+            "  private privateProperty: string;",
+            "  public publicProperty: number;",
+            "",
+            "  // Constructor",
+            "  constructor(initialPrivateValue: string, initialPublicValue: number) {",
+            "    this.privateProperty = initialPrivateValue;",
+            "    this.publicProperty = initialPublicValue;",
+            "  }",
+            "",
+            "  // Methods",
+            "  public getPrivateProperty(): string {",
+            "    return this.privateProperty;",
+            "  }",
+            "  public setPrivateProperty(newValue: string): void {",
+            "    this.privateProperty = newValue;",
+            "  }",
+            "  public getPublicProperty(): number {",
+            "    return this.publicProperty;",
+            "  }",
+            "  public setPublicProperty(newValue: number): void {",
+            "    this.publicProperty = newValue;",
+            "  }",
+            "  // Static method",
+            "  static staticMethod(): string {",
+            "    return \"This is a static method\";",
+            "  }",
+            "}",
+            "//==========USAGE==========//",
+            "// import { Person } from \"./Person.ts\";",
+            "// const myInstance = new Person(\"Initial Private Value\", 42);",
+            "// console.log(myInstance.getPrivateProperty()); // Output: Initial Private Value",
+            "// console.log(myInstance.getPublicProperty()); // Output: 42",
+            "// myInstance.setPrivateProperty(\"New Private Value\");",
+            "// myInstance.setPublicProperty(99);",
+            "// console.log(myInstance.getPrivateProperty()); // Output: New Private Value",
+            "// console.log(myInstance.getPublicProperty()); // Output: 99",
+            "// console.log(Person.staticMethod()); // Output: This is a static method",
+            "//==========USAGE==========//"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Function (TypeScript/JavaScript)": {
+        "prefix": "function",
+        "body": [
+            "function ${1:functionName}(${2:{ key1, key2 \\}: { key1: string; key2: string \\}}) {",
+            "  return `\\${key1} \\${key2}`;",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "If Condition (TypeScript/JavaScript)": {
+        "prefix": "ifStatement",
+        "body": ["if (${1:1}) {", "  ", "}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Multiple If Conditions (TypeScript/JavaScript)": {
+        "prefix": "ifStatements",
+        "body": ["if (${1:1}) {", "  ", "}", "", "if (${2:2}) {", "  ", "}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "If-Else Statement (TypeScript/JavaScript)": {
+        "prefix": "ifElseStatement",
+        "body": ["if (${1:1}) {", "  ", "} else {", "    ", "}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Switch Case (TypeScript/JavaScript)": {
+        "prefix": "switchCase",
+        "body": [
+            "switch (${1:value}) {",
+            "  case ${2:\"Case 1\"}:",
+            "    // Case 1 implementation",
+            "    break;",
+            "  case ${3:\"Case 2\"}:",
+            "    // Case 2 implementation",
+            "    break;",
+            "  default:",
+            "    // Default implementation",
+            "    break;",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Try-Catch-Finally Block (TypeScript/JavaScript)": {
+        "prefix": "tryCatchFinallyBlock",
+        "body": [
+            "try {",
+            "  const startTransaction = () => true;",
+            "  const commitTransaction = () => {};",
+            "  // Start transaction",
+            "  const result = startTransaction();",
+
+            "  // Catch transaction errors",
+            "  if (!result) {",
+            "    throw new Error(\"There was an error during the transaction\");",
+            "  }",
+
+            "  // Perform transaction if there are no errors",
+            "  commitTransaction();",
+            "} catch (error) {",
+            "  const rollbackTransaction = () => {};",
+            "  // Handle errors",
+            "  console.error(\"Error:\", error.message);",
+
+            "  // Roll back transaction",
+            "  rollbackTransaction();",
+            "} finally {",
+            "  const cleanUp = () => {};",
+            "  // Ensure cleanup, even if an exception occurred",
+            "  cleanUp();",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    "For Loop N Times (TypeScript/JavaScript)": {
+        "prefix": "forLoop; loop; loopNTimes; loopANumberOfTimes",
+        "body": ["for (let i = 0; i < ${1:10}; i++) {", "  ${2:// Code}", "}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    "For Loop (TypeScript/JavaScript)": {
+        "prefix": "forLoop; loop",
+        "body": [
+            "for (let i = 0, arrayLength = ${1:arrayOfStringsVariable}.length; i < arrayLength; i++) {",
+            "  const row = ${1:arrayOfStringsVariable}[i];",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "While Loop (TypeScript/JavaScript)": {
+        "prefix": "whileLoop; loop",
+        "body": ["while (${1:true}) {", "}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Fetch (TypeScript/JavaScript)": {
+        "prefix": "fetch",
+        "body": [
+            "fetch(",
+            "  `${1:https://url.com/api/users}`,",
+            "",
+            "  // prettier-ignore",
+            "  // `https://url.com/api/users`                // GET",
+            "  // `https://url.com/api/users/\\${resource}`    // GET",
+            "",
+            "  // `https://url.com/api/users`                // POST",
+            "",
+            "  // `https://url.com/api/users/\\${resource}`    // PATCH, PUT, DELETE",
+            "  // `https://url.com/api/users/\\${resource}`    // PUT",
+            "  // `https://url.com/api/users/\\${resource}`    // DELETE",
+            "  {  ",
+            "    // *GET, POST, PATCH, PUT, DELETE  ",
+            "    method: \"${2:GET}\", ",
+            "    headers: {",
+            "      Accept: \"application/json\",",
+            "      \"Content-Type\": \"application/json\",",
+            "    },",
+            "    // For POST, PATCH, and PUT requests",
+            "    // body: JSON.stringify({ key: \"value\" }),",
+            "  }",
+            ")",
+            "  .then((response) => response.json())",
+            "  .then((result) => {",
+            "    // Success",
+            "    console.log(JSON.stringify(result, null, 4));",
+            "  })",
+            "  .catch((error) => {",
+            "    // Failure",
+            "    throw new Error(error);",
+            "  });"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    "Iterate an Array (TypeScript/JavaScript)": {
+        "prefix": "iterateArray",
+        "body": [
+            "${1:arrayOfStringsVariable}.forEach((${2:element}: string, i: number) => {",
+            "  console.log(${2:element});",
+            "});"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Iterate an Array and Return New Array (TypeScript/JavaScript)": {
+        "prefix": "iterateArrayAndReturnNewArray",
+        "body": [
+            "${1:arrayOfStringsVariable}.map((${2:element}: string, i: number) => {",
+            "  console.log(${2:element});",
+            "});"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Iterate Objects (TypeScript/JavaScript)": {
+        "prefix": "iterateObjects",
+        "body": [
+            "${1:arrayOfObjectsVariable}.forEach(({ ${2:key1, key2} }, i: number) => {",
+            "  console.log(`Index: \\${i}, Property 1: \\${key1}, Property 2: \\${key2}`);",
+            "});"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Iterate Object Properties (TypeScript/JavaScript)": {
+        "prefix": "iterateObjectProperties",
+        "body": [
+            "Object.entries(${1:objectVariable}).forEach(([key, value], i: number) => {",
+            "  console.log(`Index: \\${i}, Property Name: \\${key}, Property Value: \\${value}`);",
+            "});"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Compare Strings (TypeScript/JavaScript)": {
+        "prefix": "compareStrings",
+        "body": ["${1:stringVariable} === ${2:stringVariable2}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    "Compare Numbers (TypeScript/JavaScript)": {
+        "prefix": "compareNumbers",
+        "body": ["${1:numberVariable} === ${2:numberVariable2}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    "Compare Booleans (TypeScript/JavaScript)": {
+        "prefix": "compareBooleans",
+        "body": ["${1:booleanVariable} === ${2:booleanVariable2}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    "Compare Arrays (TypeScript/JavaScript)": {
+        "prefix": "compareArrays",
+        "body": [
+            "JSON.stringify(${1:arrayVariable}) === JSON.stringify(${2:arrayVariable2})"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    "Compare Objects (TypeScript/JavaScript)": {
+        "prefix": "compareObjects",
+        "body": [
+            "JSON.stringify(${1:objectVariable}) === JSON.stringify(${2:objectVariable2})"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    // "Print to Console (TypeScript/JavaScript)": {
+    //   "prefix": "log",
+    //   "body": ["console.log(${2:\"${1:Hello, World!}\"});"],
+    //   "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    // },
+    "Print to Console (TypeScript/JavaScript)": {
+        "prefix": "log",
+        "body": [
+            "/*prettier-ignore*/ (($= ${2:'${1:Hello, World!}'})=>{console.log([\"string\",\"number\"].includes(typeof \\$)?\\$:JSON.stringify(\\$,null,4));})();"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Print Red to Console (TypeScript/JavaScript)": {
+        "prefix": "logRed",
+        "body": [
+            "/*prettier-ignore*/ (($= ${2:'${1:Hello, World!}'})=>{console.log(['string','number'].includes(typeof \\$)?`%c\\${\\$}`:`%c\\${JSON.stringify(\\$,null,4)}`,\"color: red;\");})();"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Print Yellow to Console (TypeScript/JavaScript)": {
+        "prefix": "logYellow",
+        "body": [
+            "/*prettier-ignore*/ (($= ${2:'${1:Hello, World!}'})=>{console.log(['string','number'].includes(typeof \\$)?`%c\\${\\$}`:`%c\\${JSON.stringify(\\$,null,4)}`,\"color: yellow;\");})();"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Print Green to Console (TypeScript/JavaScript)": {
+        "prefix": "logGreen",
+        "body": [
+            "/*prettier-ignore*/ (($= ${2:'${1:Hello, World!}'})=>{console.log(['string','number'].includes(typeof \\$)?`%c\\${\\$}`:`%c\\${JSON.stringify(\\$,null,4)}`,\"color: green;\");})();"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Print Array/Object to Console (TypeScript/JavaScript)": {
+        "prefix": "logArray; logObject",
+        "body": [
+            "console.log(JSON.stringify(${1:arrayOfObjectsVariable}, null, 4));"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Print Object Property (TypeScript/JavaScript)": {
+        "prefix": "logObjectProperty",
+        "body": ["console.log(${1:arrayOfObjectsVariable}[${2:0}].${3:key1});"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Combine Strings (TypeScript/JavaScript)": {
+        "prefix": "combineStrings; concatenateStrings; stringCombination",
+        "body": ["${1:stringVariable} + ${2:stringVariable2}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Convert Array/Object to String (TypeScript/JavaScript)": {
+        "prefix": "serialize; serializeData; stringer",
+        "body": ["JSON.stringify(${1:arrayOfObjectsVariable}, null, 4)"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "String Interpolation (TypeScript/JavaScript)": {
+        "prefix": "stringInterpolation",
+        "body": ["`Message: \"\\${stringVariable}\"`"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Debugger (TypeScript/JavaScript)": {
+        "prefix": "debug",
+        "body": ["debugger;"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Lambda Expression (TypeScript/JavaScript)": {
+        "prefix": "lambda; anonymous function; lambda expression; arrow function body",
+        "body": ["() => {", "  $1", "}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "IIFE (Immediately Invoked Function Expression) (TypeScript/JavaScript)": {
+        "prefix": "IIFE; self-invoking expression; self-calling expression; self-invoking function; self-calling function;",
+        "body": ["(() => {", "  ${1://}", "})()"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Search Array of Objects (TypeScript/JavaScript)": {
+        "prefix": "searchObjects, searchArrayOfObjects, findObject, findArrayOfObjects, findObjectInArrayOfObjects, filterObjects, filterData, searchData, findData, filterArrayOfObjects, findObjectInData, filterObjectInArray, searchObjectInArray, findDataInArray, searchObjectInData",
+        "body": [
+            "const arrayOfObjectsVariable = [",
+            "  {",
+            "    key1: 1,",
+            "    key2: \"Value 1\",",
+            "  },",
+            "  {",
+            "    key1: 2,",
+            "    key2: \"Value 2\",",
+            "  },",
+            "];",
+            "",
+            "const objects = arrayOfObjectsVariable.filter((object) => object.key1 === 1);"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Find Object Index (TypeScript/JavaScript)": {
+        "prefix": "findObjectIndex",
+        "body": [
+            "const objectIndex: number = ${1:arrayOfObjectsVariable}.findIndex(",
+            "  (object): boolean => object.${2:key1} ${3:=== 1}",
+            ");",
+            "",
+            "if (objectIndex !== -1) {",
+            "  const targetObject = ${1:arrayOfObjectsVariable}[objectIndex];",
+            "  console.log(JSON.stringify(targetObject, null, 4));",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Mutate Object (TypeScript/JavaScript)": {
+        "prefix": "mutateObject",
+        "body": [
+            "const mutatedObject = {",
+            "  ...${1:{",
+            "    key1: 1,",
+            "    key2: \"Value\",",
+            "  \\}},",
+            "  ...${2:{",
+            "    key2: \"Mutated value\",",
+            "  \\}},",
+            "};"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Check if Value Exists in Array (TypeScript/JavaScript)": {
+        "prefix": "existsInArray; valueExistsInArray;",
+        "body": ["${1:[1, 2]}.includes(${2:2})"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Recursion (TypeScript/JavaScript)": {
+        "prefix": "recursion; recursiveFunction",
+        "body": [
+            "function fibonacci(n: number): number {",
+            "  /*",
+            "  fibonacci(10) // Returns 55, as it is the 10th number in the Fibonacci sequence",
+            "  */",
+            "",
+            "  // Base Case: Stop the recursion when the base case is reached.",
+            "  if (n <= 1) {",
+            "    return n;",
+            "  }",
+            "",
+            "  // Recursive Case: Continue calling the same function with different parameters until the base case is reached.",
+            "  return fibonacci(n - 1) + fibonacci(n - 2);",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Get Object Keys (TypeScript/JavaScript)": {
+        "prefix": "getObjectKeys",
+        "body": ["Object.keys(${1:objectVariable})"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Get Object Values (TypeScript/JavaScript)": {
+        "prefix": "getObjectValues",
+        "body": ["Object.values(${1:objectVariable})"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Append to Array (TypeScript/JavaScript)": {
+        "prefix": "appendToArray",
+        "body": ["arrayOfStringsVariable.push(\"New value\")"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Prepend to Array (TypeScript/JavaScript)": {
+        "prefix": "prependToArray",
+        "body": ["arrayOfStringsVariable.unshift(\"New value\")"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Remove Array's First Element (TypeScript/JavaScript)": {
+        "prefix": "removeFirstElementInArray",
+        "body": ["${1:arrayOfStringsVariable}.shift();"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Remove Array's Last Element (TypeScript/JavaScript)": {
+        "prefix": "removeLastElementInArray",
+        "body": ["${1:arrayOfStringsVariable}.pop();"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Get Array Length (TypeScript/JavaScript)": {
+        "prefix": "getArrayLength",
+        "body": ["${1:arrayOfStringsVariable}.length"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Get Object Length (TypeScript/JavaScript)": {
+        "prefix": "getObjectLength",
+        "body": ["Object.keys(${1:objectVariable}).length"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Append to Object (TypeScript/JavaScript)": {
+        "prefix": "appendToObject",
+        "body": [
+            "${1:objectVariable}.${2:key3} = ${3:\"${4:New Value}\"}; // ${1:objectVariable} must have a defined property \"${2:key3}\" in its type"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Prepend to Object (TypeScript/JavaScript)": {
+        "prefix": "prependToObject",
+        "body": [
+            "const objectWithPrependedValue = {",
+            "  key3: \"New Value\", // Add the new property first",
+            "  ...objectVariable, // Spread the existing properties after the new property",
+            "};"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Convert Array to CSV String (TypeScript/JavaScript)": {
+        "prefix": "arrayToCSV",
+        "body": ["${1:arrayOfStringsVariable}.join(\"${2:, }\")"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Multi-line String (TypeScript/JavaScript)": {
+        "prefix": "multilineString; heredoc",
+        "body": ["`${1:Line 1", "Line 2", "Line 2}`"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Builder Pattern and Method Chaining (TypeScript/JavaScript)": {
+        "prefix": "builderPattern; methodChaining",
+        "body": [
+            "const calculator = (initialValue: number) => {",
+            "  /*",
+            "    Usage:",
+            "    const initialValue = 10;",
+            "    console.log(",
+            "    calculator(initialValue).add(5).multiply(2).subtract(10).divide(5).getResult()",
+            "    );",
+            "  */",
+            "  let result = initialValue;",
+            "",
+            "  const builder = {",
+            "    add: (value: number) => {",
+            "      result += value;",
+            "      return builder;",
+            "    },",
+            "    subtract: (value: number) => {",
+            "      result -= value;",
+            "      return builder;",
+            "    },",
+            "    multiply: (value: number) => {",
+            "      result *= value;",
+            "      return builder;",
+            "    },",
+            "    divide: (value: number) => {",
+            "      result /= value;",
+            "      return builder;",
+            "    },",
+            "    getResult: () => result,",
+            "  };",
+            "  return builder;",
+            "};"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Namespace (TypeScript/JavaScript)": {
+        "prefix": "namespace",
+        "body": ["// Namespace"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Import Statement (TypeScript/JavaScript)": {
+        "prefix": "import",
+        "body": ["import ${1:{ ${2:Person} \\}} from \"./${3:Person.ts}\";"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Export Statement (TypeScript/JavaScript)": {
+        "prefix": "export",
+        "body": [
+            "export ${1:function functionName(${2:{ key1, key2 \\}: { key1: string; key2: string \\}}) {",
+            "  return `\\${key1\\} \\${key2\\}`;",
+            "\\}}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+
+    // TypeScript Extras; JavaScript Extras
+    "Export Default Statement (TypeScript/JavaScript)": {
+        "prefix": "exportDefault",
+        "body": ["export default ${1:Person};"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Print to page (TypeScript)": {
+        "prefix": "alert; debug; log",
+        "body": [
+            "/*prettier-ignore*/ (($= ${2:'${1:Hello, World!}'}) => { const isObject = (obj: unknown): obj is Record<PropertyKey, unknown> => { return obj !== null && typeof obj === 'object'; }; const isArrayOfObjects = (arr: unknown): arr is Record<PropertyKey, unknown>[] => { return Array.isArray(arr) && arr.every(isObject); }; const parentDiv: HTMLElement = document.getElementById('quicklogContainer') ?? (() => { const div = document.createElement('div'); div.id = 'quicklogContainer'; div.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; max-height: 90vh; overflow-y: auto; padding: 10px; box-sizing: border-box;'; const helperButtonsDiv = document.createElement('div'); helperButtonsDiv.style.cssText = 'position: sticky; bottom: 0; display: flex; flex-direction: column; z-index: 1001;'; const clearButton = document.createElement('button'); clearButton.textContent = 'Clear'; clearButton.style.cssText = 'margin-top: 10px; background-color: red; color: white; border: none; padding: 5px; cursor: pointer; border-radius: 5px;'; clearButton.onclick = () => { if (parentDiv instanceof HTMLElement) { parentDiv.remove(); } }; helperButtonsDiv.appendChild(clearButton); document.body.appendChild(div); div.appendChild(helperButtonsDiv); return div; })(); const createTable = (obj: Record<PropertyKey, unknown>): HTMLTableElement => { const table = document.createElement('table'); table.style.cssText = 'border-collapse: collapse; background-color: yellow; box-shadow: white 0px 0px 5px 1px; padding: 5px; border: 3px solid black; border-radius: 10px; color: black !important; cursor: pointer; font: bold 25px \"Comic Sans MS\"; margin-bottom: 10px;'; Object.entries(obj).forEach(([key, value]) => { const row = document.createElement('tr'); const keyCell = document.createElement('td'); const valueCell = document.createElement('td'); keyCell.textContent = key; valueCell.textContent = String(value); keyCell.style.cssText = 'border: 1px solid black; padding: 5px;'; valueCell.style.cssText = 'border: 1px solid black; padding: 5px;'; row.appendChild(keyCell); row.appendChild(valueCell); table.appendChild(row); }); return table; }; const createTableFromArray = ( arr: Record<PropertyKey, unknown>[], ): HTMLTableElement => { const table = document.createElement('table'); table.style.cssText = 'border-collapse: collapse; background-color: yellow; box-shadow: white 0px 0px 5px 1px; padding: 5px; border: 3px solid black; border-radius: 10px; color: black !important; cursor: pointer; font: bold 25px \"Comic Sans MS\"; margin-bottom: 10px;'; const headers = Object.keys(arr[0]); const headerRow = document.createElement('tr'); headers.forEach((header) => { const th = document.createElement('th'); th.textContent = header; th.style.cssText = 'border: 1px solid black; padding: 5px;'; headerRow.appendChild(th); }); table.appendChild(headerRow); arr.forEach((obj) => { const row = document.createElement('tr'); headers.forEach((header) => { const td = document.createElement('td'); td.textContent = String(obj[header]); td.style.cssText = 'border: 1px solid black; padding: 5px;'; row.appendChild(td); }); table.appendChild(row); }); return table; }; const createChildDiv = (data: unknown): HTMLElement => { const newDiv = document.createElement('div'); const jsonData = JSON.stringify(data, null, 2); if (isArrayOfObjects(data)) { const table = createTableFromArray(data); newDiv.appendChild(table); } else if (isObject(data)) { const table = createTable(data); newDiv.appendChild(table); } else { newDiv.textContent = String(data); } newDiv.style.cssText = 'font: bold 25px \"Comic Sans MS\"; width: max-content; max-width: 500px; word-wrap: break-word; background-color: yellow; box-shadow: white 0px 0px 5px 1px; padding: 5px; border: 3px solid black; border-radius: 10px; color: black !important; cursor: pointer; margin-bottom: 10px;'; const handleMouseDown = (e: MouseEvent) => { e.preventDefault(); const clickedDiv = e.target instanceof Element && e.target.closest('div'); if (clickedDiv !== null && e.button === 0 && clickedDiv === newDiv) { void navigator.clipboard.writeText(jsonData).then(() => { clickedDiv.style.backgroundColor = 'gold'; setTimeout(() => { clickedDiv.style.backgroundColor = 'yellow'; }, 1000); }); } }; const handleRightClick = (e: MouseEvent) => { e.preventDefault(); if (parentDiv.contains(newDiv)) { parentDiv.removeChild(newDiv); if (!parentDiv.hasChildNodes()) { parentDiv.remove(); } } }; newDiv.addEventListener('mousedown', handleMouseDown); newDiv.addEventListener('contextmenu', handleRightClick); return newDiv; }; parentDiv.prepend(createChildDiv($)); })();"
+        ],
+        "scope": "typescript, typescriptreact"
+    },
+    "Print to page (JavaScript)": {
+        "prefix": "alert; debug; log",
+        "body": [
+            "/*prettier-ignore*/ (($= ${2:'${1:Hello, World!}'}) => { const isObject = (obj) => { return obj !== null && typeof obj === 'object'; }; const isArrayOfObjects = (arr) => { return Array.isArray(arr) && arr.every(isObject); }; const parentDiv = document.getElementById('quicklogContainer') ?? (() => { const div = document.createElement('div'); div.id = 'quicklogContainer'; div.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; max-height: 90vh; overflow-y: auto; padding: 10px; box-sizing: border-box;'; const helperButtonsDiv = document.createElement('div'); helperButtonsDiv.style.cssText = 'position: sticky; bottom: 0; display: flex; flex-direction: column; z-index: 1001;'; const clearButton = document.createElement('button'); clearButton.textContent = 'Clear'; clearButton.style.cssText = 'margin-top: 10px; background-color: red; color: white; border: none; padding: 5px; cursor: pointer; border-radius: 5px;'; clearButton.onclick = () => { if (parentDiv instanceof HTMLElement) { parentDiv.remove(); } }; helperButtonsDiv.appendChild(clearButton); document.body.appendChild(div); div.appendChild(helperButtonsDiv); return div; })(); const createTable = (obj) => { const table = document.createElement('table'); table.style.cssText = 'border-collapse: collapse; background-color: yellow; box-shadow: white 0px 0px 5px 1px; padding: 5px; border: 3px solid black; border-radius: 10px; color: black !important; cursor: pointer; font: bold 25px \"Comic Sans MS\"; margin-bottom: 10px;'; Object.entries(obj).forEach(([key, value]) => { const row = document.createElement('tr'); const keyCell = document.createElement('td'); const valueCell = document.createElement('td'); keyCell.textContent = key; valueCell.textContent = String(value); keyCell.style.cssText = 'border: 1px solid black; padding: 5px;'; valueCell.style.cssText = 'border: 1px solid black; padding: 5px;'; row.appendChild(keyCell); row.appendChild(valueCell); table.appendChild(row); }); return table; }; const createTableFromArray = (arr) => { const table = document.createElement('table'); table.style.cssText = 'border-collapse: collapse; background-color: yellow; box-shadow: white 0px 0px 5px 1px; padding: 5px; border: 3px solid black; border-radius: 10px; color: black !important; cursor: pointer; font: bold 25px \"Comic Sans MS\"; margin-bottom: 10px;'; const headers = Object.keys(arr[0]); const headerRow = document.createElement('tr'); headers.forEach((header) => { const th = document.createElement('th'); th.textContent = header; th.style.cssText = 'border: 1px solid black; padding: 5px;'; headerRow.appendChild(th); }); table.appendChild(headerRow); arr.forEach((obj) => { const row = document.createElement('tr'); headers.forEach((header) => { const td = document.createElement('td'); td.textContent = String(obj[header]); td.style.cssText = 'border: 1px solid black; padding: 5px;'; row.appendChild(td); }); table.appendChild(row); }); return table; }; const createChildDiv = (data) => { const newDiv = document.createElement('div'); const jsonData = JSON.stringify(data, null, 2); if (isArrayOfObjects(data)) { const table = createTableFromArray(data); newDiv.appendChild(table); } else if (isObject(data)) { const table = createTable(data); newDiv.appendChild(table); } else { newDiv.textContent = String(data); } newDiv.style.cssText = 'font: bold 25px \"Comic Sans MS\"; width: max-content; max-width: 500px; word-wrap: break-word; background-color: yellow; box-shadow: white 0px 0px 5px 1px; padding: 5px; border: 3px solid black; border-radius: 10px; color: black !important; cursor: pointer; margin-bottom: 10px;'; const handleMouseDown = (e) => { e.preventDefault(); const clickedDiv = e.target instanceof Element && e.target.closest('div'); if (clickedDiv !== null && e.button === 0 && clickedDiv === newDiv) { void navigator.clipboard.writeText(jsonData).then(() => { clickedDiv.style.backgroundColor = 'gold'; setTimeout(() => { clickedDiv.style.backgroundColor = 'yellow'; }, 1000); }); } }; const handleRightClick = (e) => { e.preventDefault(); if (parentDiv.contains(newDiv)) { parentDiv.removeChild(newDiv); if (!parentDiv.hasChildNodes()) { parentDiv.remove(); } } }; newDiv.addEventListener('mousedown', handleMouseDown); newDiv.addEventListener('contextmenu', handleRightClick); return newDiv; }; parentDiv.prepend(createChildDiv($)); })();"
+        ],
+        "scope": "javascript, javascriptreact"
+    },
+    "Log to HTML Document (TypeScript/JavaScript)": {
+        "prefix": "logToPage",
+        "body": ["document.write(`<pre>${1:Hello, World!}</pre>`);"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Log Array As Table (TypeScript/JavaScript)": {
+        "prefix": "logAsTable",
+        "body": [
+            "/*prettier-ignore*/ (() => { logToTable(${1:arrayOfObjectsVariable}); function logToTable(array) { if (!Array.isArray(array) || array.length === 0) { return ''; } const keys = Object.keys(array[0]); const tableHeader = `<tr>${keys.map((key) => `<th style='border:1px solid white;'>${key}</th>`).join('')}</tr>`; const tableRows = array.map((row) => `<tr>${keys.map((key) => `<td style='border:1px solid white;'>${row[key]}</td>`).join('')}</tr>`); const htmlTable = `<span>Total rows: ${array.length}</span><table style='text-align: center; border:1px solid white; border-collapse:collapse;'>${tableHeader}${tableRows.join('')}</table>`; document.write(htmlTable); } })()"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Node.js Server (TypeScript/JavaScript)": {
+        "prefix": "server",
+        "body": [
+            "import http from \"http\";",
+            "",
+            "http",
+            "  .createServer(function (_request, response) {",
+            "    response.setHeader(\"Content-Type\", \"application/json\");",
+            "    response.end(JSON.stringify({ message: `Hello, World!` }));",
+            "  })",
+            "  .listen(3000, function () {",
+            "    console.log(\"Server started at port 3000\");",
+            "  });",
+            ""
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Arrow Function Expression (TypeScript/JavaScript)": {
+        "prefix": "arrowFunction; functionArrow",
+        "body": [
+            "const ${1:functionName} = (${2:{ key1, key2 \\}: { key1: string; key2: string }}) => {",
+            "  return `\\${key1} \\${key2}`;",
+            "};"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Interface (TypeScript/JavaScript)": {
+        "prefix": "interface",
+        "body": [
+            "interface ${1:Interface} {",
+            "  key1: number;",
+            "  key2: string;",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Type (TypeScript/JavaScript)": {
+        "prefix": "type",
+        "body": [
+            "type ${1:Type} = {",
+            "  key1: number;",
+            "  key2: string;",
+            "};"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Type (TypeScript/JavaScript)": {
+        "prefix": "typeObject",
+        "body": [
+            "Record<PropertyKey, ${1|string,number,boolean,unknown,unknown[]|}>"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Array Type (TypeScript/JavaScript)": {
+        "prefix": "typeArrayOfObjects",
+        "body": [
+            "Record<PropertyKey, ${1|string,number,boolean,unknown,unknown[]|}>[]"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Array Values as Type (TypeScript/JavaScript)": {
+        "prefix": "arrayValuesAsType",
+        "body": ["(typeof ${1:arrayOfObjects})[number]"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Keys as Type (TypeScript/JavaScript)": {
+        "prefix": "objectKeysAsType",
+        "body": ["keyof typeof ${1:objectVariable}"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Keys as Mapped Type (TypeScript/JavaScript)": {
+        "prefix": "objectKeysAsMappedType",
+        "body": ["[K in keyof typeof ${1:objectVariable}]"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Object Values as Type (TypeScript/JavaScript)": {
+        "prefix": "objectValuesAsType",
+        "body": [
+            "(typeof ${1:objectVariable})[keyof typeof ${1:objectVariable}]"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Async Lambda Expression (TypeScript/JavaScript)": {
+        "prefix": "asyncLambda; async anonymous function; async lambda expression",
+        "body": [
+            "void (async () => {",
+            "  try {",
+            "    const result = await fetchData();",
+            "    ",
+            "  } catch (error: unknown) {",
+            "    if (typeof error === `string`) {",
+            "      throw new Error(`There was an error: ${error}`);",
+            "    }",
+            "    if (error instanceof Error) {",
+            "      throw new Error(`There was an error: ${error.message}`);",
+            "    }",
+            "    if (error instanceof SyntaxError) {",
+            "      // Unexpected token < in JSON",
+            "      throw new Error(`Syntax Error: ${error}`);",
+            "    }",
+            "  } finally {",
+            "    //",
+            "  }",
+            "})();"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Asynchronous IIFE (Immediately Invoked Function Expression) (TypeScript/JavaScript)": {
+        "prefix": "asyncIIFE; self-invoking expression; self-calling expression; self-invoking function; self-calling function;",
+        "body": ["void (async () => {", "  ${1://}", "})()"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Asynchronous Function (TypeScript/JavaScript)": {
+        "prefix": "asyncFunction",
+        "body": [
+            "async function asyncFunction(): Promise<unknown> {",
+            "  try {",
+            "    // First API call",
+            "    const response1 = await fetch('https://randomuser.me/api/');",
+            "    if (!response1.ok) {",
+            "      throw new Error('Failed to fetch first request data');",
+            "    }",
+            "    const data1: unknown = await response1.json();",
+            "",
+            "    // Second API call",
+            "    const response2 = await fetch(",
+            "      'https://opentdb.com/api.php?amount=10&type=multiple',",
+            "    );",
+            "    if (!response2.ok) {",
+            "      throw new Error('Failed to fetch second request data');",
+            "    }",
+            "    const data2: unknown = await response2.json();",
+            "",
+            "    // Combine the data from both APIs",
+            "    const combinedData = {",
+            "      data1,",
+            "      data2,",
+            "    };",
+            "",
+            "    return combinedData;",
+            "  } catch (error: unknown) {",
+            "    if (typeof error === 'string') {",
+            "      throw new Error(`There was an error: ${error}`);",
+            "    }",
+            "    if (error instanceof Error) {",
+            "      throw new Error(`There was an error: ${error.message}`);",
+            "    }",
+            "    throw new Error('An unknown error occurred');",
+            "  }",
+            "}",
+            "",
+            "// asyncFunction().then((result) => {/* Success */}).catch((error: unknown) => { /* Failure */ if (typeof error === `string`) { throw new Error(`There was an error: ${error}`); } if (error instanceof Error) { throw new Error(`There was an error: ${error.message}`); } }) .finally(() => { /* Finally */ });"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Asynchronous Arrow Function (TypeScript/JavaScript)": {
+        "prefix": "asyncArrowFunction",
+        "body": [
+            "const asyncFunction = async (): Promise<unknown> => {",
+            "  try {",
+            "    // First API call",
+            "    const response1 = await fetch('https://randomuser.me/api/');",
+            "    if (!response1.ok) {",
+            "      throw new Error('Failed to fetch first request data');",
+            "    }",
+            "    const data1: unknown = await response1.json();",
+            "",
+            "    // Second API call",
+            "    const response2 = await fetch('https://opentdb.com/api.php?amount=10&type=multiple');",
+            "    if (!response2.ok) {",
+            "      throw new Error('Failed to fetch second request data');",
+            "    }",
+            "    const data2: unknown = await response2.json();",
+            "",
+            "    // Combine the data from both APIs",
+            "    const combinedData = {",
+            "      data1,",
+            "      data2,",
+            "    };",
+            "",
+            "    return combinedData;",
+            "  } catch (error: unknown) {",
+            "    if (typeof error === 'string') {",
+            "      throw new Error(`There was an error: error`);",
+            "    }",
+            "    if (error instanceof Error) {",
+            "      throw new Error(`There was an error: ${error.message}`);",
+            "    }",
+            "    throw new Error('An unknown error occurred');",
+            "  }",
+            "};"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Async/Await (TypeScript/JavaScript)": {
+        "prefix": "asyncAwaitTryCatch",
+        "body": [
+            "(async () => {",
+            "  try {",
+            "    const data: object = await getData();",
+            "    return data;",
+            "  } catch (error: unknown) {",
+            "    if (typeof error === `string`) {",
+            "      throw new Error(`There was an error: ${error}`);",
+            "    }",
+            "    if (error instanceof Error) {",
+            "      throw new Error(`There was an error: ${error.message}`);",
+            "    }",
+            "    if (error instanceof SyntaxError) {",
+            "      // Unexpected token < in JSON",
+            "      throw new Error(`Syntax Error: ${error}`);",
+            "    }",
+            "  } finally {",
+            "  }",
+            "})();"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Promise callbacks (TypeScript/JavaScript)": {
+        "prefix": "thenCatchFinally",
+        "body": [
+            "then((result) => {",
+            "  // Success",
+            "  ",
+            "})",
+            ".catch((error) => {",
+            "// Failure",
+            "if (typeof error === `string`) {",
+            "    throw new Error(`There was an error: ${error}`);",
+            "}",
+            "if (error instanceof Error) {",
+            "    throw new Error(`There was an error: ${error.message}`);",
+            "}",
+            "})",
+            ".finally(() => {",
+            "// Finally",
+            "});"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Try-Catch-Finally Block Version 2 (TypeScript/JavaScript)": {
+        "prefix": "tryCatchFinallyBlock",
+        "body": [
+            "try {",
+            "  ",
+            "} catch (error: unknown) {",
+            "  if (typeof error === `string`) {",
+            "    throw new Error(`There was an error: ${error}`);",
+            "  }",
+            "  if (error instanceof Error) {",
+            "    throw new Error(`There was an error: ${error.message}`);",
+            "  }",
+            "  if (error instanceof SyntaxError) {",
+            "    // Unexpected token <tr in JSON",
+            "    throw new Error(`Syntax Error: ${error}`);",
+            "  }",
+            "} finally {",
+            "}"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Guard Clause (TypeScript/JavaScript)": {
+        "prefix": "guardClauses, errorHandling; handleErrors",
+        "body": [
+            "if (${1:true}) throw new Error(${2:'${3:Error message for guard clause.}'});"
+        ],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Early Return (TypeScript/JavaScript)": {
+        "prefix": "earlyReturns, errorHandling; handleErrors",
+        "body": ["if (${1:true}) return ${2:'${3:Return value}'};"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    "Early Exit (TypeScript/JavaScript)": {
+        "prefix": "earlyExits, errorHandling; handleErrors",
+        "body": ["if (${1:true}) return;"],
+        "scope": "typescript, javascript, typescriptreact, javascriptreact"
+    },
+    //====================TYPESCRIPT/JAVASCRIPT====================//
+    //====================REACT.JS====================//
+    "React Boilerplate (React)": {
+        "prefix": "boilerplate",
+        "body": [
+            "import { useState } from 'react';",
+            "",
+            "function App() {",
+            "  const [count, setCount] = useState<number>(0);",
+            "",
+            "  return (",
+            "    <div style={{ zoom: '500%', textAlign: 'center' }}>",
+            "      <h1>Big Bang</h1>",
+            "      <div>",
+            "        <button",
+            "          onClick={(): void => {",
+            "            setCount((count: number) => count + 1);",
+            "          }}",
+            "        >",
+            "          count is {count}",
+            "        </button>",
+            "      </div>",
+            "    </div>",
+            "  );",
+            "}",
+            "",
+            "export default App;",
+            ""
+        ],
+        "scope": "typescriptreact, javascriptreact"
+    },
+    "UseState (React)": {
+        "prefix": "useState",
+        "body": [
+            "const [${1}, set${1/(.*)/${1:/capitalize}/}] = useState<${2:string}>(${3:});"
+        ],
+        "scope": "typescriptreact, javascriptreact"
+    },
+    "UseState Expensive (React)": {
+        "prefix": "useStateExpensive; useStateLazy",
+        "body": [
+            "const [${1}, set${1/(.*)/${1:/capitalize}/}] = useState<${2:string}>(() => {",
+            "  const expensiveCalculation = () => {",
+            "    return true;",
+            "  };",
+            "  return expensiveCalculation();",
+            "});"
+        ],
+        "scope": "typescriptreact, javascriptreact"
+    },
+    "Iterate Data (React)": {
+        "prefix": "iterateData",
+        "body": [
+            "{",
+            "  ${1:data}?.map(({ ${2:id, firstName} }, i) => <div key={id}>{row}</div>);",
+            "}"
+        ],
+        "scope": "typescriptreact, javascriptreact"
+    },
+    //====================REACT.JS====================//
+    //====================PHP====================//
+    "Display Array as Table": {
+        "prefix": "logarrayastable",
+        "body": [
+            "//====================QUICKTABLE====================//",
+            "\\$quickTable = \\$${1:data};",
+            "\\$quickTable = array_map(fn (\\$item) => is_object(\\$item) ? (array) \\$item : \\$item, \\$quickTable);",
+            "echo \"<span>Total rows: \" . count(\\$quickTable) . \"</span><table style='text-align: center; border:1px solid black; border-collapse:collapse;'><tr>\" . (count(\\$quickTable) > 0 ? implode('', array_map(fn (\\$value) => \"<th style='border:1px solid black;'>\\$value</th>\", array_keys((array) \\$quickTable[0]))) . \"</tr>\" . implode('', array_map(fn (\\$row) => \"<tr>\" . implode('', array_map(fn (\\$cell) => \"<td style='border:1px solid black;'>\\$cell</td>\", (array) \\$row)) . \"</tr>\", \\$quickTable)) : \"<tr><td colspan='1'>No data available</td></tr>\") . \"</table>\";",
+            "exit;",
+            "//====================QUICKTABLE====================//"
+        ],
+        "scope": "php"
+    },
+    "Stop code execution": {
+        "prefix": "breakpoint",
+        "body": ["echo ${1:\"<h1>Breakpoint</h1>\"};", "exit;"],
+        "scope": "php"
+    },
+    "Log defined variables": {
+        "prefix": "logdefinedvariables",
+        "body": [
+            "echo \"<pre>\" . print_r(get_defined_vars(), true) . \"</pre>\";"
+        ],
+        "scope": "php"
+    },
+    "Log defined functions": {
+        "prefix": "logdefinedfunctions",
+        "body": [
+            "echo \"<pre>\" . print_r(get_defined_functions(), true) . \"</pre>\";"
+        ],
+        "scope": "php"
+    },
+    "Log array": {
+        "prefix": "logarray",
+        "body": ["echo \"<pre>\" . print_r($${1:array}, true) . \"</pre>\";"],
+        "scope": "php"
+    },
+    //====================PHP====================//
+    //====================HTML====================//
+    "Import JavaScript": {
+        "prefix": "importjs",
+        "body": ["<script src=\"${1:script}.js\"></script>"],
+        "scope": "html"
+    },
+    "Import CSS": {
+        "prefix": "importcss",
+        "body": ["<link rel=\"stylesheet\" href=\"${1:style}.css\" />"],
+        "scope": "html"
+    }
+    //====================HTML====================//
+}

@@ -8,6 +8,7 @@ This is the **single source of truth** for:
 - Shell configuration files (dotfiles)
 - Claude Code AI plugin
 - Cursor IDE templates
+- Editor settings (Cursor, VS Code, Zed)
 
 ## Quick Start
 
@@ -41,6 +42,9 @@ user/                          ← judigot/user (source of truth)
 │   ├── hooks/
 │   ├── settings/rules.md
 │   └── skills/
+├── ide/                       → syncs to ~/.apportable/ide → pushes to judigot/ide
+│   ├── cursor/                → syncs to ~/AppData/Roaming/Cursor/User
+│   └── zed/                   → syncs to ~/AppData/Roaming/Zed
 ├── .cursor/                   ─┐
 ├── agents/                     │→ syncs to ~/.apportable/cursor → pushes to judigot/cursor
 ├── AGENTS.md                   │
@@ -55,6 +59,8 @@ user/                          ← judigot/user (source of truth)
 ├── Apportable.sh              ─┘
 ├── DOTFILES                   ← manifest: files to sync to ~/
 ├── CURSOR                     ← manifest: files to sync to cursor repo
+├── IDE_FILES                  ← manifest: ide settings files
+├── UBUNTU                     ← manifest: files to sync to WSL Ubuntu
 └── commit-and-sync.sh         ← runs all syncs
 ```
 
@@ -66,6 +72,8 @@ These files act as single sources of truth for file lists:
 |------|---------|---------|
 | `DOTFILES` | List of files to sync to `~/` | `Apportable.sh`, `commit-and-sync.sh` |
 | `CURSOR` | List of files to sync to cursor repo | `commit-and-sync.sh` |
+| `IDE_FILES` | List of IDE settings files | Reference |
+| `UBUNTU` | List of files to sync to WSL Ubuntu | `commit-and-sync.sh` |
 | `PATH` | List of PATH entries | `.bashrc` |
 
 **To add/remove a file from sync:** Edit the manifest file - scripts pick up changes automatically.
@@ -77,6 +85,11 @@ These files act as single sources of truth for file lists:
 | Files in `DOTFILES` | `~/` | - |
 | `ai/` | `~/ai` | `judigot/ai` |
 | Files in `CURSOR` | `~/.apportable/cursor` | `judigot/cursor` |
+| `ide/` | `~/.apportable/ide` | `judigot/ide` |
+| `ide/cursor/` | `~/AppData/Roaming/Cursor/User` | - |
+| `ide/zed/` | `~/AppData/Roaming/Zed` | - |
+| VS Code | Symlinks → Cursor | - |
+| Files in `UBUNTU` | `//wsl.localhost/Ubuntu/root/` | - |
 
 ## Files
 
@@ -112,6 +125,18 @@ These files act as single sources of truth for file lists:
 | `AGENTS.md` | Agent documentation |
 | `CLAUDE.md` | Claude Code entry point |
 
+### IDE Settings (sync to `~/.apportable/ide` → `judigot/ide`)
+
+| File | Destination |
+|------|-------------|
+| `ide/cursor/settings.jsonc` | `~/AppData/Roaming/Cursor/User/settings.json` |
+| `ide/cursor/keybindings.jsonc` | `~/AppData/Roaming/Cursor/User/keybindings.json` |
+| `ide/cursor/Master of Snippets.code-snippets` | `~/AppData/Roaming/Cursor/User/snippets/` |
+| `ide/zed/settings.jsonc` | `~/AppData/Roaming/Zed/settings.json` |
+| `ide/zed/keymap.jsonc` | `~/AppData/Roaming/Zed/keymap.json` |
+
+**VS Code:** Symlinks to Cursor settings (shares the same files)
+
 ## Usage
 
 ### Commit and Sync Everything
@@ -125,6 +150,10 @@ This will:
 2. Sync files listed in `DOTFILES` to `~/`
 3. Sync `ai/` to `~/ai` → commit & push to `judigot/ai`
 4. Sync files listed in `CURSOR` to `~/.apportable/cursor` → push to `judigot/cursor`
+5. Sync `ide/` to `~/.apportable/ide` → push to `judigot/ide`
+6. Sync Cursor settings + create VS Code symlinks
+7. Sync Zed settings
+8. Sync files listed in `UBUNTU` to WSL Ubuntu
 
 ### Add Cursor Boilerplate to a Project
 
@@ -160,6 +189,8 @@ curl -sL "https://raw.githubusercontent.com/judigot/user/main/.zshrc" -o ~/.zshr
 | `generatessh` | Create new SSH key |
 | `testssh` | Test GitHub SSH connection |
 | `deleteall` | Delete all files in cwd (with confirmation) |
+| `termuxsetup` | Install Ubuntu on Termux (mobile) |
+| `termuxlogin` | Login to Ubuntu on Termux |
 
 See `.snippetsrc` for full list.
 
@@ -186,3 +217,4 @@ See `ai/README.md` for details.
 | [judigot/user](https://github.com/judigot/user) | Monorepo (source of truth) | - |
 | [judigot/ai](https://github.com/judigot/ai) | Claude Code plugin (standalone) | `user/ai/` |
 | [judigot/cursor](https://github.com/judigot/cursor) | Cursor IDE template (standalone) | Files in `CURSOR` |
+| [judigot/ide](https://github.com/judigot/ide) | Editor settings (standalone) | `user/ide/` |

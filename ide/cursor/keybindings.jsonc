@@ -1,0 +1,357 @@
+// Place your key bindings in this file to overwrite the defaults
+// If there are similar bindings, place the ones with conditions below the ones without (e.g. Git: Save Changes)
+[
+    /*==========CURSOR==========*/
+    // Prevent removing Composer edits
+    {
+        "key": "ctrl+backspace",
+        "command": "-composer.cancelComposerStep",
+        "when": "composerFocused"
+    },
+    /*==========CURSOR==========*/
+    /*==========RESOLVE MARKDOWN PREVIEW & PASTE JSON AS CODE CONFLICT==========*/
+    {
+        "key": "ctrl+shift+v",
+        "command": "quicktype.pasteJSONAsTypesAndSerialization",
+        "when": "editorTextFocus && editorLangId != markdown"
+    },
+    {
+        "key": "ctrl+shift+v",
+        "command": "-quicktype.pasteJSONAsTypesAndSerialization",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+shift+alt+v",
+        "command": "quicktype.pasteJSONAsTypes",
+        "when": "editorTextFocus && editorLangId != markdown"
+    },
+    {
+        "key": "ctrl+shift+alt+v",
+        "command": "-quicktype.pasteJSONAsTypes",
+        "when": "editorTextFocus"
+    },
+    /*==========RESOLVE MARKDOWN PREVIEW & PASTE JSON AS CODE CONFLICT==========*/
+    // {
+    //   "key": "ctrl+s",
+    //   "command": "extension.multiCommand.execute",
+    //   "args": {
+    //     "sequence": ["workbench.action.files.save", "eslint.restart"]
+    //   },
+    // },
+    {
+        "key": "ctrl+shift+w",
+        "command": "workbench.action.closeActiveEditor"
+    },
+    {
+        "key": "shift+alt+f",
+        "command": "extension.multiCommand.execute",
+        "args": {
+            "sequence": [
+                "namespaceResolver.importAll",
+                // "namespaceResolver.sort",
+                "editor.action.formatDocument"
+            ]
+        },
+        "when": "editorTextFocus && !editorReadonly && (editorLangId == php)"
+    },
+    // {
+    //   "key": "shift+alt+f",
+    //   "command": "extension.multiCommand.execute",
+    //   "args": {
+    //     "sequence": [
+    //       {
+    //         "command": "editor.action.sourceAction",
+    //         "args": {
+    //           "kind": "source.addMissingImports",
+    //           "apply": "first"
+    //         }
+    //       },
+    //       "editor.action.formatDocument",
+    //       "javascript.removeUnusedImports",
+    //       "eslint.executeAutofix",
+    //       "editor.action.formatDocument",
+    //       "editor.action.formatDocument"
+    //     ]
+    //   },
+    //   "when": "editorTextFocus && !editorReadonly && (editorLangId == typescript || editorLangId == typescriptreact || editorLangId == javascript || editorLangId == javascriptreact)"
+    // },
+    {
+        "key": "ctrl+shift+alt+backspace",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "clear\n"
+        }
+    },
+    {
+        "key": "alt+x",
+        "command": "editor.action.commentLine",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "shift+alt+v",
+        "command": "toggleVim"
+    },
+    {
+        "key": "ctrl+t",
+        "command": "workbench.action.files.newUntitledFile"
+    },
+    {
+        "key": "ctrl+alt+t",
+        "command": "extension.multiCommand.execute",
+        "args": {
+            "sequence": [
+                "workbench.action.files.newUntitledFile",
+                "workbench.action.editor.changeLanguageMode"
+            ]
+        }
+    },
+    {
+        "key": "shift+alt+t",
+        "command": "quokka.createFile"
+    },
+    {
+        "key": "ctrl+shift+alt+up",
+        "command": "cursorTop",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+shift+alt+down",
+        "command": "cursorBottom",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+shift+alt+,",
+        "command": "editor.action.sortLinesAscending"
+    },
+    {
+        "key": "ctrl+shift+alt+.",
+        "command": "editor.action.sortLinesDescending"
+    },
+    {
+        "key": "ctrl+shift+r",
+        "command": "editor.action.quickFix"
+    },
+    {
+        "key": "ctrl+shift+alt+r",
+        "command": "editor.action.sourceAction"
+    },
+    {
+        "key": "ctrl+alt+c",
+        "command": "code-runner.run"
+    },
+    {
+        "key": "ctrl+shift+alt+down",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "git pull\n"
+        }
+    },
+    {
+        "key": "ctrl+shift+alt+left",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "git stash -u\n"
+        }
+    },
+    {
+        "key": "ctrl+shift+alt+=",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "git stash -u\ngit stash branch new-branch-name"
+        }
+    },
+    {
+        "key": "ctrl+shift+alt+right",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "git stash pop\n"
+        }
+    },
+    {
+        "key": "f9",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "clear && pnpm start\n"
+        }
+    },
+    {
+        "key": "f10",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "clear && if [ -f artisan ] && grep -q '\"name\": \"laravel/laravel\"' composer.json; then php artisan serve; elif [ -f pom.xml ] && grep -q '<parent>.*<artifactId>spring-boot-starter-parent</artifactId>.*</parent>' pom.xml; then mvn spring-boot:run; else pnpm dev; fi\n"
+        }
+    },
+    {
+        "key": "f10",
+        "command": "extension.multiCommand.execute",
+        "args": {
+            "sequence": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": {
+                        "text": "clear && if [ -f artisan ] && grep -q '\"name\": \"laravel/laravel\"' composer.json; then php artisan serve; elif [ -f pom.xml ] && grep -q '<parent>.*<artifactId>spring-boot-starter-parent</artifactId>.*</parent>' pom.xml; then mvn spring-boot:run; else pnpm dev; fi\n"
+                    }
+                }
+            ]
+        },
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "ctrl+f9",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "clear && pnpm build && pnpm start\n"
+        }
+    },
+    {
+        "key": "ctrl+f10",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "clear && npx webpack --env buildType=development --mode development & NODE_ENV=development npx nodemon --exec ts-node -r tsconfig-paths/register src/index.ts\n"
+        }
+    },
+    {
+        "key": "f9",
+        "command": "extension.multiCommand.execute",
+        "args": {
+            "sequence": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": {
+                        "text": "clear && pnpm start\n"
+                    }
+                }
+            ]
+        },
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "ctrl+f9",
+        "command": "extension.multiCommand.execute",
+        "args": {
+            "sequence": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": {
+                        "text": "clear && pnpm build && pnpm start\n"
+                    }
+                }
+            ]
+        },
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "ctrl+f10",
+        "command": "extension.multiCommand.execute",
+        "args": {
+            "sequence": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": {
+                        "text": "clear && npx webpack --env buildType=development --mode development & NODE_ENV=development npx nodemon --exec ts-node -r tsconfig-paths/register src/index.ts\n"
+                    }
+                }
+            ]
+        },
+        "when": "!terminalFocus"
+    },
+    {
+        /**************************
+         * GIT: LINK TO GIT NOTES *
+         **************************/
+        "key": "ctrl+shift+alt+g",
+        "command": "type",
+        "args": {
+            "text": "Git Notes URL:\nhttps://petalite-parent-84e.notion.site/Git-1ca4e6c9b7dd80e28363c8bcc220fb32#1fb4e6c9b7dd800d807ae4d40f9c1a6c\n"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        /*************************
+         * GIT: REVERT TO STABLE *
+         *************************/
+        "key": "ctrl+shift+alt+r",
+        "command": "type",
+        "args": {
+            "text": "git revert --no-commit INSERT_COMMIT_HASH_HERE..HEAD\ngit commit -m \"Revert to previous commit without losing history\"\ngit push origin HEAD\ngit status\n"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        /*********************
+         * GIT: EMPTY COMMIT *
+         *********************/
+        "key": "ctrl+shift+alt+e",
+        "command": "type",
+        "args": {
+            "text": "git commit --allow-empty -m \"chore: stable version\" && git push origin\ngit status\n"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        /*************************
+         * GIT: CLONE REPOSITORY *
+         *************************/
+        "key": "ctrl+shift+alt+c",
+        "command": "type",
+        "args": {
+            "text": "git clone git@github.com:judigot/repository.git .\ngit status\n"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        /*********************
+         * GIT: SAVE CHANGES *
+         *********************/
+        "key": "ctrl+shift+alt+s",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "git add .\ngit commit -m \"Update\"\ngit push origin\ngit status\n"
+        }
+    },
+    {
+        // Paste git command on editor
+        "key": "ctrl+shift+alt+s",
+        "command": "type",
+        "args": {
+            "text": "git add .\ngit commit -m \"Update\"\ngit push origin\ngit status\n"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        /*********************
+         * GIT: CHECK STATUS *
+         *********************/
+        "key": "ctrl+shift+alt+/",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "git status\n"
+        }
+    },
+    {
+        /******************************
+         * GIT: SWITCH TO MAIN BRANCH *
+         ******************************/
+        "key": "ctrl+shift+alt+m",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "git switch main\n"
+        }
+    },
+    {
+        "key": "ctrl+i",
+        "command": "composerMode.agent"
+    },
+    {
+        "key": "ctrl+l",
+        "command": "composerMode.chat"
+    },
+    {
+        "key": "ctrl+i",
+        "command": "composerMode.agent"
+    }
+]
