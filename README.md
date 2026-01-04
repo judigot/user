@@ -55,6 +55,7 @@ user/                          ← judigot/user (source of truth)
 ├── .zshrc                      │
 ├── profile.ps1                 │
 ├── PATH                        │
+├── ALIAS                       │
 ├── Apportable.ps1              │
 ├── Apportable.sh              ─┘
 ├── DOTFILES                   ← manifest: files to sync to ~/
@@ -75,8 +76,75 @@ These files act as single sources of truth for file lists:
 | `IDE_FILES` | List of IDE settings files | Reference |
 | `UBUNTU` | List of files to sync to WSL Ubuntu | `commit-and-sync.sh` |
 | `PATH` | List of PATH entries | `.bashrc` |
+| `ALIAS` | Centralized aliases | `.snippetsrc`, `profile.ps1` |
 
 **To add/remove a file from sync:** Edit the manifest file - scripts pick up changes automatically.
+
+## Centralized Aliases
+
+The `ALIAS` file is the **single source of truth** for all shell aliases. It works in both **bash** and **PowerShell**.
+
+### Format
+
+```
+functionName:
+alias1
+alias2
+alias3
+
+anotherFunction:
+shortalias
+```
+
+- Line ending with `:` → function name
+- Lines below → aliases that call that function
+- Empty lines separate groups (optional, for readability)
+
+### Example
+
+```
+helloWorld:
+hi
+hello
+
+updateUserEnv:
+updater
+updaterc
+updateenv
+```
+
+This creates:
+- `hi` → calls `helloWorld`
+- `hello` → calls `helloWorld`
+- `updater` → calls `updateUserEnv`
+- `updaterc` → calls `updateUserEnv`
+- `updateenv` → calls `updateUserEnv`
+
+### Adding a New Alias
+
+1. Find the function in `ALIAS` (or add a new function block)
+2. Add your alias on a new line under the function
+3. Run `updater` to sync
+
+### Adding a New Function
+
+1. Define the function in `.snippetsrc`
+2. Add a new block in `ALIAS`:
+   ```
+   myNewFunction:
+   myalias
+   shortcut
+   ```
+3. Run `updater` to sync
+
+### How It Works
+
+| Shell | Behavior |
+|-------|----------|
+| Bash | `.snippetsrc` parses `ALIAS` and creates bash aliases |
+| PowerShell | `profile.ps1` parses `ALIAS` and creates functions that call bash |
+
+Both shells read from the same file, so aliases stay in sync automatically.
 
 ## Sync Destinations
 
@@ -100,9 +168,10 @@ These files act as single sources of truth for file lists:
 | `.bashrc` | Bash configuration with PATH loading and environment setup |
 | `.zshrc` | Zsh configuration (mirrors .bashrc functionality) |
 | `.profile` | Login shell profile |
-| `.snippetsrc` | Shell aliases and utility functions |
+| `.snippetsrc` | Shell functions and alias loader |
 | `profile.ps1` | PowerShell profile with bash integration |
 | `PATH` | Portable PATH entries for development tools |
+| `ALIAS` | Centralized aliases for bash and PowerShell |
 | `Apportable.ps1` | Windows setup script (installs portable dev tools) |
 | `Apportable.sh` | Linux/macOS setup script |
 
@@ -183,16 +252,17 @@ curl -sL "https://raw.githubusercontent.com/judigot/user/main/.zshrc" -o ~/.zshr
 
 | Alias | Description |
 |-------|-------------|
+| `updater` | Update all configs from GitHub |
+| `syncdotfiles` | Sync only dotfiles |
+| `syncidefiles` | Sync only IDE settings |
 | `addcursorfiles` | Add Cursor boilerplate to current project |
-| `updater` | Update shell configs from GitHub |
+| `ghfiles` | Download files from GitHub repo |
 | `getssh` | Display SSH public key |
 | `generatessh` | Create new SSH key |
 | `testssh` | Test GitHub SSH connection |
 | `deleteall` | Delete all files in cwd (with confirmation) |
-| `termuxsetup` | Install Ubuntu on Termux (mobile) |
-| `termuxlogin` | Login to Ubuntu on Termux |
 
-See `.snippetsrc` for full list.
+See `ALIAS` for full list of 81 aliases.
 
 ## AI Plugin Usage
 

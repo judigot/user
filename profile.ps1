@@ -68,10 +68,23 @@ $env:JAVA_HOME = "C:\apportable\Programming\jdk"
 
 $env:SDKMAN_DIR = "C:\apportable\Programming\sdkman"
 
-function Invoke-UpdateUserEnv { bash "updater" }
-Set-Alias -Name updateuserenv -Value Invoke-UpdateUserEnv
-Set-Alias -Name updater -Value Invoke-UpdateUserEnv
-Set-Alias -Name updaterc -Value Invoke-UpdateUserEnv
-Set-Alias -Name updateenv -Value Invoke-UpdateUserEnv
-Set-Alias -Name updatercfiles -Value Invoke-UpdateUserEnv
-Set-Alias -Name updatebashsnippets -Value Invoke-UpdateUserEnv
+# Load aliases from ALIAS file
+$aliasFile = "$env:USERPROFILE\ALIAS"
+if (Test-Path $aliasFile) {
+    $currentFunc = ""
+    Get-Content $aliasFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and -not $line.StartsWith("#")) {
+            if ($line.EndsWith(":")) {
+                $currentFunc = $line.TrimEnd(":")
+            } elseif ($currentFunc) {
+                # Create a function that calls bash with the function name
+                $funcName = $currentFunc
+                $aliasName = $line
+                $scriptBlock = [scriptblock]::Create("bash '$funcName'")
+                Set-Item -Path "function:Invoke-$funcName" -Value $scriptBlock -ErrorAction SilentlyContinue
+                Set-Alias -Name $aliasName -Value "Invoke-$funcName" -Scope Global -ErrorAction SilentlyContinue
+            }
+        }
+    }
+}

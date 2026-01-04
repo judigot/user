@@ -1,20 +1,34 @@
 #!/bin/bash
 
-helloWorld() {
-    local user=${USER:-$USERNAME}  # Use $USER if available, otherwise fallback to $USERNAME
-    echo -e "\e[32mHello, $user!\e[0m"  # Green
+# Load aliases from ALIAS file
+loadAliasFile() {
+    local alias_file="${1:-$HOME/ALIAS}"
+    [ ! -f "$alias_file" ] && return 1
+    
+    local current_func=""
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%%#*}"  # Remove comments
+        line="${line%"${line##*[![:space:]]}"}"  # Trim trailing whitespace
+        [ -z "$line" ] && continue
+        
+        if [[ "$line" == *: ]]; then
+            current_func="${line%:}"
+        elif [ -n "$current_func" ]; then
+            alias "$line"="$current_func"
+        fi
+    done < "$alias_file"
 }
-alias hi='helloWorld'
-alias hello='helloWorld'
-alias helloworld='helloWorld'
+loadAliasFile
+
+helloWorld() {
+    local user=${USER:-$USERNAME}
+    echo -e "\e[32mHello, $user!\e[0m"
+}
 
 updateCurrentBranch() {
     git merge origin/main
     git push
 }
-alias git-updatecurrentbranch='updateCurrentBranch'
-alias git-mergemaintocurrentbranch='updateCurrentBranch'
-alias git-getupdatesfrommain='updateCurrentBranch'
 
 # Original raw URL (kept for reference)
 # [ -z "$USER_REPO_URL" ] && readonly USER_REPO_URL="https://raw.githubusercontent.com/judigot/user/main"
@@ -49,7 +63,6 @@ syncDotfiles() {
     [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
     echo "Dotfiles synced to home directory."
 }
-alias syncdotfiles='syncDotfiles'
 
 syncIDEFiles() {
     local src="$1"
@@ -76,9 +89,6 @@ syncIDEFiles() {
     [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
     echo "IDE files synced."
 }
-alias syncidefiles='syncIDEFiles'
-alias synccursor='syncIDEFiles'
-alias synczed='syncIDEFiles'
 
 syncUbuntu() {
     local src="$1"
@@ -110,8 +120,6 @@ syncUbuntu() {
     [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
     echo "Ubuntu WSL synced."
 }
-alias syncubuntu='syncUbuntu'
-alias syncwsl='syncUbuntu'
 
 sourceShellConfig() {
     # Source the appropriate configuration based on the current shell
@@ -124,8 +132,6 @@ sourceShellConfig() {
     # Source the shared snippets configuration
     [[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"
 }
-alias sourceshellconfig='sourceShellConfig'
-alias reloadshell='sourceShellConfig'
 
 updateUserEnv() {
     local src=$(downloadUserRepoTemp)
@@ -139,51 +145,27 @@ updateUserEnv() {
     sourceShellConfig
     echo "Configuration files updated and sourced successfully."
 }
-alias updateuserenv='updateUserEnv'
-alias updater='updateUserEnv'
-alias updaterc='updateUserEnv'
-alias updateenv='updateUserEnv'
-alias updatercfiles='updateUserEnv'
-alias updatebashsnippets='updateUserEnv'
 
 bigBangVite() {
     curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangVite.sh" | bash
 }
-alias bbvite='bigBangVite'
-alias bigbangvite='bigBangVite'
-alias newprojectvite='bigBangVite'
 
 bigBangLaravel() {
     curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangLaravel.sh" | bash
 }
-alias bblaravel='bigBangLaravel'
-alias bigbanglaravel='bigBangLaravel'
-alias newprojectlaravel='bigBangLaravel'
 
 logSSH() {
     echo -e "Copy and paste the public key below to your GitHub account:\n\n\e[32m$(cat ~/.ssh/id_ed25519.pub) \e[0m\n" # Green
 }
-alias logssh='logSSH'
-alias logsshkey='logSSH'
-alias echossh='logSSH'
-alias echosshkey='logSSH'
-alias getssh='logSSH'
-alias getsshkey='logSSH'
 
 generateSSHKey() {
     ssh-keygen -t rsa -f ~/.ssh/id_ed25519 -P "" && clear && logSSH
     ssh-keygen -t rsa -f ~/.ssh/id_ed25519 -P "" && chmod 600 ~/.ssh/id_ed25519 && clear && echossh
 }
-alias makesshkey='generateSSHKey'
-alias createsshkey='generateSSHKey'
-alias generatesshkey='generateSSHKey'
-alias generatessh='generateSSHKey'
 
 testSSH() {
     ssh -T git@github.com -o StrictHostKeyChecking=no
 }
-alias testssh='testSSH'
-alias checkssh='testSSH'
 
 useSSHKey() {
   key="$1"
@@ -202,27 +184,17 @@ useSSHKey() {
 }
 
 usePersonalSSH() { useSSHKey "id_ed25519"; }
-alias usepersonalssh='usePersonalSSH'
-alias personalssh='usePersonalSSH'
 
 useWorkSSH() { useSSHKey "id_ed25519_work"; }
-alias useworkssh='useWorkSSH'
-alias workssh='useWorkSSH'
 
 deleteAll() {
     read -rp 'Are you sure you want to delete everything? (y/N) ' confirm
     [ "$confirm" = 'y' ] && rm -rf .[!.]* *
 }
-alias deleteall="deleteAll"
-alias deleteeverything="deleteAll"
 
 loadSnippets() {
     grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 }
-alias loadsnippets='loadSnippets'
-alias loadsnippetsrc='loadSnippets'
-alias usesnippets='loadSnippets'
-alias usesnippetssrc='loadSnippets'
 
 installClaudeCode() {
     case "$(uname -s)" in
@@ -246,9 +218,6 @@ installClaudeCode() {
             ;;
     esac
 }
-alias installai='installClaudeCode'
-alias installclaude='installClaudeCode'
-alias installclaudecode='installClaudeCode'
 
 claude() {
     if [ ! -d ~/ai ]; then
@@ -259,29 +228,10 @@ claude() {
 
     command claude --plugin-dir ~/ai --plugin-dir . "$@"
 }
-alias ai='claude'
 
 addCursorBoilerplate() {
     downloadGithubRepo judigot/cursor
 }
-alias addagenticworkflow='addCursorBoilerplate'
-alias addagentfiles='addCursorBoilerplate'
-alias addagents='addCursorBoilerplate'
-alias newagenticworkflow='addCursorBoilerplate'
-alias newagentfiles='addCursorBoilerplate'
-alias addcursorboilerplate='addCursorBoilerplate'
-alias newcursorboilerplate='addCursorBoilerplate'
-alias cursorrules='addCursorBoilerplate'
-alias cursorboilerplate='addCursorBoilerplate'
-alias newcursorfiles='addCursorBoilerplate'
-alias addcursorfiles='addCursorBoilerplate'
-alias addnewagents='addCursorBoilerplate'
-alias newagents='addCursorBoilerplate'
-alias newagent='addCursorBoilerplate'
-alias addnewagent='addCursorBoilerplate'
-alias newlocalagents='addCursorBoilerplate'
-alias createlocalagents='addCursorBoilerplate'
-alias createnewlocalagents='addCursorBoilerplate'
 
 # Download GitHub repo without cloning (no .git)
 # Usage: downloadGithubRepo <user/repo> [branch] [target_dir]
@@ -310,9 +260,6 @@ downloadGithubRepo() {
     
     echo "Downloaded $repo to $target"
 }
-alias downloadgithubrepo='downloadGithubRepo'
-alias downloadrepo='downloadGithubRepo'
-alias ghget='downloadGithubRepo'
 
 # Download files from GitHub repo (no caching issues, supports nested paths)
 # Usage: downloadGithubFiles <user/repo> [files...] [--dest dir] [--branch name]
@@ -364,8 +311,6 @@ downloadGithubFiles() {
     rm -rf "$zip" "$tmp"
     echo "Downloaded ${#files[@]} file(s) to $dest"
 }
-alias downloadgithubfiles='downloadGithubFiles'
-alias ghfiles='downloadGithubFiles'
 
 #<TERMUX>
 termuxInstallUbuntu() {
@@ -373,16 +318,10 @@ termuxInstallUbuntu() {
     pkg install -y proot-distro
     proot-distro install ubuntu
 }
-alias termuxinstallubuntu='termuxInstallUbuntu'
-alias termuxubuntu='termuxInstallUbuntu'
-alias termuxsetup='termuxInstallUbuntu'
 
 termuxLoginUbuntu() {
     proot-distro login ubuntu
 }
-alias termuxloginubuntu='termuxLoginUbuntu'
-alias termuxlogin='termuxLoginUbuntu'
-alias termuxubuntulogin='termuxLoginUbuntu'
 #</TERMUX>
 
 #<AGENT_ALIASES>
