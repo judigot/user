@@ -210,10 +210,7 @@ alias downloadgithubrepo='downloadGithubRepo'
 alias downloadrepo='downloadGithubRepo'
 alias ghget='downloadGithubRepo'
 
-# ==============================================================================
-# TERMUX (Mobile Development)
-# ==============================================================================
-
+#<TERMUX>
 termuxInstallUbuntu() {
     pkg update -y && pkg upgrade -y
     pkg install -y proot-distro
@@ -229,12 +226,11 @@ termuxLoginUbuntu() {
 alias termuxloginubuntu='termuxLoginUbuntu'
 alias termuxlogin='termuxLoginUbuntu'
 alias termuxubuntulogin='termuxLoginUbuntu'
+#</TERMUX>
 
-# ==============================================================================
-# AGENT ALIASES (AI agents only - optimized for token efficiency)
-# ==============================================================================
-
+#<AGENT_ALIASES>
 gc() { git add -A && git status && git commit -m "$1"; }  # Git commit: stage all, show status, commit with message (no push)
 gcp() { git add -A && git status; }                       # Git commit preview: stage all and show what would be committed
 gpr() { gh pr create --fill; }                            # GitHub PR: create pull request with auto-filled title/body
 nr() { bun run "$1"; }                                    # Node run: execute a script from package.json using Bun
+#</AGENT_ALIASES>
