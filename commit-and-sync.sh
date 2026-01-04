@@ -44,6 +44,13 @@ sync_ai_folder() {
     
     printf '%s\n' "Syncing ai folder to ~/ai..."
     
+    # Fresh install: ~/ai doesn't exist
+    if [ ! -d "$HOME/ai" ]; then
+        cp -r ai "$HOME/ai"
+        printf '%s\n' "AI folder sync complete (fresh install)"
+        return 0
+    fi
+    
     # Preserve .git if it exists
     if [ -d "$HOME/ai/.git" ]; then
         mv "$HOME/ai/.git" "$HOME/ai-git-tmp"
@@ -64,9 +71,16 @@ sync_ai_folder() {
 commit_ai_repo() {
     cd "$HOME/ai" || exit 1
     
-    # Check if it's a git repo
+    # Fresh install: no .git, clone it
     if [ ! -d ".git" ]; then
-        printf '%s\n' "~/ai is not a git repo, skipping commit"
+        printf '%s\n' "Initializing git repo in ~/ai..."
+        git init
+        git remote add origin git@github.com:judigot/ai.git
+        git add -A
+        git commit -m "chore: initial sync from user repo"
+        git branch -M main
+        git push -u origin main --force
+        printf '%s\n' "AI repo initialized and pushed"
         return 0
     fi
     
