@@ -66,3 +66,11 @@ $env:NVM_DIR = "$env:USERPROFILE\.nvm"
 $env:JAVA_HOME = "C:\apportable\Programming\jdk"
 
 $env:SDKMAN_DIR = "C:\apportable\Programming\sdkman"
+
+function updateUserEnv { bash "source ~/.snippetsrc && updateUserEnv" }
+Set-Alias -Name updateuserenv -Value updateUserEnv
+Set-Alias -Name updater -Value updateUserEnv
+Set-Alias -Name updaterc -Value updateUserEnv
+Set-Alias -Name updateenv -Value updateUserEnv
+Set-Alias -Name updatercfiles -Value updateUserEnv
+Set-Alias -Name updatebashsnippets -Value updateUserEnv
