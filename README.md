@@ -11,6 +11,14 @@ This is the **single source of truth** for:
 
 ## Quick Start
 
+### Load Snippets/Aliases
+
+Add to `.bashrc` to auto-load aliases:
+
+```sh
+grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+```
+
 ### Windows Setup (PowerShell as Administrator)
 
 ```powershell
@@ -131,7 +139,7 @@ This downloads `.cursor/`, `agents/`, `AGENTS.md`, `CLAUDE.md` from `judigot/cur
 Add to `.bashrc` to auto-load aliases:
 
 ```sh
-grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#<SNIPPETS/>' >> "$HOME/.bashrc"
+grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 ```
 
 ### Manual Dotfile Sync

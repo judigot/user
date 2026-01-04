@@ -3,7 +3,7 @@
 # Load aliases
 #<SNIPPETS>
 [[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"
-#<SNIPPETS/>
+#</SNIPPETS>
 
 # Configuration
 PATH_REMOTE_URL="https://raw.githubusercontent.com/judigot/user/main/PATH"
