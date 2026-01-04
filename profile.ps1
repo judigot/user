@@ -67,7 +67,7 @@ $env:JAVA_HOME = "C:\apportable\Programming\jdk"
 
 $env:SDKMAN_DIR = "C:\apportable\Programming\sdkman"
 
-function updateUserEnv { bash "source ~/.snippetsrc && updateUserEnv" }
+function updateUserEnv { bash "updateUserEnv" }
 Set-Alias -Name updateuserenv -Value updateUserEnv
 Set-Alias -Name updater -Value updateUserEnv
 Set-Alias -Name updaterc -Value updateUserEnv
