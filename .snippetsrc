@@ -1,0 +1,208 @@
+#!/bin/bash
+
+helloWorld() {
+    local user=${USER:-$USERNAME}  # Use $USER if available, otherwise fallback to $USERNAME
+    echo -e "\e[32mHello, $user!\e[0m"  # Green
+}
+alias hi='helloWorld'
+alias hello='helloWorld'
+alias helloworld='helloWorld'
+
+updateCurrentBranch() {
+    git merge origin/main
+    git push
+}
+alias git-updatecurrentbranch='updateCurrentBranch'
+alias git-mergemaintocurrentbranch='updateCurrentBranch'
+alias git-getupdatesfrommain='updateCurrentBranch'
+
+updateRCFiles() {
+    curl -sL https://raw.githubusercontent.com/judigot/references/main/.bashrc -o "$HOME/.bashrc" || { echo "Failed to download .bashrc"; return 1; }
+    curl -sL https://raw.githubusercontent.com/judigot/references/main/.zshrc -o "$HOME/.zshrc" || { echo "Failed to download .zshrc"; return 1; }
+    curl -sL https://raw.githubusercontent.com/judigot/references/main/.snippetsrc -o "$HOME/.snippetsrc" || { echo "Failed to download .snippetsrc"; return 1; }
+
+    # Source the appropriate configuration based on the current shell
+    if [[ "$0" == *"zsh"* ]]; then
+        [[ -f "$HOME/.zshrc" ]] && source "$HOME/.zshrc"
+    elif [[ "$0" == *"bash"* ]]; then
+        [[ -f "$HOME/.bashrc" ]] && source "$HOME/.bashrc"
+    fi
+
+    # Source the shared snippets configuration
+    [[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"
+    
+    echo "Configuration files updated and sourced successfully."
+    return 0
+}
+
+alias updater='updateRCFiles'
+alias updaterc='updateRCFiles'
+alias updateenv='updateRCFiles'
+alias updatercfiles='updateRCFiles'
+alias updatebashsnippets='updateRCFiles'
+
+bigBangVite() {
+    curl -L "https://raw.githubusercontent.com/judigot/references/main/BigBangVite.sh" | bash
+}
+alias bbvite='bigBangVite'
+alias bigbangvite='bigBangVite'
+alias newprojectvite='bigBangVite'
+
+bigBangLaravel() {
+    curl -L "https://raw.githubusercontent.com/judigot/references/main/BigBangLaravel.sh" | bash
+}
+alias bblaravel='bigBangLaravel'
+alias bigbanglaravel='bigBangLaravel'
+alias newprojectlaravel='bigBangLaravel'
+
+logSSH() {
+    echo -e "Copy and paste the public key below to your GitHub account:\n\n\e[32m$(cat ~/.ssh/id_ed25519.pub) \e[0m\n" # Green
+}
+alias logssh='logSSH'
+alias logsshkey='logSSH'
+alias echossh='logSSH'
+alias echosshkey='logSSH'
+alias getssh='logSSH'
+alias getsshkey='logSSH'
+
+generateSSHKey() {
+    ssh-keygen -t rsa -f ~/.ssh/id_ed25519 -P "" && clear && logSSH
+    ssh-keygen -t rsa -f ~/.ssh/id_ed25519 -P "" && chmod 600 ~/.ssh/id_ed25519 && clear && echossh
+}
+alias makesshkey='generateSSHKey'
+alias createsshkey='generateSSHKey'
+alias generatesshkey='generateSSHKey'
+alias generatessh='generateSSHKey'
+
+testSSH() {
+    ssh -T git@github.com -o StrictHostKeyChecking=no
+}
+alias testssh='testSSH'
+alias checkssh='testSSH'
+
+useSSHKey() {
+  key="$1"
+
+  # Start agent if needed
+  if [ -z "${SSH_AUTH_SOCK:-}" ] || ! ssh-add -l >/dev/null 2>&1; then
+    eval "$(ssh-agent -s)" >/dev/null
+  fi
+
+  # Reset keys, then add personal
+  ssh-add -D >/dev/null 2>&1 || true
+  ssh-add "$HOME/.ssh/$key"
+
+  # Quick confirmation
+  ssh-add -l
+}
+
+usePersonalSSH() { useSSHKey "id_ed25519"; }
+alias usepersonalssh='usePersonalSSH'
+alias personalssh='usePersonalSSH'
+
+useWorkSSH() { useSSHKey "id_ed25519_work"; }
+alias useworkssh='useWorkSSH'
+alias workssh='useWorkSSH'
+
+deleteAll() {
+    read -rp 'Are you sure you want to delete everything? (y/N) ' confirm
+    [ "$confirm" = 'y' ] && rm -rf .[!.]* *
+}
+alias deleteall="deleteAll"
+alias deleteeverything="deleteAll"
+
+loadSnippets() {
+    grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#<SNIPPETS/>' >> "$HOME/.bashrc"
+}
+alias loadsnippets='loadSnippets'
+alias loadsnippetsrc='loadSnippets'
+alias usesnippets='loadSnippets'
+alias usesnippetssrc='loadSnippets'
+
+installClaudeCode() {
+    powershell.exe -Command '
+        $GCS_BUCKET = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
+        $version = Invoke-RestMethod -Uri "$GCS_BUCKET/stable"
+        $platform = "win32-x64"
+        New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.local\bin" | Out-Null
+        Invoke-WebRequest -Uri "$GCS_BUCKET/$version/$platform/claude.exe" -OutFile "$env:USERPROFILE\.local\bin\claude.exe"
+        Write-Host "Installed claude.exe to ~/.local/bin/"
+    '
+}
+alias installai='installClaudeCode'
+alias installclaude='installClaudeCode'
+alias installclaudecode='installClaudeCode'
+
+claude() {
+    if [ ! -d ~/ai ]; then
+        git clone git@github.com:judigot/ai.git ~/ai >/dev/null 2>&1
+    else
+        git -C ~/ai pull >/dev/null 2>&1
+    fi
+
+    command claude --plugin-dir ~/ai --plugin-dir . "$@"
+}
+alias ai='claude'
+
+addCursorBoilerplate() {
+    downloadGithubRepo judigot/cursor
+}
+alias addagenticworkflow='addCursorBoilerplate'
+alias addagentfiles='addCursorBoilerplate'
+alias addagents='addCursorBoilerplate'
+alias newagenticworkflow='addCursorBoilerplate'
+alias newagentfiles='addCursorBoilerplate'
+alias addcursorboilerplate='addCursorBoilerplate'
+alias newcursorboilerplate='addCursorBoilerplate'
+alias cursorrules='addCursorBoilerplate'
+alias cursorboilerplate='addCursorBoilerplate'
+alias newcursorfiles='addCursorBoilerplate'
+alias addcursorfiles='addCursorBoilerplate'
+alias addnewagents='addCursorBoilerplate'
+alias newagents='addCursorBoilerplate'
+alias newagent='addCursorBoilerplate'
+alias addnewagent='addCursorBoilerplate'
+alias newlocalagents='addCursorBoilerplate'
+alias createlocalagents='addCursorBoilerplate'
+alias createnewlocalagents='addCursorBoilerplate'
+
+# Download GitHub repo without cloning (no .git)
+# Usage: ghget <user/repo> [branch] [target_dir]
+# Example: ghget judigot/cursor main .
+downloadGithubRepo() {
+    local repo="$1"
+    local branch="${2:-main}"
+    local target="${3:-.}"
+    
+    if [ -z "$repo" ]; then
+        echo "Usage: downloadGithubRepo <user/repo> [branch] [target_dir]"
+        return 1
+    fi
+    
+    local user="${repo%/*}"
+    local name="${repo#*/}"
+    local url="https://github.com/$repo/archive/refs/heads/$branch.zip"
+    local zip="/tmp/$name.zip"
+    
+    curl -sL "$url" -o "$zip" || { echo "Download failed"; return 1; }
+    unzip -q "$zip" -d "$target" || { echo "Extract failed"; return 1; }
+    
+    mv "$target/$name-$branch"/* "$target/" 2>/dev/null
+    mv "$target/$name-$branch"/.[!.]* "$target/" 2>/dev/null
+    rmdir "$target/$name-$branch"
+    rm "$zip"
+    
+    echo "Downloaded $repo to $target"
+}
+alias downloadgithubrepo='downloadGithubRepo'
+alias downloadrepo='downloadGithubRepo'
+alias ghget='downloadGithubRepo'
+
+# ==============================================================================
+# AGENT ALIASES (AI agents only - optimized for token efficiency)
+# ==============================================================================
+
+gc() { git add -A && git status && git commit -m "$1"; }  # Git commit: stage all, show status, commit with message (no push)
+gcp() { git add -A && git status; }                       # Git commit preview: stage all and show what would be committed
+gpr() { gh pr create --fill; }                            # GitHub PR: create pull request with auto-filled title/body
+nr() { bun run "$1"; }                                    # Node run: execute a script from package.json using Bun
