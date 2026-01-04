@@ -114,11 +114,11 @@ open_bash_bat() {
 
 #=====RC FILES=====#
 setup_rc_files() {
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/PATH -o "$HOME/PATH"
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/.bashrc -o "$HOME/.bashrc"
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/.profile -o "$HOME/.profile"
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/.zshrc -o "$HOME/.zshrc"
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc"
+    base_url="https://raw.githubusercontent.com/judigot/user/main"
+    
+    curl -sL "$base_url/DOTFILES" | while read -r file; do
+        [ -n "$file" ] && curl -sL "$base_url/$file" -o "$HOME/$file"
+    done
 }
 #=====RC FILES=====#
 

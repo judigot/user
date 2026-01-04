@@ -27,14 +27,9 @@ sync_to_home() {
     
     printf '%s\n' "Syncing dotfiles to home directory..."
     
-    cp .bashrc "$HOME/.bashrc"
-    cp .snippetsrc "$HOME/.snippetsrc"
-    cp .profile "$HOME/.profile"
-    cp .zshrc "$HOME/.zshrc"
-    cp profile.ps1 "$HOME/profile.ps1"
-    cp PATH "$HOME/PATH"
-    cp Apportable.ps1 "$HOME/Apportable.ps1"
-    cp Apportable.sh "$HOME/Apportable.sh"
+    while read -r file; do
+        [ -n "$file" ] && cp "$file" "$HOME/$file"
+    done < DOTFILES
     
     printf '%s\n' "Dotfiles sync complete"
 }
