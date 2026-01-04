@@ -233,8 +233,8 @@ alias createlocalagents='addCursorBoilerplate'
 alias createnewlocalagents='addCursorBoilerplate'
 
 # Download GitHub repo without cloning (no .git)
-# Usage: ghget <user/repo> [branch] [target_dir]
-# Example: ghget judigot/cursor main .
+# Usage: downloadGithubRepo <user/repo> [branch] [target_dir]
+# Example: downloadGithubRepo judigot/cursor main .
 downloadGithubRepo() {
     local repo="$1"
     local branch="${2:-main}"
@@ -245,7 +245,6 @@ downloadGithubRepo() {
         return 1
     fi
     
-    local user="${repo%/*}"
     local name="${repo#*/}"
     local url="https://github.com/$repo/archive/refs/heads/$branch.zip"
     local zip="/tmp/$name.zip"
@@ -263,6 +262,59 @@ downloadGithubRepo() {
 alias downloadgithubrepo='downloadGithubRepo'
 alias downloadrepo='downloadGithubRepo'
 alias ghget='downloadGithubRepo'
+
+# Download files from GitHub repo (no caching issues, supports nested paths)
+# Usage: downloadGithubFiles <user/repo> [files...] [--dest dir] [--branch name]
+# Example: downloadGithubFiles judigot/user .bashrc .zshrc .snippetsrc
+# Example: downloadGithubFiles judigot/user src/index.ts --dest ./src --branch develop
+downloadGithubFiles() {
+    local repo=""
+    local dest="."
+    local branch="main"
+    local files=()
+    
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --dest) dest="$2"; shift 2 ;;
+            --branch) branch="$2"; shift 2 ;;
+            *)
+                if [ -z "$repo" ]; then
+                    repo="$1"
+                else
+                    files+=("$1")
+                fi
+                shift ;;
+        esac
+    done
+    
+    if [ -z "$repo" ] || [ ${#files[@]} -eq 0 ]; then
+        echo "Usage: downloadGithubFiles <user/repo> [files...] [--dest dir] [--branch name]"
+        return 1
+    fi
+    
+    local name="${repo#*/}"
+    local url="https://github.com/$repo/archive/refs/heads/$branch.zip"
+    local zip="/tmp/$name-$$.zip"
+    local tmp="/tmp/$name-$$"
+    
+    curl -sL "$url" -o "$zip" || { echo "Download failed"; return 1; }
+    unzip -q "$zip" -d "$tmp" || { echo "Extract failed"; rm "$zip"; return 1; }
+    
+    local src="$tmp/$name-$branch"
+    
+    for file in "${files[@]}"; do
+        if [ -n "$file" ]; then
+            local dest_path="$dest/$file"
+            mkdir -p "$(dirname "$dest_path")"
+            cp "$src/$file" "$dest_path" 2>/dev/null
+        fi
+    done
+    
+    rm -rf "$zip" "$tmp"
+    echo "Downloaded ${#files[@]} file(s) to $dest"
+}
+alias downloadgithubfiles='downloadGithubFiles'
+alias ghfiles='downloadGithubFiles'
 
 #<TERMUX>
 termuxInstallUbuntu() {
