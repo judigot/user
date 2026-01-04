@@ -5,8 +5,8 @@ readonly PROJECT_DIRECTORY=$(cd "$(dirname "$0")" || exit 1; pwd)
 main() {
     commit_user_repo
     sync_to_home
-    sync_ai_folder
-    commit_ai_repo
+    sync_ai_repo
+    sync_cursor_repo
 }
 
 commit_user_repo() {
@@ -39,7 +39,7 @@ sync_to_home() {
     printf '%s\n' "Dotfiles sync complete"
 }
 
-sync_ai_folder() {
+sync_ai_repo() {
     cd "$PROJECT_DIRECTORY" || exit 1
     
     printf '%s\n' "Syncing ai folder to ~/ai..."
@@ -47,7 +47,14 @@ sync_ai_folder() {
     # Fresh install: ~/ai doesn't exist
     if [ ! -d "$HOME/ai" ]; then
         cp -r ai "$HOME/ai"
-        printf '%s\n' "AI folder sync complete (fresh install)"
+        cd "$HOME/ai" || exit 1
+        git init
+        git remote add origin git@github.com:judigot/ai.git
+        git add -A
+        git commit -m "chore: initial sync from user repo"
+        git branch -M main
+        git push -u origin main --force
+        printf '%s\n' "AI repo created and pushed"
         return 0
     fi
     
@@ -65,15 +72,10 @@ sync_ai_folder() {
         mv "$HOME/ai-git-tmp" "$HOME/ai/.git"
     fi
     
-    printf '%s\n' "AI folder sync complete"
-}
-
-commit_ai_repo() {
+    # Commit and push
     cd "$HOME/ai" || exit 1
     
-    # Fresh install: no .git, clone it
     if [ ! -d ".git" ]; then
-        printf '%s\n' "Initializing git repo in ~/ai..."
         git init
         git remote add origin git@github.com:judigot/ai.git
         git add -A
@@ -93,7 +95,41 @@ commit_ai_repo() {
     git commit -m "chore: sync from user repo"
     git push
     
-    printf '%s\n' "AI repo committed and pushed"
+    printf '%s\n' "AI repo synced and pushed"
+}
+
+sync_cursor_repo() {
+    cd "$PROJECT_DIRECTORY" || exit 1
+    
+    printf '%s\n' "Syncing cursor files to judigot/cursor..."
+    
+    # Clone cursor repo to temp dir
+    rm -rf /tmp/cursor-sync
+    git clone --depth 1 git@github.com:judigot/cursor.git /tmp/cursor-sync
+    
+    # Remove old files (keep .git)
+    cd /tmp/cursor-sync || exit 1
+    find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+    
+    # Copy cursor files from user repo
+    cp -r "$PROJECT_DIRECTORY/.cursor" .
+    cp -r "$PROJECT_DIRECTORY/agents" .
+    cp "$PROJECT_DIRECTORY/AGENTS.md" .
+    cp "$PROJECT_DIRECTORY/CLAUDE.md" .
+    
+    # Commit and push
+    if [ -z "$(git status --porcelain)" ]; then
+        printf '%s\n' "No changes to commit in cursor repo"
+        rm -rf /tmp/cursor-sync
+        return 0
+    fi
+    
+    git add -A
+    git commit -m "chore: sync from user repo"
+    git push
+    
+    rm -rf /tmp/cursor-sync
+    printf '%s\n' "Cursor repo synced and pushed"
 }
 
 main "$@"
