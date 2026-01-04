@@ -16,11 +16,58 @@ alias git-updatecurrentbranch='updateCurrentBranch'
 alias git-mergemaintocurrentbranch='updateCurrentBranch'
 alias git-getupdatesfrommain='updateCurrentBranch'
 
-updateRCFiles() {
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/.bashrc -o "$HOME/.bashrc" || { echo "Failed to download .bashrc"; return 1; }
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/.zshrc -o "$HOME/.zshrc" || { echo "Failed to download .zshrc"; return 1; }
-    curl -sL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc" || { echo "Failed to download .snippetsrc"; return 1; }
+readonly USER_REPO_URL="https://raw.githubusercontent.com/judigot/user/main"
 
+syncDotfiles() {
+    while IFS= read -r file; do
+        [ -n "$file" ] && curl -sL "$USER_REPO_URL/$file" -o "$HOME/$file"
+    done <<< "$(curl -sL "$USER_REPO_URL/DOTFILES")"
+    echo "Dotfiles synced to home directory."
+}
+alias syncdotfiles='syncDotfiles'
+
+syncIDEFiles() {
+    local appdata="$HOME/AppData/Roaming"
+    local cursor_user="$appdata/Cursor/User"
+    local zed_dir="$appdata/Zed"
+    
+    mkdir -p "$cursor_user/snippets" "$zed_dir"
+    
+    curl -sL "$USER_REPO_URL/ide/cursor/settings.jsonc" -o "$cursor_user/settings.json"
+    curl -sL "$USER_REPO_URL/ide/cursor/keybindings.jsonc" -o "$cursor_user/keybindings.json"
+    curl -sL "$USER_REPO_URL/ide/cursor/Master of Snippets.code-snippets" -o "$cursor_user/snippets/Master of Snippets.code-snippets"
+    curl -sL "$USER_REPO_URL/ide/zed/settings.jsonc" -o "$zed_dir/settings.json"
+    curl -sL "$USER_REPO_URL/ide/zed/keymap.jsonc" -o "$zed_dir/keymap.json"
+    echo "IDE files synced."
+}
+alias syncidefiles='syncIDEFiles'
+alias synccursor='syncIDEFiles'
+alias synczed='syncIDEFiles'
+
+syncUbuntu() {
+    local wsl_root="//wsl.localhost/Ubuntu/root"
+    local wsl_user="//wsl.localhost/Ubuntu/home/$USER"
+    
+    if [ ! -d "$wsl_root" ]; then
+        echo "WSL Ubuntu not accessible, skipping."
+        return 0
+    fi
+    
+    while IFS= read -r file; do
+        [ -n "$file" ] && curl -sL "$USER_REPO_URL/$file" -o "$wsl_root/$file" 2>/dev/null
+    done <<< "$(curl -sL "$USER_REPO_URL/UBUNTU")"
+    
+    if [ -d "$wsl_user" ]; then
+        while IFS= read -r file; do
+            [ -n "$file" ] && curl -sL "$USER_REPO_URL/$file" -o "$wsl_user/$file" 2>/dev/null
+        done <<< "$(curl -sL "$USER_REPO_URL/UBUNTU")"
+    fi
+    echo "Ubuntu WSL synced."
+}
+alias syncubuntu='syncUbuntu'
+alias syncwsl='syncUbuntu'
+
+sourceShellConfig() {
     # Source the appropriate configuration based on the current shell
     if [[ "$0" == *"zsh"* ]]; then
         [[ -f "$HOME/.zshrc" ]] && source "$HOME/.zshrc"
@@ -30,16 +77,23 @@ updateRCFiles() {
 
     # Source the shared snippets configuration
     [[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"
-    
-    echo "Configuration files updated and sourced successfully."
-    return 0
 }
+alias sourceshellconfig='sourceShellConfig'
+alias reloadshell='sourceShellConfig'
 
-alias updater='updateRCFiles'
-alias updaterc='updateRCFiles'
-alias updateenv='updateRCFiles'
-alias updatercfiles='updateRCFiles'
-alias updatebashsnippets='updateRCFiles'
+updateUserEnv() {
+    syncDotfiles
+    syncIDEFiles
+    syncUbuntu
+    sourceShellConfig
+    echo "Configuration files updated and sourced successfully."
+}
+alias updateuserenv='updateUserEnv'
+alias updater='updateUserEnv'
+alias updaterc='updateUserEnv'
+alias updateenv='updateUserEnv'
+alias updatercfiles='updateUserEnv'
+alias updatebashsnippets='updateUserEnv'
 
 bigBangVite() {
     curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangVite.sh" | bash
