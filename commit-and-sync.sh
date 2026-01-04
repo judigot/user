@@ -209,8 +209,9 @@ sync_cursor_settings() {
     
     printf '%s\n' "Syncing Cursor/VS Code settings..."
     
-    cursor_user="$APPDATA/Cursor/User"
-    vscode_user="$APPDATA/Code/User"
+    appdata="$HOME/AppData/Roaming"
+    cursor_user="$appdata/Cursor/User"
+    vscode_user="$appdata/Code/User"
     
     # Create directories
     mkdir -p "$cursor_user/snippets"
@@ -250,7 +251,8 @@ sync_zed_settings() {
     
     printf '%s\n' "Syncing Zed settings..."
     
-    zed_dir="$APPDATA/Zed"
+    appdata="$HOME/AppData/Roaming"
+    zed_dir="$appdata/Zed"
     
     mkdir -p "$zed_dir"
     
