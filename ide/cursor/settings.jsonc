@@ -128,7 +128,7 @@
                 "source /c/Users/${env:USERNAME}/.bashrc; exec bash"
             ],
             "env": {
-                "HOME": "C:/apportable/Programming/msys64/home/${env:USERNAME}",
+                // "HOME": "C:/apportable/Programming/msys64/home/${env:USERNAME}",
                 "MSYSTEM": "MSYS",
                 "CHERE_INVOKING": "1"
             },
