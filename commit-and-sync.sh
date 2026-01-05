@@ -343,10 +343,9 @@ sync_ubuntu() {
             local dest_path="$dest_base/$rel_path"
             
             if [ -d "$src_path" ]; then
-                # Remove destination first to avoid nesting, then copy
-                rm -rf "$dest_path" 2>/dev/null || true
-                mkdir -p "$(dirname "$dest_path")" 2>/dev/null || true
-                cp -r "$src_path" "$dest_path" 2>/dev/null || true
+                # Copy contents into destination (merge, don't replace)
+                mkdir -p "$dest_path" 2>/dev/null || true
+                cp -r "$src_path/." "$dest_path/" 2>/dev/null || true
             elif [ -f "$src_path" ]; then
                 mkdir -p "$(dirname "$dest_path")" 2>/dev/null || true
                 cp "$src_path" "$dest_path" 2>/dev/null || true
@@ -354,8 +353,8 @@ sync_ubuntu() {
         else
             # Regular file from repo
             if [ -d "$entry" ]; then
-                rm -rf "$dest_base/$entry" 2>/dev/null || true
-                cp -r "$entry" "$dest_base/$entry" 2>/dev/null || true
+                mkdir -p "$dest_base/$entry" 2>/dev/null || true
+                cp -r "$entry/." "$dest_base/$entry/" 2>/dev/null || true
             elif [ -f "$entry" ]; then
                 cp "$entry" "$dest_base/$entry" 2>/dev/null || true
             fi

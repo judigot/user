@@ -149,10 +149,9 @@ syncUbuntu() {
             
             # Copy from Windows to WSL
             if [ -d "$win_path" ]; then
-                # Remove destination first to avoid nesting, then copy
-                rm -rf "$wsl_dest" 2>/dev/null || true
-                mkdir -p "$(dirname "$wsl_dest")" 2>/dev/null || true
-                cp -r "$win_path" "$wsl_dest" 2>/dev/null || true
+                # Copy contents into destination (merge, don't replace)
+                mkdir -p "$wsl_dest" 2>/dev/null || true
+                cp -r "$win_path/." "$wsl_dest/" 2>/dev/null || true
             elif [ -f "$win_path" ]; then
                 mkdir -p "$(dirname "$wsl_dest")" 2>/dev/null || true
                 cp "$win_path" "$wsl_dest" 2>/dev/null || true
@@ -160,9 +159,8 @@ syncUbuntu() {
         else
             # Regular file from repo
             if [ -d "$src/$entry" ]; then
-                rm -rf "$dest_base/$entry" 2>/dev/null || true
-                mkdir -p "$dest_base/$(dirname "$entry")" 2>/dev/null || true
-                cp -r "$src/$entry" "$dest_base/$entry" 2>/dev/null || true
+                mkdir -p "$dest_base/$entry" 2>/dev/null || true
+                cp -r "$src/$entry/." "$dest_base/$entry/" 2>/dev/null || true
             elif [ -f "$src/$entry" ]; then
                 mkdir -p "$dest_base/$(dirname "$entry")" 2>/dev/null || true
                 cp "$src/$entry" "$dest_base/$entry" 2>/dev/null || true
