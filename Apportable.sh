@@ -68,6 +68,9 @@ main() {
     install_heidisql   # Requires: unzip
     # install_dbeaver
     
+    # === SSH KEYS (Bitwarden) ===
+    setup_ssh_keys_from_bitwarden
+    
     # === OPTIONAL ===
     # setup_audio_production
 }
@@ -666,5 +669,14 @@ setup_audio_production() {
     #=====REAPER=====#
 }
 #==========AUDIO PRODUCTION==========#
+
+#=====SSH KEYS (BITWARDEN)=====#
+setup_ssh_keys_from_bitwarden() {
+    # Run SSH key setup script (interactive - requires Bitwarden login)
+    echo "Setting up SSH keys from Bitwarden..."
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/setup-ssh-bitwarden.sh" | bash || \
+        echo "Warning: SSH key setup skipped or failed (interactive login required)"
+}
+#=====SSH KEYS (BITWARDEN)=====#
 
 main "$@"
