@@ -57,7 +57,18 @@ syncDotfiles() {
     
     # Original: curl -sL "$USER_REPO_URL/$file" -o "$HOME/$file"
     while IFS= read -r file; do
-        [ -n "$file" ] && cp "$src/$file" "$HOME/$file"
+        if [ -n "$file" ]; then
+            if [ -f "$src/$file" ]; then
+                # Ensure parent directory exists (for nested files)
+                if [ "$(dirname "$file")" != "." ]; then
+                    mkdir -p "$HOME/$(dirname "$file")" 2>/dev/null || true
+                fi
+                cp "$src/$file" "$HOME/$file" 2>/dev/null || true
+            elif [ -d "$src/$file" ]; then
+                mkdir -p "$HOME/$(dirname "$file")" 2>/dev/null || true
+                cp -r "$src/$file" "$HOME/$file" 2>/dev/null || true
+            fi
+        fi
     done < "$src/DOTFILES"
     
     [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
