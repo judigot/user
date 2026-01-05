@@ -7,6 +7,13 @@ on:
   workflow_dispatch: # Manual trigger
 
 jobs:
+  lint-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint GitHub Actions workflows
+        uses: raven-actions/actionlint@v2
+
   test-windows:
     runs-on: windows-latest
     steps:
