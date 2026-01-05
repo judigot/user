@@ -93,28 +93,6 @@ jobs:
             exit 1
           }
 
-  test-apportable-sh:
-    name: Test Apportable.sh (Ubuntu)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Apportable.sh in CI mode
-        env:
-          CI_MODE: "true"
-        run: |
-          chmod +x ./Apportable.sh
-          CI_MODE=true ./Apportable.sh
-          echo "✓ Apportable.sh completed"
-
-      - name: Verify dotfiles exist
-        run: |
-          for file in .snippetsrc .bashrc ALIAS; do
-            if [ -f "$HOME/$file" ]; then
-              echo "✓ $file exists"
-            else
-              echo "✗ $file not found"
-              exit 1
-            fi
-          done
+  # NOTE: Apportable.sh is Windows-only (uses C:/ paths, MSYS2, 7z.exe)
+  # Ubuntu bootstrap would need a separate script
 
