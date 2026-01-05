@@ -10,16 +10,24 @@ readonly rootDir="C:/$portableFolderName"
 environment="Programming"
 readonly HOME="C:/Users/$USERNAME" # Set the custom home directory dynamically using $USER
 # HOME="C:/apportable/Programming/msys64/home/$USERNAME" # Set the custom home directory dynamically using $USER
-_7zip_path="$rootDir/$environment/7-Zip"
+
+# Use system 7-Zip in CI mode (pre-installed on GitHub runners)
+if [ "$CI_MODE" = "true" ] && [ -f "/c/Program Files/7-Zip/7z.exe" ]; then
+    _7zip_path="/c/Program Files/7-Zip"
+else
+    _7zip_path="$rootDir/$environment/7-Zip"
+fi
 
 main() {
     setup_programming_environment
     
     if [ "$CI_MODE" = "true" ]; then
-        # CI mode: only essential setup, skip heavy downloads
+        # CI mode: essential setup + MSYS2 (required for bash function)
+        install_msys2
+        create_bash_bat
         setup_rc_files
         setup_git_config
-        echo "CI mode: Skipped heavy installs (MSYS2, NVM, PHP, etc.)"
+        echo "CI mode: Installed MSYS2, skipped other heavy installs (NVM, PHP, etc.)"
         return 0
     fi
     
