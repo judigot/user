@@ -12,6 +12,12 @@ This is the **single source of truth** for:
 
 ## Easy-Copy Snippets
 
+Download and use `.snippetsrc`
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc" && . "$HOME/.snippetsrc"
+```
+
 Initialize Ubuntu
 
 ```sh
