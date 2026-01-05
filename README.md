@@ -15,70 +15,12 @@ This is the **single source of truth** for:
 Initialize Ubuntu
 
 ```sh
-set -eu
-sudo apt-get update -y
-sudo apt-get upgrade -y
-sudo apt-get install -y ca-certificates curl git openssh-client unzip
+set -eu; sudo apt-get update -y; sudo apt-get upgrade -y; sudo apt-get install -y ca-certificates curl git openssh-client unzip
 ```
 
 Generate SSH Keys Using Bitwarden
 ```sh
-set -eu
-need() { command -v "$1" >/dev/null 2>&1 || { echo "Missing: $1" >&2; exit 1; }; }
-need curl; need unzip; need ssh-add
-
-os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-arch="$(uname -m)"
-
-case "$arch" in
-  x86_64|amd64) bw_arch="x86_64" ;;
-  aarch64|arm64) bw_arch="arm64" ;;
-  *) echo "Unsupported arch: $arch" >&2; exit 1 ;;
-esac
-
-tmp="${TMPDIR:-/tmp}"
-
-bw_ver="$(curl -fsSL https://api.github.com/repos/bitwarden/clients/releases/latest \
-  | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' \
-  | head -n1)"
-[ -n "$bw_ver" ] || { echo "Failed to resolve Bitwarden CLI version." >&2; exit 1; }
-
-if ! command -v bw >/dev/null 2>&1; then
-  if [ "$os" = "linux" ]; then
-    url="https://github.com/bitwarden/clients/releases/download/v$bw_ver/bw-linux-$bw_arch-$bw_ver.zip"
-    curl -fsSL "$url" -o "$tmp/bw.zip"
-    sudo unzip -o "$tmp/bw.zip" -d /usr/local/bin >/dev/null
-    sudo chmod +x /usr/local/bin/bw
-    rm -f "$tmp/bw.zip"
-  else
-    url="https://github.com/bitwarden/clients/releases/download/v$bw_ver/bw-windows-$bw_ver.zip"
-    mkdir -p "$HOME/.local/bin"
-    curl -fsSL "$url" -o "$tmp/bw.zip"
-    unzip -o "$tmp/bw.zip" -d "$HOME/.local/bin" >/dev/null
-    chmod +x "$HOME/.local/bin/bw.exe" 2>/dev/null || true
-    export PATH="$HOME/.local/bin:$PATH"
-    rm -f "$tmp/bw.zip"
-  fi
-fi
-
-bw login >/dev/null 2>&1 || true
-BW_SESSION="$(bw unlock --raw)"
-export BW_SESSION
-
-item_id="$(bw list items --search "ssh-key-work" | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
-[ -n "$item_id" ] || { echo "Bitwarden item not found: ssh-key-work" >&2; exit 1; }
-
-mkdir -p "$HOME/.ssh"
-chmod 700 "$HOME/.ssh" 2>/dev/null || true
-
-bw get attachment "id_ed25519_work" --itemid "$item_id" --output "$HOME/.ssh/id_ed25519_work" >/dev/null
-chmod 600 "$HOME/.ssh/id_ed25519_work" 2>/dev/null || true
-
-if [ "$os" = "linux" ]; then
-  eval "$(ssh-agent -s)" >/dev/null
-fi
-
-ssh-add "$HOME/.ssh/id_ed25519_work"
+ set -eu; need(){ command -v "$1" >/dev/null 2>&1 || { echo "Missing: $1" >&2; exit 1; }; }; need curl; need unzip; need ssh-add; os="$(uname -s | tr '[:upper:]' '[:lower:]')"; arch="$(uname -m)"; case "$arch" in x86_64|amd64) bw_arch="x86_64" ;; aarch64|arm64) bw_arch="arm64" ;; *) echo "Unsupported arch: $arch" >&2; exit 1 ;; esac; tmp="${TMPDIR:-/tmp}"; bw_ver="$(curl -fsSL https://api.github.com/repos/bitwarden/clients/releases/latest | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1)"; [ -n "$bw_ver" ] || { echo "Failed to resolve Bitwarden CLI version." >&2; exit 1; }; if ! command -v bw >/dev/null 2>&1; then if [ "$os" = "linux" ]; then url="https://github.com/bitwarden/clients/releases/download/v$bw_ver/bw-linux-$bw_arch-$bw_ver.zip"; curl -fsSL "$url" -o "$tmp/bw.zip"; sudo unzip -o "$tmp/bw.zip" -d /usr/local/bin >/dev/null; sudo chmod +x /usr/local/bin/bw; rm -f "$tmp/bw.zip"; else url="https://github.com/bitwarden/clients/releases/download/v$bw_ver/bw-windows-$bw_ver.zip"; mkdir -p "$HOME/.local/bin"; curl -fsSL "$url" -o "$tmp/bw.zip"; unzip -o "$tmp/bw.zip" -d "$HOME/.local/bin" >/dev/null; chmod +x "$HOME/.local/bin/bw.exe" 2>/dev/null || true; export PATH="$HOME/.local/bin:$PATH"; rm -f "$tmp/bw.zip"; fi; fi; bw login >/dev/null 2>&1 || true; BW_SESSION="$(bw unlock --raw)"; export BW_SESSION; item_id="$(bw list items --search "ssh-key-work" | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"; [ -n "$item_id" ] || { echo "Bitwarden item not found: ssh-key-work" >&2; exit 1; }; mkdir -p "$HOME/.ssh"; chmod 700 "$HOME/.ssh" 2>/dev/null || true; bw get attachment "id_ed25519_work" --itemid "$item_id" --output "$HOME/.ssh/id_ed25519_work" >/dev/null; chmod 600 "$HOME/.ssh/id_ed25519_work" 2>/dev/null || true; [ "$os" = "linux" ] && eval "$(ssh-agent -s)" >/dev/null || true; ssh-add "$HOME/.ssh/id_ed25519_work"
 ```
 
 Auto-load `.snippetsrc` in `.bashrc`
