@@ -83,7 +83,7 @@ user/                          ← judigot/user (source of truth)
 
 ## Manifest Files
 
-These files act as single sources of truth for file lists:
+These files act as single sources of truth for file lists. Each manifest file lists **source files** that get synced to specific destinations.
 
 | File | Purpose | Used By |
 |------|---------|---------|
@@ -95,6 +95,119 @@ These files act as single sources of truth for file lists:
 | `ALIAS` | Centralized aliases | `.snippetsrc`, `profile.ps1` |
 
 **To add/remove a file from sync:** Edit the manifest file - scripts pick up changes automatically.
+
+### How Syncing Works
+
+The syncing mechanism reads manifest files line-by-line and copies each listed file to its destination. Here's how each manifest type works:
+
+#### DOTFILES Manifest
+
+**Purpose:** Sync files from the repository root to your Windows home directory (`~/` or `C:\Users\YourName\`).
+
+**How it works:**
+1. Script reads `DOTFILES` line by line
+2. Each line is a **source file path** (relative to repo root)
+3. Files are copied to `~/filename` (preserving the filename)
+4. If `DOTFILES` lists itself (e.g., contains "DOTFILES"), it gets synced too
+5. If `DOTFILES` doesn't list itself, it won't be synced
+
+**Example `DOTFILES` content:**
+```
+.bashrc
+.snippetsrc
+ALIAS
+DOTFILES
+```
+
+**Result:** 
+- `.bashrc` → copied to `~/.bashrc`
+- `.snippetsrc` → copied to `~/.snippetsrc`
+- `ALIAS` → copied to `~/ALIAS`
+- `DOTFILES` → copied to `~/DOTFILES` (because it's listed)
+
+**Important:** All paths in `DOTFILES` are **source files** from the repository root.
+
+#### UBUNTU Manifest
+
+**Purpose:** Sync files from Windows to WSL Ubuntu (both root and user home).
+
+**How it works:**
+1. Script reads `UBUNTU` line by line
+2. Each line can be:
+   - A **repo file** (e.g., `.snippetsrc`) → copied from repo to WSL
+   - A **Windows path** starting with `$HOME` (e.g., `$HOME\.ssh`) → copied from Windows home to WSL
+3. `$HOME` in entries refers to **Windows home directory** (`C:\Users\YourName\`), not WSL's home
+4. Files are synced to both WSL root (`/root/`) and user home (`/home/username/`)
+5. For directories: contents are **merged** (adds/replaces files, preserves existing files in destination)
+
+**Example `UBUNTU` content:**
+```
+.snippetsrc
+$HOME\.ssh
+```
+
+**Result:**
+- `.snippetsrc` → copied from repo to `/root/.snippetsrc` and `/home/username/.snippetsrc`
+- `$HOME\.ssh` → copied from `C:\Users\YourName\.ssh` to `/root/.ssh` and `/home/username/.ssh`
+  - If `.ssh` already exists in WSL, files are merged (not replaced)
+
+**Important:** 
+- `$HOME` always means **Windows home**, never WSL home
+- Directory syncing **merges** contents (doesn't delete existing files)
+- `UBUNTU` itself is only synced if it's listed in the file
+
+#### CURSOR Manifest
+
+**Purpose:** Sync files from repository to the Cursor repository (`~/.apportable/cursor`), which then gets pushed to `judigot/cursor`.
+
+**How it works:**
+1. Script reads `CURSOR` line by line
+2. Each line is a **source file or directory** (relative to repo root)
+3. Files are copied to `~/.apportable/cursor/`
+4. The cursor repo is then committed and pushed to GitHub
+5. This is different from `DOTFILES` and `UBUNTU` - it syncs to a **separate Git repository**
+
+**Example `CURSOR` content:**
+```
+.cursor
+agents
+AGENTS.md
+CLAUDE.md
+```
+
+**Result:**
+- `.cursor/` → copied to `~/.apportable/cursor/.cursor/`
+- `agents/` → copied to `~/.apportable/cursor/agents/`
+- `AGENTS.md` → copied to `~/.apportable/cursor/AGENTS.md`
+- `CLAUDE.md` → copied to `~/.apportable/cursor/CLAUDE.md`
+
+**Important:** Files synced to CURSOR repo are managed in a separate Git repository.
+
+### Key Concepts for Beginners
+
+1. **Manifest files are "source lists"**: They list what to copy, not where to copy (destination is hardcoded in scripts)
+
+2. **Self-referencing**: If a manifest lists itself, it gets synced. If not, it doesn't.
+
+3. **`$HOME` means Windows home**: In `UBUNTU` manifest, `$HOME` always refers to `C:\Users\YourName\`, never WSL's `/home/username/`
+
+4. **Directory syncing merges**: When syncing directories (like `.ssh`), existing files in destination are preserved. Only matching files are replaced, new files are added.
+
+5. **No hardcoded filenames**: The manifest filename is passed as an argument to sync functions, making it flexible and testable.
+
+### Common Patterns
+
+**Adding a new dotfile:**
+1. Add the filename to `DOTFILES`
+2. Run `commit-and-sync.sh` or `updater`
+
+**Syncing a Windows directory to WSL:**
+1. Add `$HOME\directoryname` to `UBUNTU`
+2. Run `commit-and-sync.sh`
+
+**Syncing a file to Cursor repo:**
+1. Add the filename to `CURSOR`
+2. Run `commit-and-sync.sh`
 
 ## Centralized Aliases
 
