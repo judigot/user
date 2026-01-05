@@ -50,6 +50,39 @@ jobs:
           $env:HOME = $env:USERPROFILE
           & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && echo 'snippetsrc sourced successfully'"
 
+      - name: Test aliases loaded
+        shell: pwsh
+        run: |
+          $env:HOME = $env:USERPROFILE
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && alias hi && echo '✓ Aliases loaded'"
+
+      - name: Test updateUserEnv function
+        shell: pwsh
+        run: |
+          $env:HOME = $env:USERPROFILE
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && updateUserEnv && echo '✓ updateUserEnv completed'"
+
+      - name: Test idempotence (run updateUserEnv twice)
+        shell: pwsh
+        run: |
+          $env:HOME = $env:USERPROFILE
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && updateUserEnv && updateUserEnv && echo '✓ Idempotence test passed'"
+
+      - name: Test downloadGithubFiles function
+        shell: pwsh
+        run: |
+          $env:HOME = $env:USERPROFILE
+          & "C:\Program Files\Git\bin\bash.exe" --login -c @"
+            source ~/.snippetsrc
+            downloadGithubFiles judigot/user README.md --dest /tmp/test-download
+            if [ -f '/tmp/test-download/README.md' ]; then
+              echo '✓ downloadGithubFiles works'
+            else
+              echo '✗ downloadGithubFiles failed'
+              exit 1
+            fi
+"@
+
   test-ubuntu:
     runs-on: ubuntu-latest
     steps:
@@ -81,6 +114,39 @@ jobs:
             echo "✓ Aliases loaded"
           else
             echo "✗ Aliases not loaded"
+            exit 1
+          fi
+
+      - name: Test updateUserEnv function
+        run: |
+          source ~/.snippetsrc
+          updateUserEnv
+          echo "✓ updateUserEnv completed"
+
+      - name: Test idempotence (run updateUserEnv twice)
+        run: |
+          source ~/.snippetsrc
+          updateUserEnv
+          updateUserEnv
+          echo "✓ Idempotence test passed"
+
+      - name: Test downloadGithubFiles function
+        run: |
+          source ~/.snippetsrc
+          # Test downloading a single file
+          downloadGithubFiles judigot/user README.md --dest /tmp/test-download
+          if [ -f "/tmp/test-download/README.md" ]; then
+            echo "✓ downloadGithubFiles single file works"
+          else
+            echo "✗ downloadGithubFiles failed"
+            exit 1
+          fi
+          # Test downloading multiple files
+          downloadGithubFiles judigot/user README.md LICENSE --dest /tmp/test-multi
+          if [ -f "/tmp/test-multi/README.md" ]; then
+            echo "✓ downloadGithubFiles multiple files works"
+          else
+            echo "✗ downloadGithubFiles multiple files failed"
             exit 1
           fi
 
