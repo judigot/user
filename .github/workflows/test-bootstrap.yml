@@ -1,0 +1,86 @@
+name: Test Apportable Bootstrap
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test PowerShell profile setup
+        shell: pwsh
+        run: |
+          # Download and source profile.ps1
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/judigot/user/main/profile.ps1" -OutFile "$env:USERPROFILE\profile.ps1"
+          . "$env:USERPROFILE\profile.ps1"
+          Write-Host "PowerShell profile loaded successfully"
+
+      - name: Test bash integration
+        shell: pwsh
+        run: |
+          # Test that bash function works (Git Bash is pre-installed on windows-latest)
+          $env:HOME = $env:USERPROFILE
+          & "C:\Program Files\Git\bin\bash.exe" -c "echo 'Bash integration working'"
+
+      - name: Test dotfiles download
+        shell: pwsh
+        run: |
+          # Download key dotfiles
+          $files = @(".snippetsrc", ".bashrc", "ALIAS")
+          foreach ($file in $files) {
+            $url = "https://raw.githubusercontent.com/judigot/user/main/$file"
+            $dest = "$env:USERPROFILE\$file"
+            Invoke-WebRequest -Uri $url -OutFile $dest
+            if (Test-Path $dest) {
+              Write-Host "✓ Downloaded $file"
+            } else {
+              Write-Error "✗ Failed to download $file"
+              exit 1
+            }
+          }
+
+      - name: Test .snippetsrc sourcing
+        shell: pwsh
+        run: |
+          $env:HOME = $env:USERPROFILE
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && echo 'snippetsrc sourced successfully'"
+
+  test-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test dotfiles download
+        run: |
+          files=".snippetsrc .bashrc ALIAS"
+          for file in $files; do
+            curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/$file" -o "$HOME/$file"
+            if [ -f "$HOME/$file" ]; then
+              echo "✓ Downloaded $file"
+            else
+              echo "✗ Failed to download $file"
+              exit 1
+            fi
+          done
+
+      - name: Test .snippetsrc sourcing
+        run: |
+          source ~/.snippetsrc
+          echo "snippetsrc sourced successfully"
+
+      - name: Test aliases loaded
+        run: |
+          source ~/.snippetsrc
+          # Verify ALIAS file was parsed
+          if alias hi &>/dev/null; then
+            echo "✓ Aliases loaded"
+          else
+            echo "✗ Aliases not loaded"
+            exit 1
+          fi
+
