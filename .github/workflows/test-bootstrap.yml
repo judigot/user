@@ -72,16 +72,7 @@ jobs:
         shell: pwsh
         run: |
           $env:HOME = $env:USERPROFILE
-          & "C:\Program Files\Git\bin\bash.exe" --login -c @"
-            source ~/.snippetsrc
-            downloadGithubFiles judigot/user README.md --dest /tmp/test-download
-            if [ -f '/tmp/test-download/README.md' ]; then
-              echo '✓ downloadGithubFiles works'
-            else
-              echo '✗ downloadGithubFiles failed'
-              exit 1
-            fi
-"@
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && downloadGithubFiles judigot/user README.md --dest /tmp/test-download && [ -f /tmp/test-download/README.md ] && echo '✓ downloadGithubFiles works' || (echo '✗ downloadGithubFiles failed' && exit 1)"
 
   test-ubuntu:
     runs-on: ubuntu-latest
