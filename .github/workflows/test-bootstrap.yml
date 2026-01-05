@@ -31,7 +31,7 @@ jobs:
         shell: pwsh
         run: |
           # Download key dotfiles
-          $files = @(".snippetsrc", ".bashrc", "ALIAS")
+          $files = @(".bash_profile", ".bashrc", ".profile", ".snippetsrc", "ALIAS")
           foreach ($file in $files) {
             $url = "https://raw.githubusercontent.com/judigot/user/main/$file"
             $dest = "$env:USERPROFILE\$file"
@@ -57,7 +57,7 @@ jobs:
 
       - name: Test dotfiles download
         run: |
-          files=".snippetsrc .bashrc ALIAS"
+          files=".bash_profile .bashrc .profile .snippetsrc ALIAS"
           for file in $files; do
             curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/$file" -o "$HOME/$file"
             if [ -f "$HOME/$file" ]; then
