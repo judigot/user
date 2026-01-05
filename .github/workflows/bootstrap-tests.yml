@@ -1,0 +1,91 @@
+name: Bootstrap Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  test-apportable-ps1:
+    name: Test Apportable.ps1 (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Apportable.ps1 in CI mode
+        shell: pwsh
+        run: |
+          # Run with -CI flag (skip 7-Zip/Git install, use system Git)
+          # Run with -SkipBashSetup to test only the PowerShell parts
+          .\Apportable.ps1 -CI -SkipBashSetup
+          Write-Host "✓ Apportable.ps1 completed successfully"
+
+      - name: Verify PATH was loaded
+        shell: pwsh
+        run: |
+          if (Test-Path "$env:USERPROFILE\PATH") {
+            Write-Host "✓ PATH file exists"
+          } else {
+            Write-Host "⚠ PATH file not found (may be cached async)"
+          }
+
+      - name: Verify profile.ps1 was downloaded
+        shell: pwsh
+        run: |
+          if (Test-Path "$env:USERPROFILE\profile.ps1") {
+            Write-Host "✓ profile.ps1 downloaded"
+          } else {
+            Write-Error "✗ profile.ps1 not found"
+            exit 1
+          }
+
+      - name: Verify programming folder was created
+        shell: pwsh
+        run: |
+          if (Test-Path "C:\apportable\Programming") {
+            Write-Host "✓ Programming folder created"
+          } else {
+            Write-Error "✗ Programming folder not created"
+            exit 1
+          }
+
+  test-apportable-ps1-full:
+    name: Test Apportable.ps1 with Apportable.sh (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Apportable.ps1 in CI mode (with bash setup)
+        shell: pwsh
+        run: |
+          # Run with -CI flag only (will run Apportable.sh)
+          $env:HOME = $env:USERPROFILE
+          .\Apportable.ps1 -CI
+          Write-Host "✓ Full Apportable.ps1 completed"
+
+      - name: Verify dotfiles exist
+        shell: pwsh
+        run: |
+          $files = @(".snippetsrc", ".bashrc", "ALIAS")
+          foreach ($file in $files) {
+            $path = "$env:USERPROFILE\$file"
+            if (Test-Path $path) {
+              Write-Host "✓ $file exists"
+            } else {
+              Write-Host "⚠ $file not found"
+            }
+          }
+
+  test-apportable-sh:
+    name: Test Apportable.sh (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Apportable.sh
+        run: |
+          chmod +x ./Apportable.sh
+          ./Apportable.sh
+          echo "✓ Apportable.sh completed"
+

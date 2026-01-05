@@ -1,9 +1,16 @@
-# Check for administrator privileges
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
-{
-    Write-Host "Please run this script as an administrator." -ForegroundColor Red
-    Read-Host "Press Enter to exit"
-    exit
+param(
+    [switch]$CI,           # CI mode: skip heavy installs, use pre-installed Git
+    [switch]$SkipBashSetup # Skip running Apportable.sh (for testing PS1 only)
+)
+
+# Check for administrator privileges (skip in CI mode - already elevated)
+if (-not $CI) {
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+    {
+        Write-Host "Please run this script as an administrator." -ForegroundColor Red
+        Read-Host "Press Enter to exit"
+        exit
+    }
 }
 
 $portableFolderName = "apportable"
@@ -15,10 +22,16 @@ function main {
     load_path_from_github
     setup_powershell_profile
     create_programming_folder
-    setup_ssh_agent
-    install_7zip
-    install_git
-    run_apportable
+    
+    if (-not $CI) {
+        setup_ssh_agent
+        install_7zip
+        install_git
+    }
+    
+    if (-not $SkipBashSetup) {
+        run_apportable
+    }
     # run_apportable -useLocalScript $true
 }
 
@@ -131,7 +144,12 @@ function run_apportable {
         [bool]$useLocalScript = $true
     )
     
-    $bashPath = Join-Path $portableGitInstallationDir "PortableGit\bin\bash.exe"
+    # In CI mode, use system Git Bash; otherwise use PortableGit
+    if ($CI) {
+        $bashPath = "C:\Program Files\Git\bin\bash.exe"
+    } else {
+        $bashPath = Join-Path $portableGitInstallationDir "PortableGit\bin\bash.exe"
+    }
     
     if ($useLocalScript) {
         $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
