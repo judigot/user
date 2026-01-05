@@ -1,4 +1,4 @@
-name: Test Apportable Bootstrap
+name: Terminal Environment Tests
 
 on:
   push:
