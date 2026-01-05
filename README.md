@@ -14,19 +14,19 @@ This is the **single source of truth** for:
 
 Load Snippets/Aliases
 
-Add to `.bashrc` to auto-load aliases:
+Auto-load `.snippetsrc` in `.bashrc`:
 
 ```sh
 grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 ```
 
-### Windows Setup (PowerShell as Administrator)
+Windows Setup (PowerShell as Administrator)
 
 ```powershell
 curl.exe -L "https://raw.githubusercontent.com/judigot/user/main/Apportable.ps1" | powershell -NoProfile -
 ```
 
-### Linux/macOS Setup
+Linux/macOS Setup
 
 ```sh
 curl -sL "https://raw.githubusercontent.com/judigot/user/main/Apportable.sh" | sh
