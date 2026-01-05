@@ -53,17 +53,19 @@ main() {
     setup_git_config
     set_windows_terminal_msys2_default
     
+    # === TOOLS (install first - some runtimes depend on these) ===
+    install_unzip_zip  # Required by: install_sdkman, install_terraform, install_heidisql
+    
     # === RUNTIMES & LANGUAGES ===
     install_deno
     install_nvm
     install_php_and_composer
     # setup_php_ini
-    install_sdkman
+    install_sdkman  # Requires: unzip
     
     # === TOOLS ===
-    install_unzip_zip
-    install_terraform
-    install_heidisql
+    install_terraform  # Requires: unzip
+    install_heidisql   # Requires: unzip
     # install_dbeaver
     
     # === OPTIONAL ===
