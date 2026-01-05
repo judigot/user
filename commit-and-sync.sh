@@ -311,6 +311,14 @@ sync_ubuntu() {
         return 1
     fi
     
+    # Get Windows home directory
+    local win_home="$HOME"
+    if [ -n "$USERPROFILE" ]; then
+        win_home=$(echo "$USERPROFILE" | sed 's|\\|/|g' | sed 's|^\([A-Z]\):|/\1|' | tr '[:upper:]' '[:lower:]')
+    elif [ -d "/c/Users/$USER" ]; then
+        win_home="/c/Users/$USER"
+    fi
+    
     wsl_root="//wsl.localhost/Ubuntu/root"
     wsl_user="//wsl.localhost/Ubuntu/home/$USER"
     
@@ -322,15 +330,44 @@ sync_ubuntu() {
     
     printf '%s\n' "Syncing files from $manifest to WSL Ubuntu..."
     
+    # Function to sync a single entry
+    sync_entry() {
+        local entry="$1"
+        local dest_base="$2"
+        
+        # If entry starts with $HOME, expand to Windows home path
+        if echo "$entry" | grep -q '^\$HOME'; then
+            # Get relative path (e.g., .ssh from $HOME\.ssh)
+            local rel_path=$(echo "$entry" | sed 's|^\$HOME[\\/]*||' | sed 's|\\|/|g')
+            local src_path="$win_home/$rel_path"
+            local dest_path="$dest_base/$rel_path"
+            
+            if [ -d "$src_path" ]; then
+                mkdir -p "$(dirname "$dest_path")" 2>/dev/null || true
+                cp -r "$src_path" "$dest_path" 2>/dev/null || true
+            elif [ -f "$src_path" ]; then
+                mkdir -p "$(dirname "$dest_path")" 2>/dev/null || true
+                cp "$src_path" "$dest_path" 2>/dev/null || true
+            fi
+        else
+            # Regular file from repo
+            if [ -d "$entry" ]; then
+                cp -r "$entry" "$dest_base/$entry" 2>/dev/null || true
+            elif [ -f "$entry" ]; then
+                cp "$entry" "$dest_base/$entry" 2>/dev/null || true
+            fi
+        fi
+    }
+    
     # Sync only what's listed in the manifest (handle files without trailing newline)
     while read -r file || [ -n "$file" ]; do
-        [ -n "$file" ] && cp "$file" "$wsl_root/$file" 2>/dev/null
+        [ -n "$file" ] && sync_entry "$file" "$wsl_root"
     done < "$manifest"
     
     # Sync to user home if exists
     if [ -d "$wsl_user" ]; then
         while read -r file || [ -n "$file" ]; do
-            [ -n "$file" ] && cp "$file" "$wsl_user/$file" 2>/dev/null
+            [ -n "$file" ] && sync_entry "$file" "$wsl_user"
         done < "$manifest"
     fi
     
