@@ -3,6 +3,7 @@
 .snippetsrc
 .profile
 .zshrc
+profile.ps1
 PATH
 ALIAS
 Apportable.ps1
