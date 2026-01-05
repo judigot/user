@@ -15,7 +15,7 @@ This is the **single source of truth** for:
 Download and use `.snippetsrc`
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc" && . "$HOME/.snippetsrc"
+curl -fsSL https://raw.githubusercontent.com/judigot/user/main/ALIAS -o "$HOME/ALIAS" && curl -fsSL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc" && . "$HOME/.snippetsrc"
 ```
 
 Initialize Ubuntu
