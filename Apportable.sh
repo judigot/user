@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# CI mode: skip heavy installs and interactive operations
+CI_MODE="${CI_MODE:-false}"
+
 readonly portableFolderName="apportable"
 readonly rootDir="C:/$portableFolderName"
 
@@ -11,6 +14,16 @@ _7zip_path="$rootDir/$environment/7-Zip"
 
 main() {
     setup_programming_environment
+    
+    if [ "$CI_MODE" = "true" ]; then
+        # CI mode: only essential setup, skip heavy downloads
+        setup_rc_files
+        setup_git_config
+        echo "CI mode: Skipped heavy installs (MSYS2, NVM, PHP, etc.)"
+        return 0
+    fi
+    
+    # Full install mode
     install_msys2
     # install_cygwin
     create_bash_bat

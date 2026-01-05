@@ -58,9 +58,12 @@ jobs:
 
       - name: Run Apportable.ps1 in CI mode (with bash setup)
         shell: pwsh
+        env:
+          CI_MODE: "true"
         run: |
-          # Run with -CI flag only (will run Apportable.sh)
+          # Run with -CI flag (will run Apportable.sh in CI_MODE)
           $env:HOME = $env:USERPROFILE
+          $env:CI_MODE = "true"
           .\Apportable.ps1 -CI
           Write-Host "✓ Full Apportable.ps1 completed"
 
@@ -73,8 +76,21 @@ jobs:
             if (Test-Path $path) {
               Write-Host "✓ $file exists"
             } else {
-              Write-Host "⚠ $file not found"
+              Write-Error "✗ $file not found"
+              exit 1
             }
+          }
+
+      - name: Verify git config was set
+        shell: pwsh
+        run: |
+          $env:HOME = $env:USERPROFILE
+          $defaultBranch = & "C:\Program Files\Git\bin\git.exe" config --global init.defaultBranch
+          if ($defaultBranch -eq "main") {
+            Write-Host "✓ Git default branch is 'main'"
+          } else {
+            Write-Error "✗ Git default branch not set correctly"
+            exit 1
           }
 
   test-apportable-sh:
@@ -83,9 +99,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Apportable.sh
+      - name: Run Apportable.sh in CI mode
+        env:
+          CI_MODE: "true"
         run: |
           chmod +x ./Apportable.sh
-          ./Apportable.sh
+          CI_MODE=true ./Apportable.sh
           echo "✓ Apportable.sh completed"
+
+      - name: Verify dotfiles exist
+        run: |
+          for file in .snippetsrc .bashrc ALIAS; do
+            if [ -f "$HOME/$file" ]; then
+              echo "✓ $file exists"
+            else
+              echo "✗ $file not found"
+              exit 1
+            fi
+          done
 
