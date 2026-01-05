@@ -19,39 +19,54 @@ else
 fi
 
 main() {
+    # === DIRECTORY SETUP ===
     setup_programming_environment
     
     if [ "$CI_MODE" = "true" ]; then
         # CI mode: essential setup + MSYS2 (required for bash function)
+        
+        # === TERMINAL (MSYS2) ===
         install_msys2
         initialize_msys2
         create_bash_bat
+        
+        # === CONFIGURATION ===
         setup_rc_files
         setup_git_config
+        
         echo "CI mode: Installed MSYS2, skipped other heavy installs (NVM, PHP, etc.)"
         return 0
     fi
     
-    # Full install mode
+    # === FULL INSTALL MODE ===
+    
+    # === TERMINAL (MSYS2) ===
     install_msys2
     initialize_msys2
     # install_cygwin
     create_bash_bat
+    create_zsh_bat
     open_bash_bat
+    
+    # === CONFIGURATION ===
     setup_rc_files
     setup_git_config
-    create_zsh_bat
+    set_windows_terminal_msys2_default
+    
+    # === RUNTIMES & LANGUAGES ===
     install_deno
     install_nvm
     install_php_and_composer
     # setup_php_ini
-    install_unzip_zip
     install_sdkman
+    
+    # === TOOLS ===
+    install_unzip_zip
     install_terraform
     install_heidisql
     # install_dbeaver
-    set_windows_terminal_msys2_default
     
+    # === OPTIONAL ===
     # setup_audio_production
 }
 
