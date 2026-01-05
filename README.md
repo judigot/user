@@ -10,9 +10,9 @@ This is the **single source of truth** for:
 - Cursor IDE templates
 - Editor settings (Cursor, VS Code, Zed)
 
-## Quick Start
+## Easy-Copy Snippets
 
-### Load Snippets/Aliases
+Load Snippets/Aliases
 
 Add to `.bashrc` to auto-load aliases:
 
