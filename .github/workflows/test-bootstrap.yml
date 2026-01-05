@@ -101,11 +101,13 @@ jobs:
 
       - name: Test .snippetsrc sourcing
         run: |
+          # shellcheck disable=SC1090
           source ~/.snippetsrc
           echo "snippetsrc sourced successfully"
 
       - name: Test aliases loaded
         run: |
+          # shellcheck disable=SC1090
           source ~/.snippetsrc
           # Verify ALIAS file was parsed
           if alias hi &>/dev/null; then
@@ -117,12 +119,14 @@ jobs:
 
       - name: Test updateUserEnv function
         run: |
+          # shellcheck disable=SC1090
           source ~/.snippetsrc
           updateUserEnv
           echo "✓ updateUserEnv completed"
 
       - name: Test idempotence (run updateUserEnv twice)
         run: |
+          # shellcheck disable=SC1090
           source ~/.snippetsrc
           updateUserEnv
           updateUserEnv
@@ -130,6 +134,7 @@ jobs:
 
       - name: Test downloadGithubFiles function
         run: |
+          # shellcheck disable=SC1090
           source ~/.snippetsrc
           # Test downloading a single file
           downloadGithubFiles judigot/user README.md --dest /tmp/test-download
