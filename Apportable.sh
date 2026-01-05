@@ -24,6 +24,7 @@ main() {
     if [ "$CI_MODE" = "true" ]; then
         # CI mode: essential setup + MSYS2 (required for bash function)
         install_msys2
+        initialize_msys2
         create_bash_bat
         setup_rc_files
         setup_git_config
@@ -33,6 +34,7 @@ main() {
     
     # Full install mode
     install_msys2
+    initialize_msys2
     # install_cygwin
     create_bash_bat
     open_bash_bat
@@ -92,6 +94,18 @@ install_cygwin() {
 }
 
 #=====MSYS2=====#
+initialize_msys2() {
+    # Run MSYS2 once to complete initialization (sets up pacman, etc.)
+    msys2_bash="$rootDir/$environment/msys64/usr/bin/bash.exe"
+    if [ -f "$msys2_bash" ]; then
+        echo "Initializing MSYS2..."
+        "$msys2_bash" --login -c "echo 'MSYS2 initialized successfully'"
+    else
+        echo "MSYS2 bash not found at $msys2_bash"
+        return 1
+    fi
+}
+
 install_msys2() {
     msys2_url="https://github.com/msys2/msys2-installer/releases"
     h2Index=3
