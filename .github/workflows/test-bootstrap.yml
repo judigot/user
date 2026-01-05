@@ -145,8 +145,8 @@ jobs:
             exit 1
           fi
           # Test downloading multiple files
-          downloadGithubFiles judigot/user README.md LICENSE --dest /tmp/test-multi
-          if [ -f "/tmp/test-multi/README.md" ]; then
+          downloadGithubFiles judigot/user README.md DOTFILES --dest /tmp/test-multi
+          if [ -f "/tmp/test-multi/README.md" ] && [ -f "/tmp/test-multi/DOTFILES" ]; then
             echo "✓ downloadGithubFiles multiple files works"
           else
             echo "✗ downloadGithubFiles multiple files failed"
