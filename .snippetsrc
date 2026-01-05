@@ -64,8 +64,8 @@ syncDotfiles() {
         return 1
     fi
     
-    # Sync only what's listed in the manifest
-    while IFS= read -r file; do
+    # Sync only what's listed in the manifest (handle files without trailing newline)
+    while IFS= read -r file || [ -n "$file" ]; do
         if [ -n "$file" ]; then
             if [ -f "$src/$file" ]; then
                 if [ "$(dirname "$file")" != "." ]; then
@@ -167,14 +167,14 @@ syncUbuntu() {
         fi
     }
     
-    # Sync only what's listed in the manifest
-    while IFS= read -r file; do
+    # Sync only what's listed in the manifest (handle files without trailing newline)
+    while IFS= read -r file || [ -n "$file" ]; do
         [ -n "$file" ] && sync_entry "$file" "$wsl_root"
     done < "$manifest_path"
     
     # Sync to user home if available
     if [ -d "$wsl_user" ]; then
-        while IFS= read -r file; do
+        while IFS= read -r file || [ -n "$file" ]; do
             [ -n "$file" ] && sync_entry "$file" "$wsl_user"
         done < "$manifest_path"
     fi

@@ -48,8 +48,8 @@ sync_to_home() {
     
     printf '%s\n' "Syncing files from $manifest to: $target_home"
     
-    # Sync only what's listed in the manifest
-    while read -r file; do
+    # Sync only what's listed in the manifest (handle files without trailing newline)
+    while read -r file || [ -n "$file" ]; do
         if [ -n "$file" ]; then
             if [ -f "$file" ]; then
                 if [ "$(dirname "$file")" != "." ]; then
@@ -152,8 +152,8 @@ sync_cursor_repo() {
     rm -rf "$cursor_local"
     mkdir -p "$cursor_local"
     
-    # Sync only what's listed in the manifest
-    while read -r item; do
+    # Sync only what's listed in the manifest (handle files without trailing newline)
+    while read -r item || [ -n "$item" ]; do
         [ -n "$item" ] && cp -r "$PROJECT_DIRECTORY/$item" "$cursor_local/"
     done < "$manifest"
     
@@ -322,14 +322,14 @@ sync_ubuntu() {
     
     printf '%s\n' "Syncing files from $manifest to WSL Ubuntu..."
     
-    # Sync only what's listed in the manifest
-    while read -r file; do
+    # Sync only what's listed in the manifest (handle files without trailing newline)
+    while read -r file || [ -n "$file" ]; do
         [ -n "$file" ] && cp "$file" "$wsl_root/$file" 2>/dev/null
     done < "$manifest"
     
     # Sync to user home if exists
     if [ -d "$wsl_user" ]; then
-        while read -r file; do
+        while read -r file || [ -n "$file" ]; do
             [ -n "$file" ] && cp "$file" "$wsl_user/$file" 2>/dev/null
         done < "$manifest"
     fi
