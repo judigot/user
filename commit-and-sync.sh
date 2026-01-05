@@ -4,11 +4,11 @@ readonly PROJECT_DIRECTORY=$(cd "$(dirname "$0")" || exit 1; pwd)
 
 main() {
     commit_user_repo
-    sync_to_home
+    sync_to_home "DOTFILES"
     sync_ai_repo
-    sync_cursor_repo
+    sync_cursor_repo "CURSOR"
     sync_ide_repo
-    sync_ubuntu
+    sync_ubuntu "UBUNTU"
     sync_zed_settings
     sync_cursor_settings
 }
@@ -27,13 +27,41 @@ commit_user_repo() {
 }
 
 sync_to_home() {
+    local manifest="$1"
     cd "$PROJECT_DIRECTORY" || exit 1
     
-    printf '%s\n' "Syncing dotfiles to home directory..."
+    if [ ! -f "$manifest" ]; then
+        printf '%s\n' "Manifest file not found: $manifest" >&2
+        return 1
+    fi
     
+    # Ensure we use Windows home directory, not MSYS2 home
+    local target_home="$HOME"
+    if [ -n "$USERPROFILE" ]; then
+        # Convert Windows path to Unix path (C:\Users\Jude -> /c/Users/Jude)
+        target_home=$(echo "$USERPROFILE" | sed 's|\\|/|g' | sed 's|^\([A-Z]\):|/\1|' | tr '[:upper:]' '[:lower:]')
+    elif [ -d "/c/Users/$USER" ]; then
+        target_home="/c/Users/$USER"
+    elif [ -d "/c/Users/$(whoami)" ]; then
+        target_home="/c/Users/$(whoami)"
+    fi
+    
+    printf '%s\n' "Syncing files from $manifest to: $target_home"
+    
+    # Sync only what's listed in the manifest
     while read -r file; do
-        [ -n "$file" ] && cp "$file" "$HOME/$file"
-    done < DOTFILES
+        if [ -n "$file" ]; then
+            if [ -f "$file" ]; then
+                if [ "$(dirname "$file")" != "." ]; then
+                    mkdir -p "$target_home/$(dirname "$file")" 2>/dev/null || true
+                fi
+                cp "$file" "$target_home/$file" || printf '%s\n' "Warning: Failed to copy $file" >&2
+            elif [ -d "$file" ]; then
+                mkdir -p "$target_home/$(dirname "$file")" 2>/dev/null || true
+                cp -r "$file" "$target_home/$file" || printf '%s\n' "Warning: Failed to copy $file" >&2
+            fi
+        fi
+    done < "$manifest"
     
     printf '%s\n' "Dotfiles sync complete"
 }
@@ -98,9 +126,15 @@ sync_ai_repo() {
 }
 
 sync_cursor_repo() {
+    local manifest="$1"
     cd "$PROJECT_DIRECTORY" || exit 1
     
-    printf '%s\n' "Syncing cursor files to judigot/cursor..."
+    if [ ! -f "$manifest" ]; then
+        printf '%s\n' "Manifest file not found: $manifest" >&2
+        return 1
+    fi
+    
+    printf '%s\n' "Syncing files from $manifest to judigot/cursor..."
     
     cursor_local="$HOME/.apportable/cursor"
     
@@ -118,9 +152,10 @@ sync_cursor_repo() {
     rm -rf "$cursor_local"
     mkdir -p "$cursor_local"
     
+    # Sync only what's listed in the manifest
     while read -r item; do
         [ -n "$item" ] && cp -r "$PROJECT_DIRECTORY/$item" "$cursor_local/"
-    done < "$PROJECT_DIRECTORY/CURSOR"
+    done < "$manifest"
     
     if [ -d "$HOME/.apportable/cursor-git-tmp" ]; then
         mv "$HOME/.apportable/cursor-git-tmp" "$cursor_local/.git"
@@ -268,7 +303,13 @@ sync_zed_settings() {
 }
 
 sync_ubuntu() {
+    local manifest="$1"
     cd "$PROJECT_DIRECTORY" || exit 1
+    
+    if [ ! -f "$manifest" ]; then
+        printf '%s\n' "Manifest file not found: $manifest" >&2
+        return 1
+    fi
     
     wsl_root="//wsl.localhost/Ubuntu/root"
     wsl_user="//wsl.localhost/Ubuntu/home/$USER"
@@ -279,18 +320,18 @@ sync_ubuntu() {
         return 0
     fi
     
-    printf '%s\n' "Syncing to WSL Ubuntu..."
+    printf '%s\n' "Syncing files from $manifest to WSL Ubuntu..."
     
-    # Sync to root
+    # Sync only what's listed in the manifest
     while read -r file; do
         [ -n "$file" ] && cp "$file" "$wsl_root/$file" 2>/dev/null
-    done < UBUNTU
+    done < "$manifest"
     
     # Sync to user home if exists
     if [ -d "$wsl_user" ]; then
         while read -r file; do
             [ -n "$file" ] && cp "$file" "$wsl_user/$file" 2>/dev/null
-        done < UBUNTU
+        done < "$manifest"
     fi
     
     printf '%s\n' "WSL Ubuntu sync complete"

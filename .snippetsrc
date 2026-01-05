@@ -47,7 +47,8 @@ downloadUserRepoTemp() {
 }
 
 syncDotfiles() {
-    local src="$1"
+    local manifest="$1"
+    local src="$2"
     local cleanup=""
     
     if [ -z "$src" ]; then
@@ -55,11 +56,18 @@ syncDotfiles() {
         cleanup="$src"
     fi
     
-    # Original: curl -sL "$USER_REPO_URL/$file" -o "$HOME/$file"
+    local manifest_path="$src/$manifest"
+    
+    if [ ! -f "$manifest_path" ]; then
+        echo "Manifest file not found: $manifest_path"
+        [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
+        return 1
+    fi
+    
+    # Sync only what's listed in the manifest
     while IFS= read -r file; do
         if [ -n "$file" ]; then
             if [ -f "$src/$file" ]; then
-                # Ensure parent directory exists (for nested files)
                 if [ "$(dirname "$file")" != "." ]; then
                     mkdir -p "$HOME/$(dirname "$file")" 2>/dev/null || true
                 fi
@@ -69,7 +77,7 @@ syncDotfiles() {
                 cp -r "$src/$file" "$HOME/$file" 2>/dev/null || true
             fi
         fi
-    done < "$src/DOTFILES"
+    done < "$manifest_path"
     
     [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
     echo "Dotfiles synced to home directory."
@@ -102,7 +110,8 @@ syncIDEFiles() {
 }
 
 syncUbuntu() {
-    local src="$1"
+    local manifest="$1"
+    local src="$2"
     local cleanup=""
     local wsl_root="//wsl.localhost/Ubuntu/root"
     local wsl_user="//wsl.localhost/Ubuntu/home/$USER"
@@ -115,6 +124,14 @@ syncUbuntu() {
     if [ -z "$src" ]; then
         src=$(downloadUserRepoTemp)
         cleanup="$src"
+    fi
+    
+    local manifest_path="$src/$manifest"
+    
+    if [ ! -f "$manifest_path" ]; then
+        echo "Manifest file not found: $manifest_path"
+        [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
+        return 1
     fi
     
     # Function to sync a single entry
@@ -150,16 +167,16 @@ syncUbuntu() {
         fi
     }
     
-    # Sync to root first
+    # Sync only what's listed in the manifest
     while IFS= read -r file; do
         [ -n "$file" ] && sync_entry "$file" "$wsl_root"
-    done < "$src/UBUNTU"
+    done < "$manifest_path"
     
     # Sync to user home if available
     if [ -d "$wsl_user" ]; then
         while IFS= read -r file; do
             [ -n "$file" ] && sync_entry "$file" "$wsl_user"
-        done < "$src/UBUNTU"
+        done < "$manifest_path"
     fi
     
     [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
@@ -181,9 +198,9 @@ sourceShellConfig() {
 updateUserEnv() {
     local src=$(downloadUserRepoTemp)
     
-    syncDotfiles "$src"
+    syncDotfiles "DOTFILES" "$src"
     syncIDEFiles "$src"
-    syncUbuntu "$src"
+    syncUbuntu "UBUNTU" "$src"
     
     rm -rf "$(dirname "$src")"
     
