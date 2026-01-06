@@ -86,12 +86,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download minimal files for non-Windows
+      - name: Test dotfiles download
         run: |
-          curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc"
-          curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS"
-          test -f "$HOME/.snippetsrc"
-          test -f "$HOME/ALIAS"
+          files=".bash_profile .bashrc .profile .snippetsrc ALIAS"
+          for file in $files; do
+            curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/$file" -o "$HOME/$file"
+            if [ -f "$HOME/$file" ]; then
+              echo "✓ Downloaded $file"
+            else
+              echo "✗ Failed to download $file"
+              exit 1
+            fi
+          done
 
       - name: Test .snippetsrc sourcing
         run: |
@@ -115,25 +121,7 @@ jobs:
         run: |
           # shellcheck disable=SC1090
           source ~/.snippetsrc
-          bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
-          output_file="/tmp/updateUserEnv-output.txt"
-          updateUserEnv >"$output_file" 2>&1
-          bashrc_after="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
-
-          # On non-Windows, updateUserEnv should not overwrite the runner's .bashrc.
-          if [ "$bashrc_before" != "$bashrc_after" ]; then
-            echo "✗ updateUserEnv modified .bashrc on non-Windows (unexpected)"
-            exit 1
-          fi
-
-          # On non-Windows, updateUserEnv should not perform full DOTFILES/IDE/WSL sync.
-          awk '
-            index($0, "Dotfiles synced") { bad=1 }
-            index($0, "IDE files synced") { bad=1 }
-            index($0, "Ubuntu WSL synced") { bad=1 }
-            END { exit bad }
-          ' "$output_file" || { echo "✗ updateUserEnv ran full sync on non-Windows (unexpected)"; exit 1; }
-
+          updateUserEnv
           echo "✓ updateUserEnv completed"
 
       - name: Test idempotence (run updateUserEnv twice)
@@ -164,4 +152,40 @@ jobs:
             echo "✗ downloadGithubFiles multiple files failed"
             exit 1
           fi
+
+  test-non-windows-minimal-updater:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download minimal files for non-Windows
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc"
+          curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS"
+          test -f "$HOME/.snippetsrc"
+          test -f "$HOME/ALIAS"
+
+      - name: Assert updateUserEnv is minimal on non-Windows
+        run: |
+          # shellcheck disable=SC1090
+          source ~/.snippetsrc
+
+          bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
+          output_file="/tmp/updateUserEnv-output.txt"
+          updateUserEnv >"$output_file" 2>&1
+          bashrc_after="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
+
+          if [ "$bashrc_before" != "$bashrc_after" ]; then
+            echo "✗ updateUserEnv modified .bashrc on non-Windows (unexpected)"
+            exit 1
+          fi
+
+          awk '
+            index($0, "Dotfiles synced") { bad=1 }
+            index($0, "IDE files synced") { bad=1 }
+            index($0, "Ubuntu WSL synced") { bad=1 }
+            END { exit bad }
+          ' "$output_file" || { echo "✗ updateUserEnv ran full sync on non-Windows (unexpected)"; exit 1; }
+
+          echo "✓ non-Windows minimal updater behavior confirmed"
 
