@@ -724,11 +724,6 @@ useAI() {
         msysInstallPackage "fzf" || return 1
     fi
 
-    if ! installPackage "claude" && ! installPackage "opencode"; then
-        echo "Neither 'claude' nor 'opencode' is available. Install one first." >&2
-        return 1
-    fi
-
     local choices=("Claude Code" "Open Code")
     
     local fzf_opts=(
