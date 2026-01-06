@@ -83,6 +83,15 @@ installai
 installclaude
 installclaudecode
 
+installTerraform:
+installterraform
+terraforminstall
+tfinstall
+
+useSHS:
+useshs
+shs
+
 claude:
 ai
 
