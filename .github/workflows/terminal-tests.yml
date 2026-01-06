@@ -168,9 +168,9 @@ jobs:
 
       - name: Assert updateUserEnv is minimal on non-Windows
         run: |
-          # shellcheck source=/dev/null
           cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
           cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
+          # shellcheck disable=SC1090
           source ~/.snippetsrc
 
           bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
