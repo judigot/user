@@ -438,6 +438,11 @@ loadSnippets() {
 }
 
 installOpenCode() {
+    if ! command -v npm >/dev/null 2>&1; then
+        echo "npm is required to install Open Code (opencode-ai)." >&2
+        return 1
+    fi
+
     npm i -g opencode-ai
 }
 
@@ -623,6 +628,23 @@ installPackage() {
     command -v "$package" >/dev/null 2>&1
 }
 
+msysInstallPackage() {
+    local package="$1"
+
+    if [ -z "$package" ] || ! command -v pacman >/dev/null 2>&1; then
+        return 1
+    fi
+
+    case "${MSYSTEM:-}" in
+        MINGW64|UCRT64|CLANG64|CLANGARM64)
+            pacman -S --needed --noconfirm "mingw-w64-x86_64-$package"
+            ;;
+        *)
+            pacman -S --needed --noconfirm "$package"
+            ;;
+    esac
+}
+
 # Ubuntu-like apt wrapper for pacman
 # Usage: apt <command> [options] [packages]
 apt() {
@@ -668,7 +690,15 @@ apt() {
             pacman -Rs "${pacman_args[@]}" "${args[@]}"
             ;;
         autoremove)
-            pacman -Rns "${pacman_args[@]}" "$(pacman -Qdtq)" "${args[@]}"
+            local orphans=""
+            orphans=$(pacman -Qdtq 2>/dev/null) || orphans=""
+
+            if [ -z "$orphans" ]; then
+                return 0
+            fi
+
+            # shellcheck disable=SC2086
+            pacman -Rns "${pacman_args[@]}" $orphans "${args[@]}"
             ;;
         list)
             if [ "${args[0]}" = "--installed" ]; then
@@ -690,22 +720,20 @@ apt() {
 }
 
 useAI() {
-    # Check if fzf is installed, install if missing
     if ! installPackage "fzf"; then
-        if command -v pacman >/dev/null 2>&1; then
-            pacman -S mingw-w64-x86_64-fzf || return 1
-        else
-            return 1
-        fi
+        msysInstallPackage "fzf" || return 1
     fi
 
-    # Define AI choices with official names
+    if ! installPackage "claude" && ! installPackage "opencode"; then
+        echo "Neither 'claude' nor 'opencode' is available. Install one first." >&2
+        return 1
+    fi
+
     local choices=("Claude Code" "Open Code")
     
-    # Configure fzf with ✨ as pointer, cycling enabled, and proper terminal handling
     local fzf_opts=(
-        --prompt="✨ Select AI: "
-        --pointer="✨"
+        --prompt="Select AI: "
+        --pointer=">"
         --height=10
         --border=rounded
         --info=hidden
@@ -714,13 +742,8 @@ useAI() {
         --bind="ctrl-c:abort"
     )
 
-    # Use alternate screen if available for cleaner experience
     local choice
-    if [ -t 0 ] && [ -t 1 ]; then
-        choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
-    else
-        choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
-    fi
+    choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
 
     # Handle cancellation (Ctrl+C or empty selection)
     if [ -z "$choice" ]; then
@@ -730,9 +753,15 @@ useAI() {
     # Execute the chosen AI command with passed arguments
     case "$choice" in
         "Claude Code")
+            if ! installPackage "claude"; then
+                installClaudeCode || return 1
+            fi
             claude "$@"
             ;;
         "Open Code")
+            if ! installPackage "opencode"; then
+                installOpenCode || return 1
+            fi
             opencode "$@"
             ;;
         *)
