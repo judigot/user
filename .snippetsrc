@@ -270,6 +270,15 @@ sourceShellConfig() {
     [[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"
 }
 
+syncSnippetsrcAndAliasFromRemote() {
+    if [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${GITHUB_WORKSPACE:-}" ] && [ -f "$GITHUB_WORKSPACE/.snippetsrc" ] && [ -f "$GITHUB_WORKSPACE/ALIAS" ]; then
+        cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc" && cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
+        return $?
+    fi
+
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS"
+}
+
 updateUserEnv() {
     isWindowsLikeShell() {
         case "$(uname -s 2>/dev/null)" in
@@ -286,15 +295,23 @@ updateUserEnv() {
         [ -d "/c/apportable" ] || [ -d "/mnt/c/apportable" ]
     }
 
+    # Self-heal: even old versions of `.snippetsrc` should be able to pull the latest
+    # updater logic from GitHub, then re-run once using the refreshed definitions.
+    if [ "${UPDATER_SELF_REFRESHED:-}" != "true" ]; then
+        if syncSnippetsrcAndAliasFromRemote; then
+            UPDATER_SELF_REFRESHED="true"
+            export UPDATER_SELF_REFRESHED
+
+            # shellcheck source=/dev/null
+            . "$HOME/.snippetsrc"
+
+            updateUserEnv "$@"
+            return $?
+        fi
+    fi
+
     # Non-Windows: only keep `.snippetsrc` + `ALIAS` fresh.
     if ! isWindowsLikeShell; then
-        if [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${GITHUB_WORKSPACE:-}" ] && [ -f "$GITHUB_WORKSPACE/.snippetsrc" ] && [ -f "$GITHUB_WORKSPACE/ALIAS" ]; then
-            cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
-            cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
-        else
-            downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
-        fi
-
         # shellcheck source=/dev/null
         [ -f "$HOME/.snippetsrc" ] && source "$HOME/.snippetsrc"
 
