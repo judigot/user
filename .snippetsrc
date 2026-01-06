@@ -421,6 +421,10 @@ loadSnippets() {
     grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 }
 
+installOpenCode() {
+    curl -fsSL https://opencode.ai/install | bash
+}
+
 installClaudeCode() {
     case "$(uname -s)" in
         Linux*|Darwin*)
@@ -452,6 +456,28 @@ claude() {
     fi
 
     command claude --plugin-dir ~/ai --plugin-dir . "$@"
+}
+
+ai() {
+    # Choose between Claude Code and Open Code using a beautiful terminal UI selector.
+    # Choose numbers or use up and down arrows to select.
+    # Ctrl + C to cancel.
+    # Press enter to select AI
+
+    local choices=("Claude Code" "Open Code")
+    local choice=$(printf '%s\n' "${choices[@]}" | fzf --prompt="Select AI: " --height=10 --border=rounded --info=hidden --cycle)
+    case "$choice" in
+        "Claude Code")
+            claude "$@"
+            ;;
+        "Open Code")
+            opencode "$@"
+            ;;
+        *)
+            echo "Invalid choice"
+            return 1
+            ;;
+    esac
 }
 
 addCursorBoilerplate() {

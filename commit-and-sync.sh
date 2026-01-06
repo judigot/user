@@ -6,7 +6,7 @@ main() {
     commit_user_repo
     sync_to_home "DOTFILES"
     sync_ai_repo
-    sync_cursor_repo "CURSOR"
+    sync_cursor_repo "PROJECT_CORE"
     sync_ide_repo
     sync_ubuntu "UBUNTU"
     sync_zed_settings

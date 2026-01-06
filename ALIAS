@@ -79,14 +79,22 @@ usesnippets
 usesnippetssrc
 
 installClaudeCode:
-installai
 installclaude
 installclaudecode
 
-claude:
-ai
+installOpenCode:
+installopencode
+installopencodeai
 
 addCursorBoilerplate:
+initproject
+initializeproject
+projectinitialize
+projectinit
+generateprojectcorefiles
+generateprojectcore
+addprojectcorefiles
+addprojectcore
 addagenticworkflow
 addagentfiles
 addagents
