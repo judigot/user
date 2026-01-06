@@ -509,6 +509,94 @@ useSHS() {
     curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/setup-ssh-bitwarden.sh" | bash -s -- "$@"
 }
 
+setupNodeEnv() {
+    if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+        node --version
+        npm --version
+        return 0
+    fi
+
+    case "$(uname -s 2>/dev/null)" in
+        MINGW*|MSYS*|CYGWIN*) ;;
+        *)
+            echo "Node environment setup is currently Windows/MSYS2-only (uses nvm-windows, like Apportable.sh)." >&2
+            return 1
+            ;;
+    esac
+
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "Node environment setup requires curl." >&2
+        return 1
+    fi
+
+    local root_dir="/c/apportable/Programming"
+    local nvm_home="$root_dir/nvm"
+    local nvm_symlink="$root_dir/nodejs"
+    local nvm_zip_url="https://github.com/coreybutler/nvm-windows/releases/download/1.2.2/nvm-noinstall.zip"
+
+    mkdir -p "$nvm_home" "$nvm_symlink" 2>/dev/null || true
+
+    if ! command -v nvm >/dev/null 2>&1; then
+        local tmp_dir=""
+        tmp_dir=$(mktemp -d "/tmp/nvm-windows.XXXXXXXX" 2>/dev/null) || tmp_dir=""
+        [ -n "$tmp_dir" ] || { echo "Failed to create a temp directory." >&2; return 1; }
+
+        local zip="$tmp_dir/nvm-noinstall.zip"
+        if ! curl -fsSL --retry 3 --retry-delay 1 "$nvm_zip_url" -o "$zip" 2>/dev/null; then
+            rm -rf "$tmp_dir" 2>/dev/null || true
+            echo "Failed to download nvm-windows." >&2
+            return 1
+        fi
+
+        if command -v unzip >/dev/null 2>&1; then
+            unzip -o "$zip" -d "$nvm_home" >/dev/null 2>&1 || {
+                rm -rf "$tmp_dir" 2>/dev/null || true
+                echo "Failed to extract nvm-windows (unzip failed)." >&2
+                return 1
+            }
+        elif command -v powershell.exe >/dev/null 2>&1; then
+            powershell.exe -NoProfile -Command "Expand-Archive -Force -Path '$zip' -DestinationPath '$nvm_home'" >/dev/null 2>&1 || {
+                rm -rf "$tmp_dir" 2>/dev/null || true
+                echo "Failed to extract nvm-windows (Expand-Archive failed)." >&2
+                return 1
+            }
+        else
+            rm -rf "$tmp_dir" 2>/dev/null || true
+            echo "unzip (or powershell Expand-Archive) is required to extract nvm-windows." >&2
+            return 1
+        fi
+
+        rm -rf "$tmp_dir" 2>/dev/null || true
+    fi
+
+    export NVM_HOME="$nvm_home"
+    export NVM_SYMLINK="$nvm_symlink"
+    export PATH="$PATH:$NVM_HOME:$NVM_SYMLINK"
+
+    : >"$NVM_HOME/PATH.txt"
+    : >"$NVM_HOME/settings.txt"
+    echo "PATH=$PATH" >"$NVM_HOME/PATH.txt"
+
+    local sys_arch="64"
+    [ -d "/c/Program Files (x86)" ] || sys_arch="32"
+    echo "root: $NVM_HOME" >"$NVM_HOME/settings.txt"
+    echo "path: $NVM_SYMLINK" >>"$NVM_HOME/settings.txt"
+    echo "arch: $sys_arch" >>"$NVM_HOME/settings.txt"
+    echo "proxy: none" >>"$NVM_HOME/settings.txt"
+
+    nvm install lts && nvm use lts || return 1
+
+    if [ -f "$root_dir/PortableGit/bin/bash.exe" ]; then
+        npm config set script-shell "$root_dir/PortableGit/bin/bash.exe" >/dev/null 2>&1 || true
+    fi
+
+    npm install -g bun pnpm >/dev/null 2>&1 || true
+    pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || true
+
+    node --version
+    npm --version
+}
+
 claude() {
     if [ ! -d ~/ai ]; then
         git clone git@github.com:judigot/ai.git ~/ai >/dev/null 2>&1

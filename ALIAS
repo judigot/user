@@ -92,6 +92,12 @@ useSHS:
 useshs
 shs
 
+setupNodeEnv:
+setupnodeenv
+nodeenv
+installnodeenv
+installnvm
+
 claude:
 ai
 

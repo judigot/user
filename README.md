@@ -30,6 +30,12 @@ Install Terraform (Ubuntu/Debian)
 sudo apt-get update && sudo apt-get install -y ca-certificates curl gnupg && . /etc/os-release && curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${VERSION_CODENAME} main" | sudo tee /etc/apt/sources.list.d/hashicorp.list >/dev/null && sudo apt-get update && sudo apt-get install -y terraform
 ```
 
+Setup Node environment (Windows/MSYS2)
+
+```sh
+curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && setupNodeEnv
+```
+
 Generate SSH Keys Using Bitwarden
 
 ```sh
