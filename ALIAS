@@ -3,6 +3,9 @@ hi
 hello
 helloworld
 
+apt:
+apt
+
 updateCurrentBranch:
 git-updatecurrentbranch
 git-mergemaintocurrentbranch
@@ -79,7 +82,6 @@ usesnippets
 usesnippetssrc
 
 installClaudeCode:
-installai
 installclaude
 installclaudecode
 
@@ -100,8 +102,18 @@ installnvm
 
 claude:
 ai
+useai
+useaiagent
 
 addCursorBoilerplate:
+initproject
+initializeproject
+projectinitialize
+projectinit
+generateprojectcorefiles
+generateprojectcore
+addprojectcorefiles
+addprojectcore
 addagenticworkflow
 addagentfiles
 addagents

@@ -87,7 +87,7 @@ user/                          ← judigot/user (source of truth)
 ├── Apportable.ps1              │
 ├── Apportable.sh              ─┘
 ├── DOTFILES                   ← manifest: files to sync to ~/
-├── CURSOR                     ← manifest: files to sync to cursor repo
+├── PROJECT_CORE               ← manifest: files to sync to cursor repo
 ├── IDE_FILES                  ← manifest: ide settings files
 ├── UBUNTU                     ← manifest: files to sync to WSL Ubuntu
 └── commit-and-sync.sh         ← runs all syncs
@@ -100,7 +100,7 @@ These files act as single sources of truth for file lists. Each manifest file li
 | File | Purpose | Used By |
 |------|---------|---------|
 | `DOTFILES` | List of files to sync to `~/` | `Apportable.sh`, `commit-and-sync.sh` |
-| `CURSOR` | List of files to sync to cursor repo | `commit-and-sync.sh` |
+| `PROJECT_CORE` | List of files to sync to cursor repo | `commit-and-sync.sh` |
 | `IDE_FILES` | List of IDE settings files | Reference |
 | `UBUNTU` | List of files to sync to WSL Ubuntu | `commit-and-sync.sh` |
 | `PATH` | List of PATH entries | `.bashrc` |
@@ -168,18 +168,18 @@ $HOME\.ssh
 - Directory syncing **merges** contents (doesn't delete existing files)
 - `UBUNTU` itself is only synced if it's listed in the file
 
-#### CURSOR Manifest
+#### PROJECT_CORE Manifest
 
 **Purpose:** Sync files from repository to the Cursor repository (`~/.apportable/cursor`), which then gets pushed to `judigot/cursor`.
 
 **How it works:**
-1. Script reads `CURSOR` line by line
+1. Script reads `PROJECT_CORE` line by line
 2. Each line is a **source file or directory** (relative to repo root)
 3. Files are copied to `~/.apportable/cursor/`
 4. The cursor repo is then committed and pushed to GitHub
 5. This is different from `DOTFILES` and `UBUNTU` - it syncs to a **separate Git repository**
 
-**Example `CURSOR` content:**
+**Example `PROJECT_CORE` content:**
 ```
 .cursor
 agents
@@ -193,7 +193,7 @@ CLAUDE.md
 - `AGENTS.md` → copied to `~/.apportable/cursor/AGENTS.md`
 - `CLAUDE.md` → copied to `~/.apportable/cursor/CLAUDE.md`
 
-**Important:** Files synced to CURSOR repo are managed in a separate Git repository.
+**Important:** Files synced to Cursor repo are managed in a separate Git repository.
 
 ### Key Concepts for Beginners
 
@@ -218,7 +218,7 @@ CLAUDE.md
 2. Run `commit-and-sync.sh`
 
 **Syncing a file to Cursor repo:**
-1. Add the filename to `CURSOR`
+1. Add the filename to `PROJECT_CORE`
 2. Run `commit-and-sync.sh`
 
 ## Centralized Aliases
@@ -293,7 +293,7 @@ Both shells read from the same file, so aliases stay in sync automatically.
 |--------|-------------|----------------|
 | Files in `DOTFILES` | `~/` | - |
 | `ai/` | `~/ai` | `judigot/ai` |
-| Files in `CURSOR` | `~/.apportable/cursor` | `judigot/cursor` |
+| Files in `PROJECT_CORE` | `~/.apportable/cursor` | `judigot/cursor` |
 | `ide/` | `~/.apportable/ide` | `judigot/ide` |
 | `ide/cursor/` | `~/AppData/Roaming/Cursor/User` | - |
 | `ide/zed/` | `~/AppData/Roaming/Zed` | - |
@@ -359,7 +359,7 @@ This will:
 1. Commit & push changes to `judigot/user`
 2. Sync files listed in `DOTFILES` to `~/`
 3. Sync `ai/` to `~/ai` → commit & push to `judigot/ai`
-4. Sync files listed in `CURSOR` to `~/.apportable/cursor` → push to `judigot/cursor`
+4. Sync files listed in `PROJECT_CORE` to `~/.apportable/cursor` → push to `judigot/cursor`
 5. Sync `ide/` to `~/.apportable/ide` → push to `judigot/ide`
 6. Sync Cursor settings + create VS Code symlinks
 7. Sync Zed settings
@@ -427,5 +427,5 @@ See `ai/README.md` for details.
 |------------|---------|-------------|
 | [judigot/user](https://github.com/judigot/user) | Monorepo (source of truth) | - |
 | [judigot/ai](https://github.com/judigot/ai) | Claude Code plugin (standalone) | `user/ai/` |
-| [judigot/cursor](https://github.com/judigot/cursor) | Cursor IDE template (standalone) | Files in `CURSOR` |
+| [judigot/cursor](https://github.com/judigot/cursor) | Cursor IDE template (standalone) | Files in `PROJECT_CORE` |
 | [judigot/ide](https://github.com/judigot/ide) | Editor settings (standalone) | `user/ide/` |

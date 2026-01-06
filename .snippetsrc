@@ -437,6 +437,10 @@ loadSnippets() {
     grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 }
 
+installOpenCode() {
+    npm i -g opencode-ai
+}
+
 installClaudeCode() {
     case "$(uname -s)" in
         Linux*|Darwin*)
@@ -605,6 +609,137 @@ claude() {
     fi
 
     command claude --plugin-dir ~/ai --plugin-dir . "$@"
+}
+
+# Check if a package/command is installed (silent check)
+# Usage: installPackage <package_name>
+installPackage() {
+    local package="$1"
+
+    if [ -z "$package" ]; then
+        return 1
+    fi
+
+    command -v "$package" >/dev/null 2>&1
+}
+
+# Ubuntu-like apt wrapper for pacman
+# Usage: apt <command> [options] [packages]
+apt() {
+    # If pacman is not available, fall back to real apt
+    if ! command -v pacman >/dev/null 2>&1; then
+        command apt "$@"
+        return $?
+    fi
+
+    local cmd="$1"
+    shift
+
+    # Process -y flag: convert to --noconfirm for pacman
+    local args=()
+    local use_noconfirm=false
+
+    for arg in "$@"; do
+        if [ "$arg" = "-y" ] || [ "$arg" = "--yes" ]; then
+            use_noconfirm=true
+        else
+            args+=("$arg")
+        fi
+    done
+
+    # Build pacman command with conditional --noconfirm
+    local pacman_args=()
+    [ "$use_noconfirm" = true ] && pacman_args+=("--noconfirm")
+
+    case "$cmd" in
+        install)
+            pacman -S "${pacman_args[@]}" "${args[@]}"
+            ;;
+        update)
+            pacman -Sy "${pacman_args[@]}" "${args[@]}"
+            ;;
+        upgrade)
+            pacman -Syu "${pacman_args[@]}" "${args[@]}"
+            ;;
+        search)
+            pacman -Ss "${args[@]}"
+            ;;
+        remove)
+            pacman -Rs "${pacman_args[@]}" "${args[@]}"
+            ;;
+        autoremove)
+            pacman -Rns "${pacman_args[@]}" "$(pacman -Qdtq)" "${args[@]}"
+            ;;
+        list)
+            if [ "${args[0]}" = "--installed" ]; then
+                pacman -Q "${args[@]:1}"
+            else
+                pacman -Sl "${args[@]}"
+            fi
+            ;;
+        show)
+            pacman -Si "${args[@]}"
+            ;;
+        clean)
+            pacman -Sc "${pacman_args[@]}" "${args[@]}"
+            ;;
+        *)
+            command apt "$cmd" "$@"
+            ;;
+    esac
+}
+
+useAI() {
+    # Check if fzf is installed, install if missing
+    if ! installPackage "fzf"; then
+        if command -v pacman >/dev/null 2>&1; then
+            pacman -S mingw-w64-x86_64-fzf || return 1
+        else
+            return 1
+        fi
+    fi
+
+    # Define AI choices with official names
+    local choices=("Claude Code" "Open Code")
+    
+    # Configure fzf with ✨ as pointer, cycling enabled, and proper terminal handling
+    local fzf_opts=(
+        --prompt="✨ Select AI: "
+        --pointer="✨"
+        --height=10
+        --border=rounded
+        --info=hidden
+        --cycle
+        --no-multi
+        --bind="ctrl-c:abort"
+    )
+
+    # Use alternate screen if available for cleaner experience
+    local choice
+    if [ -t 0 ] && [ -t 1 ]; then
+        choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
+    else
+        choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
+    fi
+
+    # Handle cancellation (Ctrl+C or empty selection)
+    if [ -z "$choice" ]; then
+        return 130
+    fi
+
+    # Execute the chosen AI command with passed arguments
+    case "$choice" in
+        "Claude Code")
+            claude "$@"
+            ;;
+        "Open Code")
+            opencode "$@"
+            ;;
+        *)
+            printf '%s\n' "Invalid choice: $choice" >&2
+            return 1
+            ;;
+    esac
 }
 
 addCursorBoilerplate() {
