@@ -279,7 +279,7 @@ syncSnippetsrcAndAliasFromRemote() {
     fi
 
     if command -v downloadGithubFiles >/dev/null 2>&1; then
-        if downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"; then
+        if downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
             return 0
         fi
     fi
@@ -330,7 +330,10 @@ updateUserEnv() {
 
     # If Apportable isn't present, only refresh terminal essentials.
     if ! hasApportableRoot; then
-        downloadGithubFiles judigot/user ".bashrc" ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
+        if ! downloadGithubFiles judigot/user ".bashrc" ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
+            syncSnippetsrcAndAliasFromRemote || true
+            curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc" -o "$HOME/.bashrc" 2>/dev/null || true
+        fi
         sourceShellConfig
         echo "Terminal files updated and sourced successfully."
         return 0
@@ -470,15 +473,33 @@ downloadGithubRepo() {
     
     local name="${repo#*/}"
     local url="https://github.com/$repo/archive/refs/heads/$branch.zip"
-    local zip="/tmp/$name.zip"
+
+    local tmp_dir
+    tmp_dir=$(mktemp -d "/tmp/${name}.XXXXXXXX") || return 1
+
+    local zip="$tmp_dir/$name.zip"
+
+    if ! curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$zip" 2>/dev/null; then
+        printf '%s\n' "Download failed" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
+
+    if [ ! -s "$zip" ]; then
+        printf '%s\n' "Download failed (empty archive)" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
+
+    if ! unzip -q "$zip" -d "$tmp_dir" 2>/dev/null; then
+        printf '%s\n' "Extract failed" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
     
-    curl -sL "$url" -o "$zip" || { echo "Download failed"; return 1; }
-    unzip -q "$zip" -d "$target" || { echo "Extract failed"; return 1; }
-    
-    mv "$target/$name-$branch"/* "$target/" 2>/dev/null
-    mv "$target/$name-$branch"/.[!.]* "$target/" 2>/dev/null
-    rmdir "$target/$name-$branch"
-    rm "$zip"
+    mv "$tmp_dir/$name-$branch"/* "$target/" 2>/dev/null
+    mv "$tmp_dir/$name-$branch"/.[!.]* "$target/" 2>/dev/null
+    rm -rf "$tmp_dir"
     
     echo "Downloaded $repo to $target"
 }
@@ -514,13 +535,31 @@ downloadGithubFiles() {
     
     local name="${repo#*/}"
     local url="https://github.com/$repo/archive/refs/heads/$branch.zip"
-    local zip="/tmp/$name-$$.zip"
-    local tmp="/tmp/$name-$$"
+
+    local tmp_dir
+    tmp_dir=$(mktemp -d "/tmp/${name}.XXXXXXXX") || return 1
+
+    local zip="$tmp_dir/$name.zip"
+
+    if ! curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$zip" 2>/dev/null; then
+        printf '%s\n' "Download failed" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
+
+    if [ ! -s "$zip" ]; then
+        printf '%s\n' "Download failed (empty archive)" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
+
+    if ! unzip -q "$zip" -d "$tmp_dir" 2>/dev/null; then
+        printf '%s\n' "Extract failed" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
     
-    curl -sL "$url" -o "$zip" || { echo "Download failed"; return 1; }
-    unzip -q "$zip" -d "$tmp" || { echo "Extract failed"; rm "$zip"; return 1; }
-    
-    local src="$tmp/$name-$branch"
+    local src="$tmp_dir/$name-$branch"
     
     for file in "${files[@]}"; do
         if [ -n "$file" ]; then
@@ -530,7 +569,7 @@ downloadGithubFiles() {
         fi
     done
     
-    rm -rf "$zip" "$tmp"
+    rm -rf "$tmp_dir"
     echo "Downloaded ${#files[@]} file(s) to $dest"
 }
 
