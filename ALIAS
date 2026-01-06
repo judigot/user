@@ -86,6 +86,11 @@ installOpenCode:
 installopencode
 installopencodeai
 
+useAI:
+ai
+useai
+useaiagent
+
 addCursorBoilerplate:
 initproject
 initializeproject

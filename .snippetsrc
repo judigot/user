@@ -458,7 +458,7 @@ claude() {
     command claude --plugin-dir ~/ai --plugin-dir . "$@"
 }
 
-ai() {
+useAI() {
     # Choose between Claude Code and Open Code using a beautiful terminal UI selector.
     # Choose numbers or use up and down arrows to select.
     # Ctrl + C to cancel.
