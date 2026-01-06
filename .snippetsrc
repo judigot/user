@@ -81,32 +81,55 @@ updateCurrentBranch() {
 
 # Download user repo to temp directory, returns the path
 downloadUserRepoTemp() {
-    local tmp="/tmp/user-repo-$$"
-    local zip="/tmp/user-$$.zip"
     local url="https://github.com/judigot/user/archive/refs/heads/main.zip"
-    
-    curl -sL "$url" -o "$zip" || { echo "Download failed"; return 1; }
-    unzip -q "$zip" -d "$tmp" || { echo "Extract failed"; rm "$zip"; return 1; }
-    rm "$zip"
-    
-    echo "$tmp/user-main"
+
+    if ! command -v curl >/dev/null 2>&1; then
+        printf '%s\n' "curl is required to download the repo." >&2
+        return 1
+    fi
+
+    if ! command -v unzip >/dev/null 2>&1; then
+        printf '%s\n' "unzip is required to extract the repo." >&2
+        return 1
+    fi
+
+    local tmp_dir
+    tmp_dir=$(mktemp -d "/tmp/user-repo.XXXXXXXX") || return 1
+
+    local zip="$tmp_dir/user.zip"
+
+    if ! curl -fsSL "$url" -o "$zip" 2>/dev/null; then
+        printf '%s\n' "Download failed" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
+
+    if ! unzip -q "$zip" -d "$tmp_dir" 2>/dev/null; then
+        printf '%s\n' "Extract failed" >&2
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        return 1
+    fi
+
+    rm -f "$zip" 2>/dev/null || true
+
+    printf '%s\n' "$tmp_dir/user-main"
 }
 
 syncDotfiles() {
     local manifest="$1"
     local src="$2"
-    local cleanup=""
+    local cleanup_dir=""
     
     if [ -z "$src" ]; then
-        src=$(downloadUserRepoTemp)
-        cleanup="$src"
+        src=$(downloadUserRepoTemp) || return 1
+        cleanup_dir=$(dirname "$src")
     fi
     
     local manifest_path="$src/$manifest"
     
     if [ ! -f "$manifest_path" ]; then
         echo "Manifest file not found: $manifest_path"
-        [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
+        [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir"
         return 1
     fi
     
@@ -125,17 +148,17 @@ syncDotfiles() {
         fi
     done < "$manifest_path"
     
-    [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
+    [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir"
     echo "Dotfiles synced to home directory."
 }
 
 syncIDEFiles() {
     local src="$1"
-    local cleanup=""
+    local cleanup_dir=""
     
     if [ -z "$src" ]; then
-        src=$(downloadUserRepoTemp)
-        cleanup="$src"
+        src=$(downloadUserRepoTemp) || return 1
+        cleanup_dir=$(dirname "$src")
     fi
     
     local appdata="$HOME/AppData/Roaming"
@@ -151,14 +174,14 @@ syncIDEFiles() {
     cp "$src/ide/zed/settings.jsonc" "$zed_dir/settings.json"
     cp "$src/ide/zed/keymap.jsonc" "$zed_dir/keymap.json"
     
-    [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
+    [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir"
     echo "IDE files synced."
 }
 
 syncUbuntu() {
     local manifest="$1"
     local src="$2"
-    local cleanup=""
+    local cleanup_dir=""
     local wsl_root="//wsl.localhost/Ubuntu/root"
     local wsl_user="//wsl.localhost/Ubuntu/home/$USER"
     
@@ -168,15 +191,15 @@ syncUbuntu() {
     fi
     
     if [ -z "$src" ]; then
-        src=$(downloadUserRepoTemp)
-        cleanup="$src"
+        src=$(downloadUserRepoTemp) || return 1
+        cleanup_dir=$(dirname "$src")
     fi
     
     local manifest_path="$src/$manifest"
     
     if [ ! -f "$manifest_path" ]; then
         echo "Manifest file not found: $manifest_path"
-        [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
+        [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir"
         return 1
     fi
     
@@ -226,7 +249,7 @@ syncUbuntu() {
         done < "$manifest_path"
     fi
     
-    [ -n "$cleanup" ] && rm -rf "$(dirname "$cleanup")"
+    [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir"
     echo "Ubuntu WSL synced."
 }
 
@@ -243,8 +266,19 @@ sourceShellConfig() {
 }
 
 updateUserEnv() {
+    isWindowsLikeShell() {
+        case "$(uname -s 2>/dev/null)" in
+            MINGW*|MSYS*|CYGWIN*) return 0 ;;
+            *) return 1 ;;
+        esac
+    }
+
     hasApportableRoot() {
-        [ -d "C:/apportable" ] || [ -d "/c/apportable" ] || [ -d "/mnt/c/apportable" ]
+        if isWindowsLikeShell && [ -d "C:/apportable" ]; then
+            return 0
+        fi
+
+        [ -d "/c/apportable" ] || [ -d "/mnt/c/apportable" ]
     }
 
     # If Apportable isn't present, only refresh terminal essentials.
