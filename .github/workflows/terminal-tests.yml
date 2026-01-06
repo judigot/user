@@ -101,13 +101,13 @@ jobs:
 
       - name: Test .snippetsrc sourcing
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           echo "snippetsrc sourced successfully"
 
       - name: Test aliases loaded
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           # Verify ALIAS file was parsed
           if alias hi &>/dev/null; then
@@ -119,14 +119,14 @@ jobs:
 
       - name: Test updateUserEnv function
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           updateUserEnv
           echo "✓ updateUserEnv completed"
 
       - name: Test idempotence (run updateUserEnv twice)
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           updateUserEnv
           updateUserEnv
@@ -134,7 +134,7 @@ jobs:
 
       - name: Test downloadGithubFiles function
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           # Test downloading a single file
           downloadGithubFiles judigot/user README.md --dest /tmp/test-download
@@ -168,7 +168,7 @@ jobs:
 
       - name: Assert updateUserEnv is minimal on non-Windows
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
           cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
           source ~/.snippetsrc
