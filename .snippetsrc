@@ -103,14 +103,16 @@ downloadUserRepoTemp() {
 
     local zip="$tmp_dir/user.zip"
 
-    if ! curl -fsSL "$url" -o "$zip" 2>/dev/null; then
+    if ! curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$zip" 2>/dev/null; then
         printf '%s\n' "Download failed" >&2
         rm -rf "$tmp_dir" 2>/dev/null || true
         return 1
     fi
 
     if ! unzip -q "$zip" -d "$tmp_dir" 2>/dev/null; then
-        printf '%s\n' "Extract failed" >&2
+        # `unzip` failures are commonly caused by an HTML response being saved instead of a zip.
+        # Don't hide the failure behind a generic message.
+        printf '%s\n' "Extract failed (downloaded archive could not be unzipped)" >&2
         rm -rf "$tmp_dir" 2>/dev/null || true
         return 1
     fi
@@ -277,8 +279,9 @@ syncSnippetsrcAndAliasFromRemote() {
     fi
 
     if command -v downloadGithubFiles >/dev/null 2>&1; then
-        downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
-        return $?
+        if downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"; then
+            return 0
+        fi
     fi
 
     curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" \
@@ -334,7 +337,14 @@ updateUserEnv() {
     fi
 
     local src
-    src=$(downloadUserRepoTemp) || return 1
+    src=$(downloadUserRepoTemp) || {
+        # If the full repo archive can't be downloaded/unzipped, keep the terminal usable.
+        syncSnippetsrcAndAliasFromRemote || true
+        curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc" -o "$HOME/.bashrc" 2>/dev/null || true
+        sourceShellConfig
+        echo "Updater fallback: refreshed terminal essentials, full sync skipped."
+        return 1
+    }
 
     # Apportable exists: avoid overwriting terminal files. Keep any Windows-specific
     # terminal customization intact, while still syncing other dotfiles.
