@@ -197,14 +197,60 @@ sourceShellConfig() {
 }
 
 updateUserEnv() {
-    local src=$(downloadUserRepoTemp)
-    
+    updateSnippetsrcFirstAndRerun() {
+        local url="https://raw.githubusercontent.com/judigot/user/main/.snippetsrc"
+        local tmp="$HOME/.snippetsrc.tmp.$$"
+
+        if ! curl -fsSL "$url" -o "$tmp" 2>/dev/null; then
+            rm -f "$tmp" 2>/dev/null || true
+            return 1
+        fi
+
+        if [ ! -s "$tmp" ]; then
+            rm -f "$tmp" 2>/dev/null || true
+            return 1
+        fi
+
+        if [ -f "$HOME/.snippetsrc" ] && cmp -s "$tmp" "$HOME/.snippetsrc" 2>/dev/null; then
+            rm -f "$tmp" 2>/dev/null || true
+            return 1
+        fi
+
+        mv "$tmp" "$HOME/.snippetsrc"
+
+        # shellcheck source=/dev/null
+        source "$HOME/.snippetsrc"
+
+        updateUserEnv "$@"
+        return 0
+    }
+
+    hasApportableRoot() {
+        [ -d "C:/apportable" ] || [ -d "/c/apportable" ] || [ -d "/mnt/c/apportable" ]
+    }
+
+    # Ensure the updater logic is current before doing anything else.
+    if updateSnippetsrcFirstAndRerun "$@"; then
+        return 0
+    fi
+
+    # If Apportable isn't present, only refresh terminal essentials.
+    if ! hasApportableRoot; then
+        downloadGithubFiles judigot/user ".bashrc" ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
+        sourceShellConfig
+        echo "Terminal files updated and sourced successfully."
+        return 0
+    fi
+
+    local src
+    src=$(downloadUserRepoTemp) || return 1
+
     syncDotfiles "DOTFILES" "$src"
     syncIDEFiles "$src"
     syncUbuntu "UBUNTU" "$src"
-    
+
     rm -rf "$(dirname "$src")"
-    
+
     sourceShellConfig
     echo "Configuration files updated and sourced successfully."
 }
