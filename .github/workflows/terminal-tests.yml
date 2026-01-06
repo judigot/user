@@ -101,13 +101,13 @@ jobs:
 
       - name: Test .snippetsrc sourcing
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           echo "snippetsrc sourced successfully"
 
       - name: Test aliases loaded
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           # Verify ALIAS file was parsed
           if alias hi &>/dev/null; then
@@ -119,14 +119,14 @@ jobs:
 
       - name: Test updateUserEnv function
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           updateUserEnv
           echo "✓ updateUserEnv completed"
 
       - name: Test idempotence (run updateUserEnv twice)
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           updateUserEnv
           updateUserEnv
@@ -134,7 +134,7 @@ jobs:
 
       - name: Test downloadGithubFiles function
         run: |
-          # shellcheck disable=SC1090
+          # shellcheck source=/dev/null
           source ~/.snippetsrc
           # Test downloading a single file
           downloadGithubFiles judigot/user README.md --dest /tmp/test-download
@@ -152,4 +152,43 @@ jobs:
             echo "✗ downloadGithubFiles multiple files failed"
             exit 1
           fi
+
+  test-non-windows-minimal-updater:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up isolated HOME
+        run: |
+          test_home="/tmp/snippetsrc-test-home"
+          rm -rf "$test_home"
+          mkdir -p "$test_home"
+          printf '%s\n' "baseline" >"$test_home/.bashrc"
+          printf '%s\n' "export HOME=\"$test_home\"" >>"$GITHUB_ENV"
+
+      - name: Assert updateUserEnv is minimal on non-Windows
+        run: |
+          cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
+          cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
+          # shellcheck disable=SC1090
+          source ~/.snippetsrc
+
+          bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
+          output_file="/tmp/updateUserEnv-output.txt"
+          updateUserEnv >"$output_file" 2>&1
+          bashrc_after="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
+
+          if [ "$bashrc_before" != "$bashrc_after" ]; then
+            echo "✗ updateUserEnv modified .bashrc on non-Windows (unexpected)"
+            exit 1
+          fi
+
+          awk '
+            index($0, "Dotfiles synced") { bad=1 }
+            index($0, "IDE files synced") { bad=1 }
+            index($0, "Ubuntu WSL synced") { bad=1 }
+            END { exit bad }
+          ' "$output_file" || { echo "✗ updateUserEnv ran full sync on non-Windows (unexpected)"; exit 1; }
+
+          echo "✓ non-Windows minimal updater behavior confirmed"
 
