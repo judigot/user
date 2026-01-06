@@ -460,6 +460,97 @@ installClaudeCode() {
     esac
 }
 
+installTerraform() {
+    if command -v terraform >/dev/null 2>&1; then
+        terraform version
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "curl is required to install Terraform." >&2
+        return 1
+    fi
+
+    local version
+    version="$(curl -fsSL "https://checkpoint-api.hashicorp.com/v1/check/terraform" 2>/dev/null | awk -F'"' '/current_version/ { print $4; exit }')"
+    if [ -z "$version" ]; then
+        echo "Failed to determine the latest Terraform version." >&2
+        return 1
+    fi
+
+    local os
+    os="$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+    case "$os" in
+        mingw*|msys*|cygwin*) os="windows" ;;
+        darwin*) os="darwin" ;;
+        linux*) os="linux" ;;
+    esac
+
+    local arch
+    arch="$(uname -m 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+    case "$arch" in
+        x86_64|amd64) arch="amd64" ;;
+        aarch64|arm64) arch="arm64" ;;
+        armv7l|armv7) arch="arm" ;;
+        i386|i686) arch="386" ;;
+    esac
+
+    local tmp_dir
+    tmp_dir="$(mktemp -d "/tmp/terraform.XXXXXXXX" 2>/dev/null)" || tmp_dir=""
+    [ -n "$tmp_dir" ] || { echo "Failed to create a temp directory." >&2; return 1; }
+
+    local zip="$tmp_dir/terraform.zip"
+    local url="https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${os}_${arch}.zip"
+
+    if ! curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$zip" 2>/dev/null; then
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        echo "Failed to download Terraform: $url" >&2
+        return 1
+    fi
+
+    mkdir -p "$HOME/.local/bin" 2>/dev/null || true
+
+    if command -v unzip >/dev/null 2>&1; then
+        unzip -o "$zip" -d "$HOME/.local/bin" >/dev/null 2>&1 || {
+            rm -rf "$tmp_dir" 2>/dev/null || true
+            echo "Failed to extract Terraform (unzip failed)." >&2
+            return 1
+        }
+    elif command -v powershell.exe >/dev/null 2>&1; then
+        powershell.exe -NoProfile -Command "Expand-Archive -Force -Path '$zip' -DestinationPath '$HOME/.local/bin'" >/dev/null 2>&1 || {
+            rm -rf "$tmp_dir" 2>/dev/null || true
+            echo "Failed to extract Terraform (Expand-Archive failed)." >&2
+            return 1
+        }
+    else
+        rm -rf "$tmp_dir" 2>/dev/null || true
+        echo "unzip (or powershell Expand-Archive) is required to install Terraform." >&2
+        return 1
+    fi
+
+    rm -rf "$tmp_dir" 2>/dev/null || true
+
+    export PATH="$HOME/.local/bin:$PATH"
+
+    if [ "$os" = "windows" ] && [ -f "$HOME/.local/bin/terraform.exe" ]; then
+        chmod +x "$HOME/.local/bin/terraform.exe" 2>/dev/null || true
+        "$HOME/.local/bin/terraform.exe" version
+        return 0
+    fi
+
+    chmod +x "$HOME/.local/bin/terraform" 2>/dev/null || true
+    terraform version
+}
+
+useSHS() {
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "curl is required to run setup-ssh-bitwarden.sh." >&2
+        return 1
+    fi
+
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/setup-ssh-bitwarden.sh" | bash -s -- "$@"
+}
+
 claude() {
     if [ ! -d ~/ai ]; then
         git clone git@github.com:judigot/ai.git ~/ai >/dev/null 2>&1
