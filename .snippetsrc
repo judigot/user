@@ -266,10 +266,6 @@ sourceShellConfig() {
 }
 
 updateUserEnv() {
-    isTermux() {
-        [ -n "${TERMUX_VERSION:-}" ] || [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] || [ -d "/data/data/com.termux" ]
-    }
-
     isWindowsLikeShell() {
         case "$(uname -s 2>/dev/null)" in
             MINGW*|MSYS*|CYGWIN*) return 0 ;;
@@ -285,14 +281,14 @@ updateUserEnv() {
         [ -d "/c/apportable" ] || [ -d "/mnt/c/apportable" ]
     }
 
-    # Mobile: only keep `.snippetsrc` + `ALIAS` fresh.
-    if isTermux; then
+    # Non-Windows: only keep `.snippetsrc` + `ALIAS` fresh.
+    if ! isWindowsLikeShell; then
         downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
 
         # shellcheck source=/dev/null
         [ -f "$HOME/.snippetsrc" ] && source "$HOME/.snippetsrc"
 
-        echo "Termux files updated and sourced successfully."
+        echo "Terminal files updated and sourced successfully."
         return 0
     fi
 
