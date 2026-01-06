@@ -276,7 +276,13 @@ syncSnippetsrcAndAliasFromRemote() {
         return $?
     fi
 
-    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS"
+    if command -v downloadGithubFiles >/dev/null 2>&1; then
+        downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
+        return $?
+    fi
+
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" \
+        && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS"
 }
 
 updateUserEnv() {
