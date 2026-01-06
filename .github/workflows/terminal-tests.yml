@@ -158,16 +158,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download minimal files for non-Windows
+      - name: Set up isolated HOME
         run: |
-          curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc"
-          curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS"
-          test -f "$HOME/.snippetsrc"
-          test -f "$HOME/ALIAS"
+          test_home="/tmp/snippetsrc-test-home"
+          rm -rf "$test_home"
+          mkdir -p "$test_home"
+          printf '%s\n' "baseline" >"$test_home/.bashrc"
+          printf '%s\n' "export HOME=\"$test_home\"" >>"$GITHUB_ENV"
 
       - name: Assert updateUserEnv is minimal on non-Windows
         run: |
           # shellcheck disable=SC1090
+          cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
+          cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
           source ~/.snippetsrc
 
           bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"

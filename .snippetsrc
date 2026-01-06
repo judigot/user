@@ -3,6 +3,11 @@
 # Keep this file up-to-date as soon as it's sourced, so any functions you run
 # in the current shell session come from the latest `.snippetsrc`.
 snippetsrcSelfUpdateOnSource() {
+    # CI should test the checked-out version deterministically (no network mutation).
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        return 1
+    fi
+
     if [ "${SNIPPETSRC_SELF_UPDATE_ATTEMPTED:-}" = "true" ]; then
         return 1
     fi
@@ -283,7 +288,12 @@ updateUserEnv() {
 
     # Non-Windows: only keep `.snippetsrc` + `ALIAS` fresh.
     if ! isWindowsLikeShell; then
-        downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
+        if [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${GITHUB_WORKSPACE:-}" ] && [ -f "$GITHUB_WORKSPACE/.snippetsrc" ] && [ -f "$GITHUB_WORKSPACE/ALIAS" ]; then
+            cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
+            cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
+        else
+            downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
+        fi
 
         # shellcheck source=/dev/null
         [ -f "$HOME/.snippetsrc" ] && source "$HOME/.snippetsrc"
