@@ -197,9 +197,18 @@ sourceShellConfig() {
 }
 
 updateUserEnv() {
+    # Prevent infinite loops when self-updating and re-running.
+    if [ "${SNIPPETSRC_SELF_UPDATED:-}" = "true" ]; then
+        :
+    fi
+
     updateSnippetsrcFirstAndRerun() {
         local url="https://raw.githubusercontent.com/judigot/user/main/.snippetsrc"
         local tmp="$HOME/.snippetsrc.tmp.$$"
+
+        if [ "${SNIPPETSRC_SELF_UPDATED:-}" = "true" ]; then
+            return 1
+        fi
 
         if ! curl -fsSL "$url" -o "$tmp" 2>/dev/null; then
             rm -f "$tmp" 2>/dev/null || true
@@ -220,6 +229,9 @@ updateUserEnv() {
 
         # shellcheck source=/dev/null
         source "$HOME/.snippetsrc"
+
+        SNIPPETSRC_SELF_UPDATED="true"
+        export SNIPPETSRC_SELF_UPDATED
 
         updateUserEnv "$@"
         return 0
@@ -245,7 +257,19 @@ updateUserEnv() {
     local src
     src=$(downloadUserRepoTemp) || return 1
 
-    syncDotfiles "DOTFILES" "$src"
+    # Apportable exists: avoid overwriting terminal files. Keep any Windows-specific
+    # terminal customization intact, while still syncing other dotfiles.
+    local dotfiles_manifest_in="$src/DOTFILES"
+    local dotfiles_manifest_tmp="$src/.dotfiles.no-terminal.$$"
+
+    if [ -f "$dotfiles_manifest_in" ]; then
+        awk '
+            $0 != ".bashrc" && $0 != ".snippetsrc" && $0 != "ALIAS" && $0 != "" { print $0 }
+        ' "$dotfiles_manifest_in" > "$dotfiles_manifest_tmp"
+        syncDotfiles "$(basename "$dotfiles_manifest_tmp")" "$src"
+    else
+        syncDotfiles "DOTFILES" "$src"
+    fi
     syncIDEFiles "$src"
     syncUbuntu "UBUNTU" "$src"
 
