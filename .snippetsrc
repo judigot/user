@@ -749,13 +749,15 @@ useAI() {
     case "$choice" in
         "Claude Code")
             if ! installPackage "claude"; then
-                installClaudeCode || return 1
+                printf '%s\n' "claude is not installed. Run: installClaudeCode" >&2
+                return 1
             fi
             claude "$@"
             ;;
         "Open Code")
             if ! installPackage "opencode"; then
-                installOpenCode || return 1
+                printf '%s\n' "opencode is not installed. Run: installOpenCode" >&2
+                return 1
             fi
             opencode "$@"
             ;;
