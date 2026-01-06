@@ -81,6 +81,28 @@ jobs:
           $env:HOME = $env:USERPROFILE
           & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && downloadGithubFiles judigot/user README.md --dest /tmp/test-download && [ -f /tmp/test-download/README.md ] && echo '✓ downloadGithubFiles works' || (echo '✗ downloadGithubFiles failed' && exit 1)"
 
+  test-windows-unzip-missing-fallback:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download key dotfiles
+        shell: pwsh
+        run: |
+          $files = @(".bash_profile", ".bashrc", ".profile", ".snippetsrc", "ALIAS")
+          foreach ($file in $files) {
+            $url = "https://raw.githubusercontent.com/judigot/user/main/$file"
+            $dest = "$env:USERPROFILE\$file"
+            Invoke-WebRequest -Uri $url -OutFile $dest
+            if (-not (Test-Path $dest)) { Write-Error "✗ Failed to download $file"; exit 1 }
+          }
+
+      - name: Test updateUserEnv fallback when unzip missing
+        shell: pwsh
+        run: |
+          $env:HOME = $env:USERPROFILE
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "mkdir -p /tmp/fakeunzip && printf '%s\n' '#!/bin/sh' 'exit 1' > /tmp/fakeunzip/unzip && chmod +x /tmp/fakeunzip/unzip && PATH=/tmp/fakeunzip:\$PATH && source ~/.snippetsrc && updateUserEnv && echo '✓ updateUserEnv succeeded without unzip'"
+
   test-ubuntu:
     runs-on: ubuntu-latest
     steps:
@@ -152,6 +174,42 @@ jobs:
             echo "✗ downloadGithubFiles multiple files failed"
             exit 1
           fi
+
+  test-ubuntu-unzip-missing-fallback:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up isolated HOME
+        run: |
+          test_home="/tmp/snippetsrc-test-home-unzip-missing"
+          rm -rf "$test_home"
+          mkdir -p "$test_home"
+          printf '%s\n' "baseline" >"$test_home/.bashrc"
+          printf '%s\n' "export HOME=\"$test_home\"" >>"$GITHUB_ENV"
+
+      - name: Assert updateUserEnv works without unzip
+        run: |
+          cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
+          cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
+          mkdir -p /tmp/fakeunzip
+          printf '%s\n' '#!/bin/sh' 'exit 1' > /tmp/fakeunzip/unzip
+          chmod +x /tmp/fakeunzip/unzip
+          export PATH="/tmp/fakeunzip:$PATH"
+
+          # shellcheck source=/dev/null
+          source ~/.snippetsrc
+
+          bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
+          updateUserEnv >/tmp/updateUserEnv-unzip-missing.txt 2>&1
+          bashrc_after="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
+
+          if [ "$bashrc_before" != "$bashrc_after" ]; then
+            echo "✗ updateUserEnv modified .bashrc on non-Windows (unexpected)"
+            exit 1
+          fi
+
+          echo "✓ updateUserEnv succeeded without unzip"
 
   test-non-windows-minimal-updater:
     runs-on: ubuntu-latest

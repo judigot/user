@@ -330,7 +330,10 @@ updateUserEnv() {
 
     # If Apportable isn't present, only refresh terminal essentials.
     if ! hasApportableRoot; then
-        downloadGithubFiles judigot/user ".bashrc" ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main"
+        if ! downloadGithubFiles judigot/user ".bashrc" ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
+            syncSnippetsrcAndAliasFromRemote || true
+            curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc" -o "$HOME/.bashrc" 2>/dev/null || true
+        fi
         sourceShellConfig
         echo "Terminal files updated and sourced successfully."
         return 0
