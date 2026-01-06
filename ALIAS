@@ -3,6 +3,9 @@ hi
 hello
 helloworld
 
+apt:
+apt
+
 updateCurrentBranch:
 git-updatecurrentbranch
 git-mergemaintocurrentbranch
