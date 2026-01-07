@@ -19,6 +19,12 @@ syncidefiles
 synccursor
 synczed
 
+initUbuntu:
+initubuntu
+ubuntuinit
+setupubuntu
+ubuntusetup
+
 syncUbuntu:
 syncubuntu
 syncwsl
