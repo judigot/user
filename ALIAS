@@ -19,6 +19,19 @@ syncidefiles
 synccursor
 synczed
 
+initUbuntu:
+initubuntu
+ubuntuinit
+setupubuntu
+ubuntusetup
+
+loginUbuntu:
+loginubuntu
+ubuntulogin
+wslubuntu
+wsl
+ubuntu
+
 syncUbuntu:
 syncubuntu
 syncwsl
@@ -85,11 +98,25 @@ installClaudeCode:
 installclaude
 installclaudecode
 
-installOpenCode:
-installopencode
-installopencodeai
+installTerraform:
+installterraform
+terraforminstall
+tfinstall
 
-useAI:
+useSSH:
+usessh
+initssh
+setupssh
+sshbitwarden
+bwssh
+
+setupNodeEnv:
+setupnodeenv
+nodeenv
+installnodeenv
+installnvm
+
+claude:
 ai
 useai
 useaiagent

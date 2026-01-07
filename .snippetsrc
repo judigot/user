@@ -341,12 +341,28 @@ updateUserEnv() {
 
     local src
     src=$(downloadUserRepoTemp) || {
-        # If the full repo archive can't be downloaded/unzipped, keep the terminal usable.
+        # If the full repo archive can't be downloaded/unzipped, fall back to raw-per-file
+        # syncing so incomplete Windows machines still get the commit-and-sync style behavior.
         syncSnippetsrcAndAliasFromRemote || true
-        curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc" -o "$HOME/.bashrc" 2>/dev/null || true
+
+        # Dotfiles (exclude terminal files since they are managed separately)
+        downloadGithubFiles judigot/user ".bash_profile" ".profile" ".zshrc" "profile.ps1" "PATH" "Apportable.ps1" "Apportable.sh" --dest "$HOME" --branch "main" >/dev/null 2>&1 || true
+
+        # IDE files into AppData
+        mkdir -p "$HOME/AppData/Roaming/Cursor/User/snippets" "$HOME/AppData/Roaming/Zed" 2>/dev/null || true
+        downloadGithubFiles judigot/user "ide/cursor/settings.jsonc" "ide/cursor/keybindings.jsonc" "ide/cursor/Master of Snippets.code-snippets" --dest "/tmp/ide-tmp" --branch "main" >/dev/null 2>&1 || true
+        downloadGithubFiles judigot/user "ide/zed/settings.jsonc" "ide/zed/keymap.jsonc" --dest "/tmp/ide-tmp" --branch "main" >/dev/null 2>&1 || true
+
+        cp "/tmp/ide-tmp/ide/cursor/settings.jsonc" "$HOME/AppData/Roaming/Cursor/User/settings.json" 2>/dev/null || true
+        cp "/tmp/ide-tmp/ide/cursor/keybindings.jsonc" "$HOME/AppData/Roaming/Cursor/User/keybindings.json" 2>/dev/null || true
+        cp "/tmp/ide-tmp/ide/cursor/Master of Snippets.code-snippets" "$HOME/AppData/Roaming/Cursor/User/snippets/Master of Snippets.code-snippets" 2>/dev/null || true
+        cp "/tmp/ide-tmp/ide/zed/settings.jsonc" "$HOME/AppData/Roaming/Zed/settings.json" 2>/dev/null || true
+        cp "/tmp/ide-tmp/ide/zed/keymap.jsonc" "$HOME/AppData/Roaming/Zed/keymap.json" 2>/dev/null || true
+        rm -rf "/tmp/ide-tmp" 2>/dev/null || true
+
         sourceShellConfig
-        echo "Updater fallback: refreshed terminal essentials, full sync skipped."
-        return 1
+        echo "Updater fallback: synced via raw downloads, repo zip unavailable."
+        return 0
     }
 
     # Apportable exists: avoid overwriting terminal files. Keep any Windows-specific
@@ -422,6 +438,11 @@ loadSnippets() {
 }
 
 installOpenCode() {
+    if ! command -v npm >/dev/null 2>&1; then
+        echo "npm is required to install Open Code (opencode-ai)." >&2
+        return 1
+    fi
+
     npm i -g opencode-ai
 }
 
@@ -448,6 +469,163 @@ installClaudeCode() {
     esac
 }
 
+initUbuntu() {
+    set -eu
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
+    sudo apt-get install -y ca-certificates curl git openssh-client unzip vim
+}
+
+loginUbuntu() {
+    if command -v proot-distro >/dev/null 2>&1; then
+        proot-distro login ubuntu
+    elif command -v wsl >/dev/null 2>&1; then
+        wsl -d Ubuntu
+    elif command -v ubuntu.exe >/dev/null 2>&1; then
+        ubuntu.exe
+    else
+        echo "Ubuntu not found. For Termux: install proot-distro and run 'proot-distro install ubuntu'. For Windows: install Ubuntu from Microsoft Store or use 'wsl --install -d Ubuntu'." >&2
+        return 1
+    fi
+}
+
+installTerraform() {
+    if command -v terraform >/dev/null 2>&1; then
+        terraform version
+        return 0
+    fi
+
+    if ! command -v apt-get >/dev/null 2>&1; then
+        echo "Terraform install requires apt-get (Debian/Ubuntu). For Windows/MSYS2, install via your Apportable setup instead." >&2
+        return 1
+    fi
+
+    if ! command -v sudo >/dev/null 2>&1; then
+        echo "Terraform install requires sudo." >&2
+        return 1
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "Terraform install requires curl." >&2
+        return 1
+    fi
+
+    sudo apt-get update \
+        && sudo apt-get install -y ca-certificates curl gnupg \
+        && . /etc/os-release \
+        && curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+        && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${VERSION_CODENAME} main" | sudo tee /etc/apt/sources.list.d/hashicorp.list >/dev/null \
+        && sudo apt-get update \
+        && sudo apt-get install -y terraform
+}
+
+useSSH() {
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "curl is required to run setup-ssh-bitwarden.sh." >&2
+        return 1
+    fi
+
+    if [ -f "./setup-ssh-bitwarden.sh" ]; then
+        bash "./setup-ssh-bitwarden.sh" "$@"
+        return $?
+    fi
+
+    if [ -f "$HOME/setup-ssh-bitwarden.sh" ]; then
+        bash "$HOME/setup-ssh-bitwarden.sh" "$@"
+        return $?
+    fi
+
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/setup-ssh-bitwarden.sh" | bash -s -- "$@"
+}
+
+setupNodeEnv() {
+    if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+        node --version
+        npm --version
+        return 0
+    fi
+
+    case "$(uname -s 2>/dev/null)" in
+        MINGW*|MSYS*|CYGWIN*) ;;
+        *)
+            echo "Node environment setup is currently Windows/MSYS2-only (uses nvm-windows, like Apportable.sh)." >&2
+            return 1
+            ;;
+    esac
+
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "Node environment setup requires curl." >&2
+        return 1
+    fi
+
+    local root_dir="/c/apportable/Programming"
+    local nvm_home="$root_dir/nvm"
+    local nvm_symlink="$root_dir/nodejs"
+    local nvm_zip_url="https://github.com/coreybutler/nvm-windows/releases/download/1.2.2/nvm-noinstall.zip"
+
+    mkdir -p "$nvm_home" "$nvm_symlink" 2>/dev/null || true
+
+    if ! command -v nvm >/dev/null 2>&1; then
+        local tmp_dir=""
+        tmp_dir=$(mktemp -d "/tmp/nvm-windows.XXXXXXXX" 2>/dev/null) || tmp_dir=""
+        [ -n "$tmp_dir" ] || { echo "Failed to create a temp directory." >&2; return 1; }
+
+        local zip="$tmp_dir/nvm-noinstall.zip"
+        if ! curl -fsSL --retry 3 --retry-delay 1 "$nvm_zip_url" -o "$zip" 2>/dev/null; then
+            rm -rf "$tmp_dir" 2>/dev/null || true
+            echo "Failed to download nvm-windows." >&2
+            return 1
+        fi
+
+        if command -v unzip >/dev/null 2>&1; then
+            unzip -o "$zip" -d "$nvm_home" >/dev/null 2>&1 || {
+                rm -rf "$tmp_dir" 2>/dev/null || true
+                echo "Failed to extract nvm-windows (unzip failed)." >&2
+                return 1
+            }
+        elif command -v powershell.exe >/dev/null 2>&1; then
+            powershell.exe -NoProfile -Command "Expand-Archive -Force -Path '$zip' -DestinationPath '$nvm_home'" >/dev/null 2>&1 || {
+                rm -rf "$tmp_dir" 2>/dev/null || true
+                echo "Failed to extract nvm-windows (Expand-Archive failed)." >&2
+                return 1
+            }
+        else
+            rm -rf "$tmp_dir" 2>/dev/null || true
+            echo "unzip (or powershell Expand-Archive) is required to extract nvm-windows." >&2
+            return 1
+        fi
+
+        rm -rf "$tmp_dir" 2>/dev/null || true
+    fi
+
+    export NVM_HOME="$nvm_home"
+    export NVM_SYMLINK="$nvm_symlink"
+    export PATH="$PATH:$NVM_HOME:$NVM_SYMLINK"
+
+    : >"$NVM_HOME/PATH.txt"
+    : >"$NVM_HOME/settings.txt"
+    echo "PATH=$PATH" >"$NVM_HOME/PATH.txt"
+
+    local sys_arch="64"
+    [ -d "/c/Program Files (x86)" ] || sys_arch="32"
+    echo "root: $NVM_HOME" >"$NVM_HOME/settings.txt"
+    echo "path: $NVM_SYMLINK" >>"$NVM_HOME/settings.txt"
+    echo "arch: $sys_arch" >>"$NVM_HOME/settings.txt"
+    echo "proxy: none" >>"$NVM_HOME/settings.txt"
+
+    nvm install lts && nvm use lts || return 1
+
+    if [ -f "$root_dir/PortableGit/bin/bash.exe" ]; then
+        npm config set script-shell "$root_dir/PortableGit/bin/bash.exe" >/dev/null 2>&1 || true
+    fi
+
+    npm install -g bun pnpm >/dev/null 2>&1 || true
+    pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || true
+
+    node --version
+    npm --version
+}
+
 claude() {
     if [ ! -d ~/ai ]; then
         git clone git@github.com:judigot/ai.git ~/ai >/dev/null 2>&1
@@ -468,6 +646,23 @@ installPackage() {
     fi
 
     command -v "$package" >/dev/null 2>&1
+}
+
+msysInstallPackage() {
+    local package="$1"
+
+    if [ -z "$package" ] || ! command -v pacman >/dev/null 2>&1; then
+        return 1
+    fi
+
+    case "${MSYSTEM:-}" in
+        MINGW64|UCRT64|CLANG64|CLANGARM64)
+            pacman -S --needed --noconfirm "mingw-w64-x86_64-$package"
+            ;;
+        *)
+            pacman -S --needed --noconfirm "$package"
+            ;;
+    esac
 }
 
 # Ubuntu-like apt wrapper for pacman
@@ -515,7 +710,15 @@ apt() {
             pacman -Rs "${pacman_args[@]}" "${args[@]}"
             ;;
         autoremove)
-            pacman -Rns "${pacman_args[@]}" "$(pacman -Qdtq)" "${args[@]}"
+            local orphans=""
+            orphans=$(pacman -Qdtq 2>/dev/null) || orphans=""
+
+            if [ -z "$orphans" ]; then
+                return 0
+            fi
+
+            # shellcheck disable=SC2086
+            pacman -Rns "${pacman_args[@]}" $orphans "${args[@]}"
             ;;
         list)
             if [ "${args[0]}" = "--installed" ]; then
@@ -537,22 +740,15 @@ apt() {
 }
 
 useAI() {
-    # Check if fzf is installed, install if missing
     if ! installPackage "fzf"; then
-        if command -v pacman >/dev/null 2>&1; then
-            pacman -S mingw-w64-x86_64-fzf || return 1
-        else
-            return 1
-        fi
+        msysInstallPackage "fzf" || return 1
     fi
 
-    # Define AI choices with official names
     local choices=("Claude Code" "Open Code")
     
-    # Configure fzf with ✨ as pointer, cycling enabled, and proper terminal handling
     local fzf_opts=(
-        --prompt="✨ Select AI: "
-        --pointer="✨"
+        --prompt="Select AI: "
+        --pointer=">"
         --height=10
         --border=rounded
         --info=hidden
@@ -561,13 +757,8 @@ useAI() {
         --bind="ctrl-c:abort"
     )
 
-    # Use alternate screen if available for cleaner experience
     local choice
-    if [ -t 0 ] && [ -t 1 ]; then
-        choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
-    else
-        choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
-    fi
+    choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
 
     # Handle cancellation (Ctrl+C or empty selection)
     if [ -z "$choice" ]; then
@@ -577,9 +768,17 @@ useAI() {
     # Execute the chosen AI command with passed arguments
     case "$choice" in
         "Claude Code")
+            if ! installPackage "claude"; then
+                printf '%s\n' "claude is not installed. Run: installClaudeCode" >&2
+                return 1
+            fi
             claude "$@"
             ;;
         "Open Code")
+            if ! installPackage "opencode"; then
+                printf '%s\n' "opencode is not installed. Run: installOpenCode" >&2
+                return 1
+            fi
             opencode "$@"
             ;;
         *)
@@ -668,44 +867,64 @@ downloadGithubFiles() {
         return 1
     fi
     
+    downloadRawFile() {
+        local raw_repo="$1"
+        local raw_branch="$2"
+        local raw_file="$3"
+        local raw_dest="$4"
+
+        local cache_bust=""
+        cache_bust=$(date +%s 2>/dev/null || echo "0")
+
+        mkdir -p "$(dirname "$raw_dest")"
+        curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" \
+            "https://raw.githubusercontent.com/$raw_repo/$raw_branch/$raw_file?cachebust=$cache_bust" \
+            -o "$raw_dest" 2>/dev/null
+    }
+
+    # Prefer zip-based download (fewer requests), but fall back to raw-per-file
+    # in networks where GitHub archive downloads are blocked/rewritten.
     local name="${repo#*/}"
     local url="https://github.com/$repo/archive/refs/heads/$branch.zip"
 
-    local tmp_dir
-    tmp_dir=$(mktemp -d "/tmp/${name}.XXXXXXXX") || return 1
+    local tmp_dir=""
+    tmp_dir=$(mktemp -d "/tmp/${name}.XXXXXXXX" 2>/dev/null) || tmp_dir=""
 
-    local zip="$tmp_dir/$name.zip"
+    if [ -n "$tmp_dir" ] && command -v unzip >/dev/null 2>&1; then
+        local zip="$tmp_dir/$name.zip"
 
-    if ! curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$zip" 2>/dev/null; then
-        printf '%s\n' "Download failed" >&2
+        if curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$zip" 2>/dev/null && [ -s "$zip" ] && unzip -q "$zip" -d "$tmp_dir" 2>/dev/null; then
+            local src="$tmp_dir/$name-$branch"
+
+            for file in "${files[@]}"; do
+                [ -n "$file" ] || continue
+                local dest_path="$dest/$file"
+                mkdir -p "$(dirname "$dest_path")"
+                cp "$src/$file" "$dest_path" 2>/dev/null
+            done
+
+            rm -rf "$tmp_dir"
+            echo "Downloaded ${#files[@]} file(s) to $dest"
+            return 0
+        fi
+
         rm -rf "$tmp_dir" 2>/dev/null || true
-        return 1
     fi
 
-    if [ ! -s "$zip" ]; then
-        printf '%s\n' "Download failed (empty archive)" >&2
-        rm -rf "$tmp_dir" 2>/dev/null || true
-        return 1
-    fi
-
-    if ! unzip -q "$zip" -d "$tmp_dir" 2>/dev/null; then
-        printf '%s\n' "Extract failed" >&2
-        rm -rf "$tmp_dir" 2>/dev/null || true
-        return 1
-    fi
-    
-    local src="$tmp_dir/$name-$branch"
-    
+    # Raw fallback
+    local downloaded=0
     for file in "${files[@]}"; do
-        if [ -n "$file" ]; then
-            local dest_path="$dest/$file"
-            mkdir -p "$(dirname "$dest_path")"
-            cp "$src/$file" "$dest_path" 2>/dev/null
+        [ -n "$file" ] || continue
+        local dest_path="$dest/$file"
+        if downloadRawFile "$repo" "$branch" "$file" "$dest_path"; then
+            downloaded=$((downloaded + 1))
+        else
+            printf '%s\n' "Download failed: $file" >&2
+            return 1
         fi
     done
-    
-    rm -rf "$tmp_dir"
-    echo "Downloaded ${#files[@]} file(s) to $dest"
+
+    echo "Downloaded ${downloaded} file(s) to $dest"
 }
 
 #<TERMUX>
