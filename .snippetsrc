@@ -477,12 +477,14 @@ initUbuntu() {
 }
 
 loginUbuntu() {
-    if command -v wsl >/dev/null 2>&1; then
+    if command -v proot-distro >/dev/null 2>&1; then
+        proot-distro login ubuntu
+    elif command -v wsl >/dev/null 2>&1; then
         wsl -d Ubuntu
     elif command -v ubuntu.exe >/dev/null 2>&1; then
         ubuntu.exe
     else
-        echo "WSL Ubuntu not found. Install Ubuntu from Microsoft Store or use 'wsl --install -d Ubuntu'." >&2
+        echo "Ubuntu not found. For Termux: install proot-distro and run 'proot-distro install ubuntu'. For Windows: install Ubuntu from Microsoft Store or use 'wsl --install -d Ubuntu'." >&2
         return 1
     fi
 }
