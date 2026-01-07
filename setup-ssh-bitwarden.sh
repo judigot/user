@@ -50,57 +50,81 @@ if [ "$bw_exists" = false ]; then
   fi
   
   if [ "$os" = "linux" ]; then
-    # Determine architecture and download URL
+    # Check if architecture is ARM (Bitwarden CLI doesn't provide prebuilt ARM binaries, use npm)
     case "$arch" in
-      aarch64|arm64)
-        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-arm64-$BW_VER.zip"
-        ;;
-      armv7l|armv6l|arm)
-        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-arm-$BW_VER.zip"
+      aarch64|arm64|armv7l|armv6l|arm)
+        # Use npm for ARM architectures
+        if ! command -v npm >/dev/null 2>&1; then
+          echo "✗ Node.js/npm is required to install Bitwarden CLI on ARM devices" >&2
+          echo "  Please install Node.js first: apt update && apt install -y nodejs npm" >&2
+          exit 1
+        fi
+        
+        echo "Installing Bitwarden CLI via npm (ARM architecture detected)..." >&2
+        if npm install -g @bitwarden/cli >/dev/null 2>&1; then
+          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+          hash -r 2>/dev/null || true
+          # Verify installation
+          if ! bw --version >/dev/null 2>&1; then
+            echo "✗ Bitwarden CLI installation failed or not in PATH" >&2
+            echo "  Try running: npm install -g @bitwarden/cli" >&2
+            exit 1
+          fi
+        else
+          echo "✗ Failed to install Bitwarden CLI via npm" >&2
+          echo "  Try running manually: npm install -g @bitwarden/cli" >&2
+          exit 1
+        fi
         ;;
       x86_64|amd64)
+        # Use prebuilt binary for x86_64
         bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-$BW_VER.zip"
+        
+        # Install to user directory if in proot/termux or if sudo is unavailable
+        if [ "$in_proot" = true ] || ! command -v sudo >/dev/null 2>&1 || ! sudo -n true 2>/dev/null; then
+          mkdir -p "$HOME/.local/bin"
+          if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
+            if unzip -o "$tmp/bw.zip" -d "$HOME/.local/bin" >/dev/null && chmod +x "$HOME/.local/bin/bw" 2>/dev/null; then
+              export PATH="$HOME/.local/bin:$PATH"
+              hash -r 2>/dev/null || true
+            else
+              echo "✗ Failed to extract or make Bitwarden CLI executable" >&2
+              rm -f "$tmp/bw.zip" "$HOME/.local/bin/bw" 2>/dev/null || true
+              exit 1
+            fi
+          else
+            echo "✗ Failed to download Bitwarden CLI" >&2
+            rm -f "$tmp/bw.zip" 2>/dev/null || true
+            exit 1
+          fi
+        else
+          if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
+            if ! sudo unzip -o "$tmp/bw.zip" -d /usr/local/bin >/dev/null || ! sudo chmod +x /usr/local/bin/bw; then
+              echo "✗ Failed to install Bitwarden CLI to /usr/local/bin" >&2
+              rm -f "$tmp/bw.zip" 2>/dev/null || true
+              exit 1
+            fi
+            hash -r 2>/dev/null || true
+          else
+            echo "✗ Failed to download Bitwarden CLI" >&2
+            rm -f "$tmp/bw.zip" 2>/dev/null || true
+            exit 1
+          fi
+        fi
         ;;
       *)
-        # Fallback to x86_64 (most common)
-        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-$BW_VER.zip"
+        # Unknown architecture - try npm as fallback
+        echo "⚠ Unknown architecture: $arch. Attempting npm installation..." >&2
+        if command -v npm >/dev/null 2>&1; then
+          npm install -g @bitwarden/cli >/dev/null 2>&1
+          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+          hash -r 2>/dev/null || true
+        else
+          echo "✗ Cannot install Bitwarden CLI: unknown architecture and npm not available" >&2
+          exit 1
+        fi
         ;;
     esac
-    
-    # Install to user directory if in proot/termux or if sudo is unavailable
-    if [ "$in_proot" = true ] || ! command -v sudo >/dev/null 2>&1 || ! sudo -n true 2>/dev/null; then
-      mkdir -p "$HOME/.local/bin"
-      if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
-        if unzip -o "$tmp/bw.zip" -d "$HOME/.local/bin" >/dev/null && chmod +x "$HOME/.local/bin/bw" 2>/dev/null; then
-          export PATH="$HOME/.local/bin:$PATH"
-          hash -r 2>/dev/null || true  # Clear command cache
-        else
-          echo "✗ Failed to extract or make Bitwarden CLI executable" >&2
-          rm -f "$tmp/bw.zip" "$HOME/.local/bin/bw" 2>/dev/null || true
-          exit 1
-        fi
-      else
-        echo "✗ Failed to download Bitwarden CLI for architecture: $arch" >&2
-        echo "  URL attempted: $bw_url" >&2
-        echo "  For ARM devices, you may need to install Bitwarden CLI manually or use npm: npm install -g @bitwarden/cli" >&2
-        rm -f "$tmp/bw.zip" 2>/dev/null || true
-        exit 1
-      fi
-    else
-      if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
-        if ! sudo unzip -o "$tmp/bw.zip" -d /usr/local/bin >/dev/null || ! sudo chmod +x /usr/local/bin/bw; then
-          echo "✗ Failed to install Bitwarden CLI to /usr/local/bin" >&2
-          rm -f "$tmp/bw.zip" 2>/dev/null || true
-          exit 1
-        fi
-        hash -r 2>/dev/null || true  # Clear command cache
-      else
-        echo "✗ Failed to download Bitwarden CLI for architecture: $arch" >&2
-        echo "  URL attempted: $bw_url" >&2
-        rm -f "$tmp/bw.zip" 2>/dev/null || true
-        exit 1
-      fi
-    fi
   else
     mkdir -p "$HOME/.local/bin"
     curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-windows-$BW_VER.zip" -o "$tmp/bw.zip"
