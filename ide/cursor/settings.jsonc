@@ -87,7 +87,7 @@
         "Git Bash": {
             "path": ["C:/apportable/Programming/PortableGit/bin/bash.exe"],
             "env": {
-                // "HOME": "C:/Users/${env:USERNAME}", // Uses the .bashrc located at C:/Users/${env:USERNAME}
+                "HOME": "C:/Users/${env:USERNAME}", // Uses the .bashrc located at C:/Users/${env:USERNAME}
                 "MSYSTEM": "MSYS",
                 "CHERE_INVOKING": "1" // Start the terminal in the directory from which it was launched
             },
@@ -109,9 +109,13 @@
         },
         "MSYS2": {
             "path": "C:/apportable/Programming/msys64/usr/bin/bash.exe",
-            "args": ["--login", "-i"],
+            "args": [
+                "--login",
+                "-i",
+                "-c",
+                "source /c/Users/${env:USERNAME}/.bashrc; exec bash"
+            ],
             "env": {
-                "HOME": "C:/Users/${env:USERNAME}", // Uses the .bashrc located at C:/Users/${env:USERNAME}
                 "MSYSTEM": "MSYS",
                 "CHERE_INVOKING": "1" // Start the terminal in the directory from which it was launched
             },
