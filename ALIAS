@@ -99,6 +99,11 @@ tfinstall
 useSHS:
 useshs
 shs
+initssh
+setupssh
+sshsetup
+sshbitwarden
+bwssh
 
 setupNodeEnv:
 setupnodeenv
