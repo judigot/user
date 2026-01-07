@@ -525,6 +525,21 @@ useSSH() {
         return 1
     fi
 
+    # Ensure ~/.local/bin is in PATH (needed for Termux/Ubuntu user installs)
+    export PATH="$HOME/.local/bin:$PATH"
+    mkdir -p "$HOME/.local/bin" 2>/dev/null || true
+
+    # Check if bw exists but can't execute (wrong architecture issue)
+    if command -v bw >/dev/null 2>&1; then
+        if ! bw --version >/dev/null 2>&1; then
+            echo "⚠ Bitwarden CLI binary found but cannot execute (wrong architecture). Removing..." >&2
+            bw_path="$(command -v bw)"
+            [ -f "$bw_path" ] && rm -f "$bw_path" 2>/dev/null || true
+            [ -f "/usr/local/bin/bw" ] && sudo rm -f /usr/local/bin/bw 2>/dev/null || rm -f /usr/local/bin/bw 2>/dev/null || true
+            [ -f "$HOME/.local/bin/bw" ] && rm -f "$HOME/.local/bin/bw" 2>/dev/null || true
+        fi
+    fi
+
     if [ -f "./setup-ssh-bitwarden.sh" ]; then
         bash "./setup-ssh-bitwarden.sh" "$@"
         return $?
