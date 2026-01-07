@@ -99,7 +99,7 @@
             "path": "C:/apportable/Programming/msys64/usr/bin/bash.exe",
             "args": ["--login", "-i", "-c", "zsh"],
             "env": {
-                // "HOME": "C:/Users/${env:USERNAME}", // Uses the .bashrc located at C:/Users/${env:USERNAME}
+                "HOME": "C:/Users/${env:USERNAME}", // Uses the .bashrc located at C:/Users/${env:USERNAME}
                 "MSYSTEM": "MSYS",
                 "CHERE_INVOKING": "1" // Start the terminal in the directory from which it was launched
             },
@@ -111,7 +111,7 @@
             "path": "C:/apportable/Programming/msys64/usr/bin/bash.exe",
             "args": ["--login", "-i"],
             "env": {
-                // "HOME": "C:/Users/${env:USERNAME}", // Uses the .bashrc located at C:/Users/${env:USERNAME}
+                "HOME": "C:/Users/${env:USERNAME}", // Uses the .bashrc located at C:/Users/${env:USERNAME}
                 "MSYSTEM": "MSYS",
                 "CHERE_INVOKING": "1" // Start the terminal in the directory from which it was launched
             },
@@ -130,7 +130,7 @@
                 "source /c/Users/${env:USERNAME}/.bashrc; exec bash"
             ],
             "env": {
-                // "HOME": "C:/apportable/Programming/msys64/home/${env:USERNAME}",
+                "HOME": "C:/apportable/Programming/msys64/home/${env:USERNAME}",
                 "MSYSTEM": "MSYS",
                 "CHERE_INVOKING": "1"
             },
