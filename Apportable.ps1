@@ -152,7 +152,7 @@ function run_apportable {
     }
     
     if ($useLocalScript) {
-        $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
+        $scriptDir = $env:USERPROFILE
         $apportableShPath = Join-Path $scriptDir "Apportable.sh"
         
         if (Test-Path -Path $apportableShPath) {
