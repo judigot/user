@@ -153,9 +153,11 @@ Abandon a worktree:
 rm -f .agent-task-context/.state/TASK_STATUS.* .agent-task-context/.state/TASK_OWNER.* && touch .agent-task-context/.state/TASK_STATUS.abandoned
 ```
 
-Find all claimable worktrees:
+Find all claimable worktrees (supports custom baseDir):
 ```sh
-find .worktrees -name "TASK_STATUS.*" -exec sh -c '
+# Discover base directory from config or use default
+BASE_DIR=$(jq -r '.baseDir // ".worktrees"' worktree-config.json 2>/dev/null || echo ".worktrees")
+find "$BASE_DIR" -name "TASK_STATUS.*" -exec sh -c '
   WT="${1%/.agent-task-context/.state/TASK_STATUS.*}"
   STATUS=$(basename "$1" | sed "s|TASK_STATUS\.||")
   case "$STATUS" in
@@ -164,14 +166,16 @@ find .worktrees -name "TASK_STATUS.*" -exec sh -c '
 ' _ {} \;
 ```
 
-Find worktrees claimed by specific owner:
+Find worktrees claimed by specific owner (supports custom baseDir):
 ```sh
-find .worktrees -name "TASK_OWNER.AGENT_ID" -exec dirname {} \; | sed 's|/.agent-task-context/.state||'
+BASE_DIR=$(jq -r '.baseDir // ".worktrees"' worktree-config.json 2>/dev/null || echo ".worktrees")
+find "$BASE_DIR" -name "TASK_OWNER.AGENT_ID" -exec dirname {} \; | sed 's|/.agent-task-context/.state||'
 ```
 
-Check for collision (ownerAgentId already exists):
+Check for collision (ownerAgentId already exists, supports custom baseDir):
 ```sh
-find .worktrees -name "TASK_OWNER.AGENT_ID" | grep -q . && echo "collision"
+BASE_DIR=$(jq -r '.baseDir // ".worktrees"' worktree-config.json 2>/dev/null || echo ".worktrees")
+find "$BASE_DIR" -name "TASK_OWNER.AGENT_ID" | grep -q . && echo "collision"
 ```
 
 ## Absolute Rules (non-negotiable)
@@ -277,20 +281,24 @@ For the specified target:
 If the initial worktree is not yours (or no target was provided), you must automatically find another worktree you are allowed to work on:
 
 Selection rules:
-1. Only consider worktrees under `.worktrees/`
-2. For each candidate worktree, extract branch-slug and generate ownerAgentId
-3. Use find command to locate eligible worktrees
-4. A worktree is eligible if:
+1. Discover worktree base directory:
+   - Check for JSON config files (e.g., `worktree-config.json`) to find `baseDir`
+   - Default to `.worktrees/` if no config found
+   - Search common locations: `.worktrees/`, `.worktrees/w/`, `.worktrees/work/`
+2. Only consider worktrees under discovered base directory
+3. For each candidate worktree, extract branch-slug and generate ownerAgentId
+4. Use find command to locate eligible worktrees
+5. A worktree is eligible if:
    - TASK_STATUS.unclaimed, paused, or abandoned exists, OR
    - TASK_STATUS.claimed exists AND TASK_OWNER file matches generated ownerAgentId
-5. Ignore any worktree that has TASK_STATUS.claimed with a different TASK_OWNER file or has TASK_STATUS.done
-6. Choose exactly ONE worktree using this priority:
+6. Ignore any worktree that has TASK_STATUS.claimed with a different TASK_OWNER file or has TASK_STATUS.done
+7. Choose exactly ONE worktree using this priority:
    - First: worktrees with TASK_STATUS.paused AND TASK_OWNER file matches (resume your paused work)
    - Second: TASK_STATUS.unclaimed
    - Third: TASK_STATUS.abandoned
    - Fourth: TASK_STATUS.paused with no TASK_OWNER file (treat as reclaimable)
-7. If no eligible worktrees exist:
-   - STOP and output only: "No eligible unclaimed worktrees found under .worktrees/."
+8. If no eligible worktrees exist:
+   - STOP and output only: "No eligible unclaimed worktrees found."
 
 8. **CRITICAL: Store the selected worktree path**
    - After selecting a worktree, store its path: `WORKTREE_PATH=".worktrees/<branch-slug>"`
@@ -459,9 +467,10 @@ Rules:
 - Do not ask questions. Run the command and report the output.
 - If `.worktrees/` does not exist, stop and report that as the only issue.
 
-Inline command:
+Inline command (supports custom baseDir):
 ```sh
-find .worktrees -name "TASK_STATUS.*" -print | sort | while IFS= read -r f; do
+BASE_DIR=$(jq -r '.baseDir // ".worktrees"' worktree-config.json 2>/dev/null || echo ".worktrees")
+find "$BASE_DIR" -name "TASK_STATUS.*" -print | sort | while IFS= read -r f; do
   wt="${f%/.agent-task-context/.state/TASK_STATUS.*}"
   status=$(basename "$f" | sed "s|TASK_STATUS\.||")
 
@@ -479,7 +488,7 @@ done
 You may ask a question ONLY if:
 - Context.md contains a direct contradiction that prevents safe action, OR
 - A required secret/config/value is missing and blocks execution, OR
-- `.worktrees/` does not exist or no worktrees can be discovered.
+- `.worktrees/` (or configured baseDir) does not exist or no worktrees can be discovered.
 
 Otherwise, do not ask questions.
 

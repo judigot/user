@@ -380,3 +380,134 @@ This workflow is correct if:
 - Work does not leak between branches.
 - Each active worktree has `.agent-task-context/Context.md` and `.agent-task-context/BRANCH_NAME` (committed) so scope and branch association are always visible.
 - Runtime task status is tracked in `.agent-task-context/.state/TASK_STATUS.*` and `.agent-task-context/.state/TASK_OWNER.*` files (gitignored, not committed).
+
+## CLI-Native Workflow (JSON Configuration)
+
+For CLI-native workflows using Claude Code terminal, use JSON configuration files to manage worktrees with dependencies and merge ordering.
+
+### Configuration Format
+
+Create a JSON configuration file (e.g., `worktree-config.json`):
+
+```json
+{
+  "baseDir": ".worktrees/w",
+  "baseBranch": "main",
+  "worktrees": [
+    {
+      "id": "feat-auth-refresh",
+      "branch": "feat/auth-refresh",
+      "dir": "repo--feat-auth-refresh",
+      "priority": 10,
+      "dependsOn": [],
+      "status": "ready"
+    },
+    {
+      "id": "fix-payment-webhook",
+      "branch": "fix/payment-webhook",
+      "dir": "repo--fix-payment-webhook",
+      "priority": 2,
+      "dependsOn": ["feat/auth-refresh"],
+      "status": "ready"
+    }
+  ]
+}
+```
+
+**Fields:**
+- `baseDir`: Base directory for worktrees (default: `.worktrees`)
+- `baseBranch`: Target branch for merges (default: `main`)
+- `worktrees`: Array of worktree definitions
+  - `id`: Unique identifier for the worktree
+  - `branch`: Git branch name (with forward slashes)
+  - `dir`: Directory name within baseDir (kebab-case)
+  - `priority`: Merge priority (higher = merge first, optional)
+  - `dependsOn`: Array of branch names this worktree depends on
+  - `status`: Initial status (`ready`, `unclaimed`, `claimed`, `paused`, `done`, `abandoned`)
+
+### Workflow Scripts
+
+Three scripts are available in `~/ai/scripts/`:
+
+1. **`init-worktrees.sh`** — Creates worktrees from JSON config
+   ```sh
+   ~/ai/scripts/init-worktrees.sh worktree-config.json
+   ```
+   - Creates all worktrees defined in config
+   - Initializes `.agent-task-context/` files
+   - Sets initial TASK_STATUS based on `status` field
+   - Commits BRANCH_NAME and Context.md
+   - Pushes branches to remote
+
+2. **`merge-order.sh`** — Determines merge order based on dependencies
+   ```sh
+   ~/ai/scripts/merge-order.sh worktree-config.json
+   ```
+   - Lists worktrees with `TASK_STATUS.done`
+   - Orders by dependencies (`dependsOn` relationships)
+   - Orders by priority (higher priority first)
+   - Shows merge sequence
+
+3. **`execute-merges.sh`** — Executes merges in correct order
+   ```sh
+   ~/ai/scripts/execute-merges.sh worktree-config.json --dry-run
+   ~/ai/scripts/execute-merges.sh worktree-config.json
+   ```
+   - Only merges worktrees with `TASK_STATUS.done`
+   - Respects dependency order (dependencies merged first)
+   - Respects priority order (higher priority first)
+   - Supports `--dry-run` to preview merges
+   - Executes merges into `baseBranch`
+
+### Complete Workflow
+
+```sh
+# 1. Create config
+cat > worktree-config.json << 'EOF'
+{
+  "baseDir": ".worktrees/w",
+  "baseBranch": "main",
+  "worktrees": [
+    {
+      "id": "feat-auth-refresh",
+      "branch": "feat/auth-refresh",
+      "dir": "repo--feat-auth-refresh",
+      "priority": 10,
+      "dependsOn": [],
+      "status": "ready"
+    },
+    {
+      "id": "fix-payment-webhook",
+      "branch": "fix/payment-webhook",
+      "dir": "repo--fix-payment-webhook",
+      "priority": 2,
+      "dependsOn": ["feat/auth-refresh"],
+      "status": "ready"
+    }
+  ]
+}
+EOF
+
+# 2. Initialize worktrees
+~/ai/scripts/init-worktrees.sh worktree-config.json
+
+# 3. Work on tasks (until TASK_STATUS.done)
+
+# 4. Check merge order
+~/ai/scripts/merge-order.sh worktree-config.json
+
+# 5. Execute merges (dry-run first)
+~/ai/scripts/execute-merges.sh worktree-config.json --dry-run
+~/ai/scripts/execute-merges.sh worktree-config.json
+```
+
+### Integration with Multitasker
+
+The multitasker agent can coordinate this workflow:
+
+1. **Create worktrees**: Use `init-worktrees.sh` with a JSON config
+2. **Monitor status**: Check `TASK_STATUS.done` files in worktrees
+3. **Determine merge order**: Use `merge-order.sh` to see merge sequence
+4. **Execute merges**: Use `execute-merges.sh` when tasks are complete
+
+The multitasker has visibility into all worktrees and their status, making it the natural coordinator for merge ordering and execution.
