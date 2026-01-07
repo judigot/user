@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Prevent multiple sourcing
+[[ -n "${BASHRC_SOURCED}" ]] && return
+export BASHRC_SOURCED=1
+
 # Load aliases
 #<SNIPPETS>
 [[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"

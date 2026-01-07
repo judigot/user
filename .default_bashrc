@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Prevent multiple sourcing (standard practice)
+# This ensures the file is only executed once per shell session
+[[ -n "${BASHRC_SOURCED}" ]] && return
+export BASHRC_SOURCED=1
+
+# Only run for interactive shells
+[[ $- != *i* ]] && return
+
+# Source system-wide bashrc if it exists
+[[ -f /etc/bash.bashrc ]] && source /etc/bash.bashrc
+
+# History configuration
+HISTCONTROL=ignoreboth
+HISTSIZE=1000
+HISTFILESIZE=2000
+shopt -s histappend
+shopt -s checkwinsize
+
+# Make less more friendly for non-text input files
+[[ -x /usr/bin/lesspipe ]] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# Set variable identifying the chroot you work in
+if [[ -z "${debian_chroot:-}" ]] && [[ -r /etc/debian_chroot ]]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# Colored prompt
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+if [[ "$color_prompt" = yes ]]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# Enable color support for ls and grep
+if [[ -x /usr/bin/dircolors ]]; then
+    [[ -r ~/.dircolors ]] && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# Aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add custom aliases here
+# alias myalias='command'
+
+# Environment variables
+export EDITOR=vim
+export VISUAL=vim
+
+# Add custom environment variables here
+# export MY_VAR="value"
+
+# Functions
+# Add custom functions here
+# myfunction() {
+#     # function body
+# }
+
+# Source additional configuration files
+# [[ -f "$HOME/.bash_aliases" ]] && source "$HOME/.bash_aliases"
+# [[ -f "$HOME/.bash_functions" ]] && source "$HOME/.bash_functions"
+
+# Enable programmable completion features
+if ! shopt -oq posix; then
+    if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+        source /usr/share/bash-completion/bash_completion
+    elif [[ -f /etc/bash_completion ]]; then
+        source /etc/bash_completion
+    fi
+fi
+

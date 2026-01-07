@@ -1,7 +1,5 @@
-.bash_profile
 .bashrc
 .snippetsrc
-.profile
 .zshrc
 profile.ps1
 PATH

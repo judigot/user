@@ -66,8 +66,7 @@ user/                          ← judigot/user (source of truth)
 ├── AGENTS.md                   │
 ├── CLAUDE.md                  ─┘
 ├── .bashrc                    ─┐
-├── .snippetsrc                 │
-├── .profile                    │→ syncs to ~/
+├── .snippetsrc                 │→ syncs to ~/
 ├── .zshrc                      │
 ├── profile.ps1                 │
 ├── PATH                        │
@@ -296,7 +295,6 @@ Both shells read from the same file, so aliases stay in sync automatically.
 |------|-------------|
 | `.bashrc` | Bash configuration with PATH loading and environment setup |
 | `.zshrc` | Zsh configuration (mirrors .bashrc functionality) |
-| `.profile` | Login shell profile |
 | `.snippetsrc` | Shell functions and alias loader |
 | `profile.ps1` | PowerShell profile with bash integration |
 | `PATH` | Portable PATH entries for development tools |
