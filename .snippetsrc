@@ -424,6 +424,11 @@ useSSHKey() {
   ssh-add -l
 }
 
+installAWS() {
+    # Ubuntu/Debian
+    sudo apt install -y awscli
+}
+
 usePersonalSSH() { useSSHKey "id_ed25519"; }
 
 useWorkSSH() { useSSHKey "id_ed25519_work"; }
@@ -473,7 +478,7 @@ initUbuntu() {
     set -eu
     sudo apt-get update -y
     sudo apt-get upgrade -y
-    sudo apt-get install -y ca-certificates curl git openssh-client unzip vim
+    sudo apt-get install -y ca-certificates curl git openssh-client unzip vim make
 }
 
 loginUbuntu() {
@@ -518,6 +523,15 @@ installTerraform() {
         && sudo apt-get update \
         && sudo apt-get install -y terraform
 }
+
+cloneTerraformRepo() {
+    git clone git@github.com:judigot/terraform.git "$HOME/terraform"
+    cd "$HOME/terraform"
+    terraform init
+    pnpm install
+}
+
+
 
 useSSH() {
     # Load nvm if available (needed for npm on Linux/Ubuntu)
@@ -584,6 +598,145 @@ useSSH() {
     # Export PATH to ensure script sees ~/.local/bin
     export PATH="$HOME/.local/bin:$PATH"
     bash "$script_path" "$@"
+    
+    # Ensure SSH directory and keys have proper permissions
+    if [ -d "$HOME/.ssh" ]; then
+        chmod 700 "$HOME/.ssh" 2>/dev/null || true
+        # Set permissions on all private keys
+        find "$HOME/.ssh" -type f -name "id_*" ! -name "*.pub" -exec chmod 600 {} \; 2>/dev/null || true
+        # Set permissions on all public keys
+        find "$HOME/.ssh" -type f -name "*.pub" -exec chmod 644 {} \; 2>/dev/null || true
+    fi
+}
+
+useAWS() {
+    # Load nvm if available (needed for npm on Linux/Ubuntu)
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+        export NVM_DIR="$HOME/.nvm"
+        # shellcheck source=/dev/null
+        . "$NVM_DIR/nvm.sh"
+        # shellcheck source=/dev/null
+        [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+    fi
+    
+    # Ensure npm is in PATH
+    npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+    export PATH="$npm_prefix/bin:$HOME/.local/bin:$PATH"
+    
+    # Check if bw exists and is executable
+    if ! command -v bw >/dev/null 2>&1; then
+        echo "✗ Bitwarden CLI (bw) is required. Please run 'usessh' first to install it." >&2
+        return 1
+    fi
+    
+    if ! bw --version >/dev/null 2>&1; then
+        echo "✗ Bitwarden CLI found but cannot execute. Please run 'usessh' first to reinstall it." >&2
+        return 1
+    fi
+    
+    # Check if logged in
+    if ! bw login --check >/dev/null 2>&1; then
+        echo "⚠ Not logged in to Bitwarden. Please login first..." >&2
+        bw login || return 1
+    fi
+    
+    # Check if vault is unlocked
+    if ! bw unlock --check >/dev/null 2>&1; then
+        echo "⚠ Bitwarden vault is locked. Please unlock..." >&2
+        export BW_SESSION="$(bw unlock --raw)"
+        [ -n "$BW_SESSION" ] || { echo "✗ Failed to unlock Bitwarden vault" >&2; return 1; }
+    else
+        export BW_SESSION="$(bw unlock --raw)"
+    fi
+    
+    # Get AWS Credentials item
+    echo "Fetching AWS Credentials from Bitwarden..." >&2
+    item_id="$(bw list items 2>/dev/null | node -e "
+        const normalize = (s) => s ? s.toLowerCase().replace(/[\\s_-]+/g, '').trim() : '';
+        const searchTerm = normalize('AWS Credentials');
+        const input = require('fs').readFileSync(0, 'utf-8').trim();
+        if (!input) process.exit(1);
+        const data = JSON.parse(input);
+        if (!Array.isArray(data)) process.exit(1);
+        const matches = data.filter(i => i && i.name && normalize(i.name) === searchTerm);
+        if (matches.length === 1) {
+            console.log(matches[0].id);
+        } else if (matches.length > 1) {
+            console.log(matches[0].id);
+            console.error('Multiple matches found, using:', matches[0].name);
+        } else {
+            process.exit(1);
+        }
+    ")"
+    
+    if [ -z "$item_id" ]; then
+        echo "✗ AWS Credentials item not found in Bitwarden vault" >&2
+        return 1
+    fi
+    
+    # Get item and extract credentials
+    credentials_data="$(bw get item "$item_id" 2>/dev/null | node -e "
+        const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+        let result = { awsAccessKeyId: null, awsSecretAccessKey: null, credentialsText: null };
+        
+        // Try to get from fields first
+        if (data.fields && data.fields.length > 0) {
+            data.fields.forEach(f => {
+                const name = (f.name || '').toLowerCase();
+                if (name.includes('access') && name.includes('key') && name.includes('id')) {
+                    result.awsAccessKeyId = f.value;
+                } else if (name.includes('secret') && name.includes('access') && name.includes('key')) {
+                    result.awsSecretAccessKey = f.value;
+                }
+            });
+        }
+        
+        // Try to get from notes (might be stored as full credentials file format)
+        if (data.notes) {
+            result.credentialsText = data.notes;
+        }
+        
+        // Try login.username and login.password as fallback
+        if (!result.awsAccessKeyId && data.login && data.login.username) {
+            result.awsAccessKeyId = data.login.username;
+        }
+        if (!result.awsSecretAccessKey && data.login && data.login.password) {
+            result.awsSecretAccessKey = data.login.password;
+        }
+        
+        console.log(JSON.stringify(result));
+    ")"
+    
+    # Extract values
+    aws_access_key_id="$(echo "$credentials_data" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf-8')); console.log(d.awsAccessKeyId || '')")"
+    aws_secret_access_key="$(echo "$credentials_data" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf-8')); console.log(d.awsSecretAccessKey || '')")"
+    credentials_text="$(echo "$credentials_data" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf-8')); console.log(d.credentialsText || '')")"
+    
+    # Create AWS credentials directory
+    mkdir -p "$HOME/.aws"
+    chmod 700 "$HOME/.aws"
+    
+    # Write credentials file
+    if [ -n "$credentials_text" ] && [ "$credentials_text" != "null" ]; then
+        # Use the full credentials text if provided
+        printf '%s\n' "$credentials_text" > "$HOME/.aws/credentials"
+    elif [ -n "$aws_access_key_id" ] && [ "$aws_access_key_id" != "null" ] && [ -n "$aws_secret_access_key" ] && [ "$aws_secret_access_key" != "null" ]; then
+        # Build credentials file from fields
+        cat > "$HOME/.aws/credentials" <<EOF
+[default]
+aws_access_key_id = $aws_access_key_id
+aws_secret_access_key = $aws_secret_access_key
+EOF
+    else
+        echo "✗ Could not extract AWS credentials from Bitwarden item" >&2
+        echo "  Expected fields: 'Access Key ID' and 'Secret Access Key', or credentials in Notes field" >&2
+        return 1
+    fi
+    
+    # Set proper permissions
+    chmod 600 "$HOME/.aws/credentials" 2>/dev/null || true
+    
+    echo "✓ AWS credentials saved to ~/.aws/credentials"
 }
 
 setupNodeEnv() {

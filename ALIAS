@@ -103,12 +103,21 @@ installterraform
 terraforminstall
 tfinstall
 
+cloneTerraformRepo:
+cloneterraformrepo
+cloneterraform
+
 useSSH:
 usessh
 initssh
 setupssh
 sshbitwarden
 bwssh
+
+useAWS:
+useaws
+setupaws
+awscredentials
 
 setupNodeEnv:
 setupnodeenv

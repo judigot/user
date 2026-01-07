@@ -15,7 +15,28 @@ This is the **single source of truth** for:
 Download and use `.snippetsrc`
 
 ```sh
+curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+```
+
+Set Up Termux
+```sh
 curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc"
+termuxubuntu
+termuxloginubuntu
+```
+
+Setup Mobile Workflow
+
+```sh
+curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+
+initubuntu
+usessh
+installAWS
+useaws
+installnodeenv
+installterraform
+cloneterraformrepo
 ```
 
 Initialize Ubuntu

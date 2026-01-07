@@ -278,6 +278,9 @@ mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" 2>/dev/null || true
         return 1
     fi
 
+# Ensure .ssh directory has proper permissions (already created above, but ensure permissions)
+chmod 700 "$HOME/.ssh" 2>/dev/null || true
+
 # Save private key to file (ensure it ends with newline)
 printf '%s\n' "$private_key" > "$HOME/.ssh/$KEY_FILENAME"
 chmod 600 "$HOME/.ssh/$KEY_FILENAME" 2>/dev/null || true
