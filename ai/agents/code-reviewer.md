@@ -272,7 +272,24 @@ After completing your review, provide:
 - CI/CD checks passing
 - Required approvals obtained
 
-### Step 1: Pre-Merge Verification
+### Integration with Multitasker Merge Coordination
+
+The **multitasker** agent coordinates merge ordering and execution using the CLI-native workflow:
+
+1. **Multitasker determines merge order**: Uses `~/ai/scripts/merge-order.sh` to determine dependency-based merge sequence
+2. **Code-reviewer verifies safety**: Reviews each branch before merge
+3. **Multitasker executes merges**: Uses `~/ai/scripts/execute-merges.sh` to merge in correct order
+
+**Workflow:**
+- Multitasker identifies `TASK_STATUS.done` worktrees
+- Multitasker presents merge plan (from `merge-order.sh`)
+- Code-reviewer reviews each branch for safety
+- Human approves merge plan
+- Multitasker executes merges using `execute-merges.sh`
+
+### Manual Merge Workflow (If Not Using Multitasker)
+
+#### Step 1: Pre-Merge Verification
 
 ```bash
 # Ensure branch is up to date
@@ -283,7 +300,7 @@ git log --oneline origin/main..HEAD
 git log --oneline HEAD..origin/main
 ```
 
-### Step 2: Merge to Main
+#### Step 2: Merge to Main
 
 ```bash
 # Option A: Merge commit
@@ -296,7 +313,7 @@ git merge --squash feature-branch
 git commit -m "feat: description"
 ```
 
-### Step 3: Post-Merge Verification
+#### Step 3: Post-Merge Verification
 
 ```bash
 # Verify merge
@@ -304,6 +321,22 @@ git log --oneline -5
 
 # Push to remote
 git push origin main
+```
+
+### CLI-Native Merge Workflow
+
+For dependency-aware merges, use the multitasker's CLI workflow:
+
+```sh
+# 1. Review merge order
+~/ai/scripts/merge-order.sh worktree-config.json
+
+# 2. Review each branch (code-reviewer)
+# ... review branches in merge order ...
+
+# 3. Execute merges (multitasker)
+~/ai/scripts/execute-merges.sh worktree-config.json --dry-run
+~/ai/scripts/execute-merges.sh worktree-config.json
 ```
 
 ## Constraints
