@@ -18,13 +18,89 @@ BW_VER="2025.12.0"  # Hardcoded as of 2026-01-05
 [[ "$HOME" != /* ]] && [[ "$HOME" != /c/* ]] && HOME="/c/Users/$USERNAME"
 export PATH="$HOME/.local/bin:$PATH"
 
+# Check if bw exists and is executable
+bw_exists=false
+if command -v bw >/dev/null 2>&1; then
+  if bw --version >/dev/null 2>&1; then
+    bw_exists=true
+  else
+    # Binary exists but can't execute (wrong architecture)
+    echo "⚠ Bitwarden CLI binary found but cannot execute (wrong architecture). Reinstalling..." >&2
+    # Remove the broken binary
+    bw_path="$(command -v bw)"
+    [ -f "$bw_path" ] && rm -f "$bw_path" 2>/dev/null || true
+    if [ -f "/usr/local/bin/bw" ]; then
+      sudo rm -f /usr/local/bin/bw 2>/dev/null || rm -f /usr/local/bin/bw 2>/dev/null || true
+    fi
+    [ -f "$HOME/.local/bin/bw" ] && rm -f "$HOME/.local/bin/bw" 2>/dev/null || true
+    hash -r 2>/dev/null || true  # Clear command cache
+  fi
+fi
+
 # Install Bitwarden CLI if needed
-if ! command -v bw >/dev/null 2>&1; then
+if [ "$bw_exists" = false ]; then
   os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+  arch="$(uname -m)"
   tmp="${TMPDIR:-/tmp}"
+  
+  # Detect if we're in a Termux/proot environment
+  in_proot=false
+  if [ -n "${PROOT_TMP_DIR:-}" ] || [ -f "/etc/proot-distro" ] || [ -n "${TERMUX_VERSION:-}" ] || grep -q "termux" /proc/version 2>/dev/null || [ -d "/data/data/com.termux" ]; then
+    in_proot=true
+  fi
+  
   if [ "$os" = "linux" ]; then
-    curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-$BW_VER.zip" -o "$tmp/bw.zip"
-    sudo unzip -o "$tmp/bw.zip" -d /usr/local/bin >/dev/null && sudo chmod +x /usr/local/bin/bw
+    # Determine architecture and download URL
+    case "$arch" in
+      aarch64|arm64)
+        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-arm64-$BW_VER.zip"
+        ;;
+      armv7l|armv6l|arm)
+        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-arm-$BW_VER.zip"
+        ;;
+      x86_64|amd64)
+        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-$BW_VER.zip"
+        ;;
+      *)
+        # Fallback to x86_64 (most common)
+        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-$BW_VER.zip"
+        ;;
+    esac
+    
+    # Install to user directory if in proot/termux or if sudo is unavailable
+    if [ "$in_proot" = true ] || ! command -v sudo >/dev/null 2>&1 || ! sudo -n true 2>/dev/null; then
+      mkdir -p "$HOME/.local/bin"
+      if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
+        if unzip -o "$tmp/bw.zip" -d "$HOME/.local/bin" >/dev/null && chmod +x "$HOME/.local/bin/bw" 2>/dev/null; then
+          export PATH="$HOME/.local/bin:$PATH"
+          hash -r 2>/dev/null || true  # Clear command cache
+        else
+          echo "✗ Failed to extract or make Bitwarden CLI executable" >&2
+          rm -f "$tmp/bw.zip" "$HOME/.local/bin/bw" 2>/dev/null || true
+          exit 1
+        fi
+      else
+        echo "✗ Failed to download Bitwarden CLI for architecture: $arch" >&2
+        echo "  URL attempted: $bw_url" >&2
+        echo "  For ARM devices, you may need to install Bitwarden CLI manually or use npm: npm install -g @bitwarden/cli" >&2
+        rm -f "$tmp/bw.zip" 2>/dev/null || true
+        exit 1
+      fi
+    else
+      if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
+        if ! sudo unzip -o "$tmp/bw.zip" -d /usr/local/bin >/dev/null || ! sudo chmod +x /usr/local/bin/bw; then
+          echo "✗ Failed to install Bitwarden CLI to /usr/local/bin" >&2
+          rm -f "$tmp/bw.zip" 2>/dev/null || true
+          exit 1
+        fi
+        hash -r 2>/dev/null || true  # Clear command cache
+      else
+        echo "✗ Failed to download Bitwarden CLI for architecture: $arch" >&2
+        echo "  URL attempted: $bw_url" >&2
+        rm -f "$tmp/bw.zip" 2>/dev/null || true
+        exit 1
+      fi
+    fi
   else
     mkdir -p "$HOME/.local/bin"
     curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-windows-$BW_VER.zip" -o "$tmp/bw.zip"

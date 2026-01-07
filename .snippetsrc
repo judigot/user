@@ -525,6 +525,7 @@ useSSH() {
     mkdir -p "$HOME/.local/bin" 2>/dev/null || true
 
     # Check if bw exists but can't execute (wrong architecture issue)
+    # Remove broken binaries from all possible locations and clear command cache
     if command -v bw >/dev/null 2>&1; then
         if ! bw --version >/dev/null 2>&1; then
             echo "⚠ Bitwarden CLI binary found but cannot execute (wrong architecture). Removing..." >&2
@@ -532,7 +533,15 @@ useSSH() {
             [ -f "$bw_path" ] && rm -f "$bw_path" 2>/dev/null || true
             [ -f "/usr/local/bin/bw" ] && sudo rm -f /usr/local/bin/bw 2>/dev/null || rm -f /usr/local/bin/bw 2>/dev/null || true
             [ -f "$HOME/.local/bin/bw" ] && rm -f "$HOME/.local/bin/bw" 2>/dev/null || true
+            hash -r 2>/dev/null || true  # Clear command cache
         fi
+    fi
+    
+    # Also proactively remove broken binary if it exists at known locations (even if not in PATH)
+    if [ -f "/usr/local/bin/bw" ] && ! /usr/local/bin/bw --version >/dev/null 2>&1; then
+        echo "⚠ Removing broken Bitwarden CLI from /usr/local/bin..." >&2
+        sudo rm -f /usr/local/bin/bw 2>/dev/null || rm -f /usr/local/bin/bw 2>/dev/null || true
+        hash -r 2>/dev/null || true
     fi
 
     local script_path=""
@@ -541,9 +550,18 @@ useSSH() {
     if [ -f "./setup-ssh-bitwarden.sh" ]; then
         script_path="./setup-ssh-bitwarden.sh"
     elif [ -f "$HOME/setup-ssh-bitwarden.sh" ]; then
-        script_path="$HOME/setup-ssh-bitwarden.sh"
-    else
-        # Download from GitHub using downloadGithubFiles
+        # Verify the local script has architecture detection (check for "bw_exists" or "arch=")
+        if ! grep -q "bw_exists\|arch=\"\$(uname -m)\"" "$HOME/setup-ssh-bitwarden.sh" 2>/dev/null; then
+            # Old version detected, remove it to force re-download of fixed version
+            echo "⚠ Removing old setup-ssh-bitwarden.sh to get fixed version..." >&2
+            rm -f "$HOME/setup-ssh-bitwarden.sh" 2>/dev/null || true
+        else
+            script_path="$HOME/setup-ssh-bitwarden.sh"
+        fi
+    fi
+    
+    # Download from GitHub if not found locally
+    if [ -z "$script_path" ]; then
         local tmp_script="$HOME/setup-ssh-bitwarden.sh"
         if downloadGithubFiles judigot/user "setup-ssh-bitwarden.sh" --dest "$HOME" --branch "main" >/dev/null 2>&1 && [ -f "$tmp_script" ]; then
             script_path="$tmp_script"
@@ -553,6 +571,8 @@ useSSH() {
         fi
     fi
 
+    # Export PATH to ensure script sees ~/.local/bin
+    export PATH="$HOME/.local/bin:$PATH"
     bash "$script_path" "$@"
 }
 
