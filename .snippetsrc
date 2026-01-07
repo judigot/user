@@ -519,7 +519,7 @@ installTerraform() {
         && sudo apt-get install -y terraform
 }
 
-useSHS() {
+useSSH() {
     if ! command -v curl >/dev/null 2>&1; then
         echo "curl is required to run setup-ssh-bitwarden.sh." >&2
         return 1

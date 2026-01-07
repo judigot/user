@@ -103,12 +103,10 @@ installterraform
 terraforminstall
 tfinstall
 
-useSHS:
-useshs
-shs
+useSSH:
+useSSH
 initssh
 setupssh
-sshsetup
 sshbitwarden
 bwssh
 
