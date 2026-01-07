@@ -19,6 +19,12 @@ syncidefiles
 synccursor
 synczed
 
+initUbuntu:
+initubuntu
+ubuntuinit
+setupubuntu
+ubuntusetup
+
 syncUbuntu:
 syncubuntu
 syncwsl
@@ -93,6 +99,11 @@ tfinstall
 useSHS:
 useshs
 shs
+initssh
+setupssh
+sshsetup
+sshbitwarden
+bwssh
 
 setupNodeEnv:
 setupnodeenv

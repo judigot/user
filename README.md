@@ -21,7 +21,7 @@ curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o 
 Initialize Ubuntu
 
 ```sh
-set -eu; sudo apt-get update -y; sudo apt-get upgrade -y; sudo apt-get install -y ca-certificates curl git openssh-client unzip
+set -eu; sudo apt-get update -y; sudo apt-get upgrade -y; sudo apt-get install -y ca-certificates curl git openssh-client unzip vim
 ```
 
 Install Terraform (Ubuntu/Debian)

@@ -469,6 +469,13 @@ installClaudeCode() {
     esac
 }
 
+initUbuntu() {
+    set -eu
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
+    sudo apt-get install -y ca-certificates curl git openssh-client unzip vim
+}
+
 installTerraform() {
     if command -v terraform >/dev/null 2>&1; then
         terraform version
