@@ -1,0 +1,17 @@
+{
+  "baseBranch": "main",
+  "worktrees": [
+    {
+      "dir": "repo--feat-auth-refresh",
+      "branch": "feat/auth-refresh",
+      "priority": 1,
+      "dependsOn": []
+    },
+    {
+      "dir": "repo--fix-payment-webhook",
+      "branch": "fix/payment-webhook",
+      "priority": 2,
+      "dependsOn": ["feat/auth-refresh"]
+    }
+  ]
+}
