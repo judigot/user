@@ -520,11 +520,6 @@ installTerraform() {
 }
 
 useSSH() {
-    if ! command -v curl >/dev/null 2>&1; then
-        echo "curl is required to run setup-ssh-bitwarden.sh." >&2
-        return 1
-    fi
-
     # Ensure ~/.local/bin is in PATH (needed for Termux/Ubuntu user installs)
     export PATH="$HOME/.local/bin:$PATH"
     mkdir -p "$HOME/.local/bin" 2>/dev/null || true
@@ -540,17 +535,25 @@ useSSH() {
         fi
     fi
 
+    local script_path=""
+    
+    # Check local locations first
     if [ -f "./setup-ssh-bitwarden.sh" ]; then
-        bash "./setup-ssh-bitwarden.sh" "$@"
-        return $?
+        script_path="./setup-ssh-bitwarden.sh"
+    elif [ -f "$HOME/setup-ssh-bitwarden.sh" ]; then
+        script_path="$HOME/setup-ssh-bitwarden.sh"
+    else
+        # Download from GitHub using downloadGithubFiles
+        local tmp_script="$HOME/setup-ssh-bitwarden.sh"
+        if downloadGithubFiles judigot/user "setup-ssh-bitwarden.sh" --dest "$HOME" --branch "main" >/dev/null 2>&1 && [ -f "$tmp_script" ]; then
+            script_path="$tmp_script"
+        else
+            echo "✗ Failed to download setup-ssh-bitwarden.sh" >&2
+            return 1
+        fi
     fi
 
-    if [ -f "$HOME/setup-ssh-bitwarden.sh" ]; then
-        bash "$HOME/setup-ssh-bitwarden.sh" "$@"
-        return $?
-    fi
-
-    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/setup-ssh-bitwarden.sh" | bash -s -- "$@"
+    bash "$script_path" "$@"
 }
 
 setupNodeEnv() {
