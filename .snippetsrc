@@ -520,8 +520,18 @@ installTerraform() {
 }
 
 useSSH() {
-    # Ensure ~/.local/bin is in PATH (needed for Termux/Ubuntu user installs)
-    export PATH="$HOME/.local/bin:$PATH"
+    # Load nvm if available (needed for npm on Linux/Ubuntu)
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+        export NVM_DIR="$HOME/.nvm"
+        # shellcheck source=/dev/null
+        . "$NVM_DIR/nvm.sh"
+        # shellcheck source=/dev/null
+        [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+    fi
+    
+    # Ensure ~/.local/bin and npm global bin are in PATH (needed for Termux/Ubuntu user installs)
+    npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+    export PATH="$npm_prefix/bin:$HOME/.local/bin:$PATH"
     mkdir -p "$HOME/.local/bin" 2>/dev/null || true
 
     # Check if bw exists but can't execute (wrong architecture issue)
@@ -550,8 +560,8 @@ useSSH() {
     if [ -f "./setup-ssh-bitwarden.sh" ]; then
         script_path="./setup-ssh-bitwarden.sh"
     elif [ -f "$HOME/setup-ssh-bitwarden.sh" ]; then
-        # Verify the local script has architecture detection (check for "bw_exists" or "arch=")
-        if ! grep -q "bw_exists\|arch=\"\$(uname -m)\"" "$HOME/setup-ssh-bitwarden.sh" 2>/dev/null; then
+        # Verify the local script uses npm installation (check for "npm install -g @bitwarden/cli")
+        if ! grep -q "npm install -g @bitwarden/cli" "$HOME/setup-ssh-bitwarden.sh" 2>/dev/null; then
             # Old version detected, remove it to force re-download of fixed version
             echo "⚠ Removing old setup-ssh-bitwarden.sh to get fixed version..." >&2
             rm -f "$HOME/setup-ssh-bitwarden.sh" 2>/dev/null || true
@@ -652,8 +662,44 @@ setupNodeEnv() {
                 npm config set script-shell "$root_dir/PortableGit/bin/bash.exe" >/dev/null 2>&1 || true
             fi
             ;;
-        Linux*|Darwin*)
-            # Linux/Ubuntu/macOS: Use nvm (nvm-sh/nvm)
+        Linux*)
+            # Linux/Ubuntu: Use nvm (nvm-sh/nvm)
+            local nvm_dir="$HOME/.nvm"
+            
+            # Install dependencies if needed (Ubuntu syntax)
+            if ! command -v git >/dev/null 2>&1; then
+                echo "Installing git..." >&2
+                apt update >/dev/null 2>&1 && apt install -y git >/dev/null 2>&1 || {
+                    echo "✗ Failed to install git. Please install manually: apt update && apt install -y git" >&2
+                    return 1
+                }
+            fi
+            
+            # Check if nvm is already installed
+            if [ ! -s "$nvm_dir/nvm.sh" ]; then
+                echo "Installing nvm..." >&2
+                if curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash >/dev/null 2>&1; then
+                    # Source nvm in current shell
+                    export NVM_DIR="$nvm_dir"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                else
+                    echo "✗ Failed to install nvm" >&2
+                    return 1
+                fi
+            else
+                # Source nvm if already installed
+                export NVM_DIR="$nvm_dir"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            fi
+
+            # Install Node.js LTS (matching Apportable.sh syntax: nvm install lts)
+            echo "Installing Node.js LTS..." >&2
+            nvm install lts && nvm use lts || return 1
+            ;;
+        Darwin*)
+            # macOS: Use nvm (nvm-sh/nvm)
             local nvm_dir="$HOME/.nvm"
             
             # Check if nvm is already installed
@@ -686,7 +732,7 @@ setupNodeEnv() {
             ;;
     esac
 
-    # Install global packages
+    # Install global packages (matching Apportable.sh)
     npm install -g bun pnpm >/dev/null 2>&1 || true
     pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || true
 

@@ -12,11 +12,19 @@ else
 fi
 
 KEY_FILENAME="${2:-}"  # Auto-detect if not provided (legacy support)
-BW_VER="2025.12.0"  # Hardcoded as of 2026-01-05
 
 # Fix HOME if malformed (MSYS2 sometimes has issues)
 [[ "$HOME" != /* ]] && [[ "$HOME" != /c/* ]] && HOME="/c/Users/$USERNAME"
 export PATH="$HOME/.local/bin:$PATH"
+
+# Load nvm if available (needed for npm on Linux/Ubuntu)
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  export NVM_DIR="$HOME/.nvm"
+  # shellcheck source=/dev/null
+  . "$NVM_DIR/nvm.sh"
+  # shellcheck source=/dev/null
+  [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+fi
 
 # Check if bw exists and is executable
 bw_exists=false
@@ -39,99 +47,42 @@ fi
 
 # Install Bitwarden CLI if needed
 if [ "$bw_exists" = false ]; then
-  os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-  arch="$(uname -m)"
-  tmp="${TMPDIR:-/tmp}"
-  
-  # Detect if we're in a Termux/proot environment
-  in_proot=false
-  if [ -n "${PROOT_TMP_DIR:-}" ] || [ -f "/etc/proot-distro" ] || [ -n "${TERMUX_VERSION:-}" ] || grep -q "termux" /proc/version 2>/dev/null || [ -d "/data/data/com.termux" ]; then
-    in_proot=true
+  # Use npm for all platforms (works cross-platform)
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "✗ Node.js/npm is required to install Bitwarden CLI" >&2
+    echo "  Please install Node.js first: run 'installnodeenv' or install npm manually" >&2
+    exit 1
   fi
   
-  if [ "$os" = "linux" ]; then
-    # Check if architecture is ARM (Bitwarden CLI doesn't provide prebuilt ARM binaries, use npm)
-    case "$arch" in
-      aarch64|arm64|armv7l|armv6l|arm)
-        # Use npm for ARM architectures
-        if ! command -v npm >/dev/null 2>&1; then
-          echo "✗ Node.js/npm is required to install Bitwarden CLI on ARM devices" >&2
-          echo "  Please install Node.js first: apt update && apt install -y nodejs npm" >&2
-          exit 1
-        fi
-        
-        echo "Installing Bitwarden CLI via npm (ARM architecture detected)..." >&2
-        if npm install -g @bitwarden/cli >/dev/null 2>&1; then
-          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-          hash -r 2>/dev/null || true
-          # Verify installation
-          if ! bw --version >/dev/null 2>&1; then
-            echo "✗ Bitwarden CLI installation failed or not in PATH" >&2
-            echo "  Try running: npm install -g @bitwarden/cli" >&2
-            exit 1
-          fi
-        else
-          echo "✗ Failed to install Bitwarden CLI via npm" >&2
-          echo "  Try running manually: npm install -g @bitwarden/cli" >&2
-          exit 1
-        fi
-        ;;
-      x86_64|amd64)
-        # Use prebuilt binary for x86_64
-        bw_url="https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-linux-$BW_VER.zip"
-        
-        # Install to user directory if in proot/termux or if sudo is unavailable
-        if [ "$in_proot" = true ] || ! command -v sudo >/dev/null 2>&1 || ! sudo -n true 2>/dev/null; then
-          mkdir -p "$HOME/.local/bin"
-          if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
-            if unzip -o "$tmp/bw.zip" -d "$HOME/.local/bin" >/dev/null && chmod +x "$HOME/.local/bin/bw" 2>/dev/null; then
-              export PATH="$HOME/.local/bin:$PATH"
-              hash -r 2>/dev/null || true
-            else
-              echo "✗ Failed to extract or make Bitwarden CLI executable" >&2
-              rm -f "$tmp/bw.zip" "$HOME/.local/bin/bw" 2>/dev/null || true
-              exit 1
-            fi
-          else
-            echo "✗ Failed to download Bitwarden CLI" >&2
-            rm -f "$tmp/bw.zip" 2>/dev/null || true
-            exit 1
-          fi
-        else
-          if curl -fsSL "$bw_url" -o "$tmp/bw.zip"; then
-            if ! sudo unzip -o "$tmp/bw.zip" -d /usr/local/bin >/dev/null || ! sudo chmod +x /usr/local/bin/bw; then
-              echo "✗ Failed to install Bitwarden CLI to /usr/local/bin" >&2
-              rm -f "$tmp/bw.zip" 2>/dev/null || true
-              exit 1
-            fi
-            hash -r 2>/dev/null || true
-          else
-            echo "✗ Failed to download Bitwarden CLI" >&2
-            rm -f "$tmp/bw.zip" 2>/dev/null || true
-            exit 1
-          fi
-        fi
-        ;;
-      *)
-        # Unknown architecture - try npm as fallback
-        echo "⚠ Unknown architecture: $arch. Attempting npm installation..." >&2
-        if command -v npm >/dev/null 2>&1; then
-          npm install -g @bitwarden/cli >/dev/null 2>&1
-          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-          hash -r 2>/dev/null || true
-        else
-          echo "✗ Cannot install Bitwarden CLI: unknown architecture and npm not available" >&2
-          exit 1
-        fi
-        ;;
-    esac
+  # Get npm global prefix to add to PATH (where npm installs global packages)
+  npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+  export PATH="$npm_prefix/bin:$PATH"
+  
+  echo "Installing Bitwarden CLI via npm..." >&2
+  if npm install -g @bitwarden/cli >/dev/null 2>&1; then
+    # Ensure npm global bin directory is in PATH
+    npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+    export PATH="$npm_prefix/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+    hash -r 2>/dev/null || true
+    # Verify installation
+    if ! bw --version >/dev/null 2>&1; then
+      echo "✗ Bitwarden CLI installation failed or not in PATH" >&2
+      echo "  npm prefix: $npm_prefix" >&2
+      echo "  Try running: npm install -g @bitwarden/cli" >&2
+      echo "  Then add to PATH: export PATH=\"\$npm_prefix/bin:\$PATH\"" >&2
+      exit 1
+    fi
   else
-    mkdir -p "$HOME/.local/bin"
-    curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v$BW_VER/bw-windows-$BW_VER.zip" -o "$tmp/bw.zip"
-    unzip -o "$tmp/bw.zip" -d "$HOME/.local/bin" >/dev/null && chmod +x "$HOME/.local/bin/bw.exe" 2>/dev/null || true
+    echo "✗ Failed to install Bitwarden CLI via npm" >&2
+    echo "  Try running manually: npm install -g @bitwarden/cli" >&2
+    exit 1
   fi
-  rm -f "$tmp/bw.zip"
 fi
+
+# Ensure npm global bin is in PATH before using bw
+npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+export PATH="$npm_prefix/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+hash -r 2>/dev/null || true
 
 # Login if needed
 bw login --check >/dev/null 2>&1 || bw login
