@@ -16,50 +16,29 @@ function Invoke-Msys2BashSession {
     throw "MSYS2 bash not found at: $BashPath"
   }
 
-  $stdout = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
-  $stderr = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
+  $script = ($InputLines -join "`n")
 
   $p = New-Object System.Diagnostics.Process
   $p.StartInfo = New-Object System.Diagnostics.ProcessStartInfo
   $p.StartInfo.FileName = $BashPath
-  $p.StartInfo.Arguments = "--login -i"
+  $p.StartInfo.Arguments = "--login"
   $p.StartInfo.UseShellExecute = $false
   $p.StartInfo.RedirectStandardInput = $true
   $p.StartInfo.RedirectStandardOutput = $true
   $p.StartInfo.RedirectStandardError = $true
   $p.StartInfo.CreateNoWindow = $true
-
-  $outEvent = Register-ObjectEvent -InputObject $p -EventName OutputDataReceived -Action {
-    if ($null -ne $EventArgs.Data) {
-      [void]$Event.MessageData.Add($EventArgs.Data)
-    }
-  } -MessageData $stdout
-
-  $errEvent = Register-ObjectEvent -InputObject $p -EventName ErrorDataReceived -Action {
-    if ($null -ne $EventArgs.Data) {
-      [void]$Event.MessageData.Add($EventArgs.Data)
-    }
-  } -MessageData $stderr
+  $p.StartInfo.EnvironmentVariables["MSYS"] = "disable_pcon"
 
   try {
     if (-not $p.Start()) {
       throw "Failed to start bash process."
     }
 
-    $p.BeginOutputReadLine()
-    $p.BeginErrorReadLine()
-
-    $sentExit = $false
-    foreach ($line in $InputLines) {
-      if ($line -eq "exit") { $sentExit = $true }
-      $p.StandardInput.WriteLine($line)
-    }
-
-    if (-not $sentExit) {
-      $p.StandardInput.WriteLine("exit")
-    }
-
+    $p.StandardInput.Write($script)
     $p.StandardInput.Close()
+
+    $stdoutTask = $p.StandardOutput.ReadToEndAsync()
+    $stderrTask = $p.StandardError.ReadToEndAsync()
 
     $waitMs = [Math]::Max(1, $TimeoutSeconds) * 1000
     if (-not $p.WaitForExit($waitMs)) {
@@ -67,19 +46,27 @@ function Invoke-Msys2BashSession {
       throw "bash session timed out after ${TimeoutSeconds}s and was terminated."
     }
 
-    Start-Sleep -Milliseconds 500
+    $stdoutResult = $stdoutTask.GetAwaiter().GetResult()
+    $stderrResult = $stderrTask.GetAwaiter().GetResult()
+
+    $stdoutLines = if ([string]::IsNullOrEmpty($stdoutResult)) {
+      @()
+    } else {
+      @($stdoutResult -split "`r?`n" | Where-Object { $_ -ne "" })
+    }
+
+    $stderrLines = if ([string]::IsNullOrEmpty($stderrResult)) {
+      @()
+    } else {
+      @($stderrResult -split "`r?`n" | Where-Object { $_ -ne "" })
+    }
 
     [PSCustomObject]@{
       ExitCode = $p.ExitCode
-      StdOut   = @($stdout.ToArray())
-      StdErr   = @($stderr.ToArray())
+      StdOut   = $stdoutLines
+      StdErr   = $stderrLines
     }
   } finally {
-    Unregister-Event -SourceIdentifier $outEvent.Name -ErrorAction SilentlyContinue
-    Unregister-Event -SourceIdentifier $errEvent.Name -ErrorAction SilentlyContinue
-    Remove-Job -Name $outEvent.Name -Force -ErrorAction SilentlyContinue
-    Remove-Job -Name $errEvent.Name -Force -ErrorAction SilentlyContinue
-
     if (-not $p.HasExited) {
       try { $p.Kill() } catch { }
     }
@@ -93,9 +80,12 @@ function Get-Msys2BashPath {
 
   $candidates = @(
     "C:\msys64\usr\bin\bash.exe",
-    "D:\msys64\usr\bin\bash.exe",
-    "$env:RUNNER_TEMP\msys64\usr\bin\bash.exe"
+    "D:\msys64\usr\bin\bash.exe"
   )
+
+  if ($env:RUNNER_TEMP) {
+    $candidates = @("$env:RUNNER_TEMP\msys64\usr\bin\bash.exe") + $candidates
+  }
 
   if ($env:MSYS2_ROOT) {
     $candidates = @("$env:MSYS2_ROOT\usr\bin\bash.exe") + $candidates
