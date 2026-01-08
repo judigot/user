@@ -1,9 +1,9 @@
 .bashrc
 .snippetsrc
 .zshrc
-profile.ps1
-PATH
 ALIAS
-Apportable.ps1
 Apportable.sh
+PATH
 DOTFILES
+profile.ps1
+Apportable.ps1
