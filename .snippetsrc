@@ -998,7 +998,7 @@ setupNodeEnv() {
 
                 # Install Node.js LTS (matching Apportable.sh syntax: nvm install lts)
                 echo "Installing Node.js LTS..." >&2
-                nvm install lts && nvm use lts || return 1
+                nvm install --lts || return 1
                 ;;
             Darwin*)
                 # macOS: Use nvm (nvm-sh/nvm)
