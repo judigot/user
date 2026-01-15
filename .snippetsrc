@@ -621,6 +621,51 @@ arrowKeySelect() {
     fi
 }
 
+applyGitCredentials() {
+    local note_name="$1"
+
+    # Must have bw and BW_SESSION already set
+    command -v bw >/dev/null 2>&1 || return 1
+    [ -n "$BW_SESSION" ] || return 1
+
+    # Sync vault to ensure latest data
+    bw sync >/dev/null 2>&1
+
+    # Find the secure note (type 2 = secure note)
+    local item_id
+    item_id="$(bw list items --search "$note_name" 2>/dev/null | node -e "
+        const input = require('fs').readFileSync(0, 'utf-8').trim();
+        if (!input) process.exit(1);
+        const data = JSON.parse(input);
+        const match = data.find(i => i && i.name === process.argv[1] && i.type === 2);
+        if (match) console.log(match.id);
+        else process.exit(1);
+    " "$note_name" 2>/dev/null)"
+
+    [ -n "$item_id" ] || return 1
+
+    # Get the notes content
+    local notes
+    notes="$(bw get item "$item_id" 2>/dev/null | node -e "
+        const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+        if (data.notes) console.log(data.notes);
+    " 2>/dev/null)"
+
+    [ -n "$notes" ] || return 1
+
+    # Execute each git config line (skip --list and --get commands)
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line#"${line%%[![:space:]]*}"}"
+        if [ -n "$line" ] && [[ "$line" == git\ config* ]]; then
+            [[ "$line" == *--list* ]] && continue
+            [[ "$line" == *--get* ]] && continue
+            eval "$line" >/dev/null 2>&1
+        fi
+    done <<< "$notes"
+
+    echo "✓ Applied: $note_name"
+}
+
 useSSH() {
     # Load nvm if available (needed for npm on Linux/Ubuntu)
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
@@ -685,25 +730,27 @@ useSSH() {
 
     # Export PATH to ensure script sees ~/.local/bin
     export PATH="$HOME/.local/bin:$PATH"
-    
+
+    local selected=""
+
     # If no arguments provided, prompt for key selection
     if [ $# -eq 0 ]; then
         local choices=("SSH Personal" "SSH Work")
-        local selected
-        
+
         # Use simple arrow key selector (no external dependencies)
         selected=$(arrowKeySelect "Select SSH key (↑↓ arrows, Enter to select, ctrl + c or q to quit):" "${choices[@]}")
-        
+
         if [ -z "$selected" ]; then
             echo "No selection made" >&2
             return 130
         fi
-        
+
         bash "$script_path" "$selected" --simple-filename
     else
+        selected="$1"
         bash "$script_path" "$@"
     fi
-    
+
     # Ensure SSH directory and keys have proper permissions
     if [ -d "$HOME/.ssh" ]; then
         chmod 700 "$HOME/.ssh" 2>/dev/null || true
@@ -712,6 +759,43 @@ useSSH() {
         # Set permissions on all public keys
         find "$HOME/.ssh" -type f -name "*.pub" -exec chmod 644 {} \; 2>/dev/null || true
     fi
+
+    # Apply git configuration
+    echo "Applying git configuration..."
+
+    # Apply global git config from GitHub repo
+    local git_settings="/tmp/GIT_SETTINGS.$$"
+    if downloadGithubFiles judigot/user "GIT_SETTINGS" --dest "/tmp" --branch "main" >/dev/null 2>&1; then
+        mv "/tmp/GIT_SETTINGS" "$git_settings" 2>/dev/null
+        if [ -f "$git_settings" ]; then
+            while IFS= read -r line || [ -n "$line" ]; do
+                line="${line#"${line%%[![:space:]]*}"}"
+                if [ -n "$line" ] && [[ "$line" == git\ config* ]]; then
+                    [[ "$line" == *--list* ]] && continue
+                    [[ "$line" == *--get* ]] && continue
+                    eval "$line" >/dev/null 2>&1
+                fi
+            done < "$git_settings"
+            rm -f "$git_settings"
+            echo "✓ Applied: Git settings from GitHub"
+        fi
+    fi
+
+    # Apply user-specific credentials from Bitwarden (overrides user.name/email)
+    if command -v bw >/dev/null 2>&1 && bw --version >/dev/null 2>&1; then
+        if bw login --check >/dev/null 2>&1; then
+            export BW_SESSION="$(bw unlock --raw)"
+            if [ -n "$BW_SESSION" ]; then
+                if [ "$selected" = "SSH Work" ]; then
+                    applyGitCredentials "Git Credentials Work"
+                elif [ "$selected" = "SSH Personal" ]; then
+                    applyGitCredentials "Git Credentials Personal"
+                fi
+            fi
+        fi
+    fi
+
+    echo "✓ Git configuration complete"
 }
 
 useAWS() {
