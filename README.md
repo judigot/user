@@ -533,3 +533,226 @@ Command:
 ```sh
 curl -o script.sh https://raw.githubusercontent.com/judestp/alpha-tokyo-dev-env-setup/main/script.sh && sh script.sh
 ```
+# Install Ubuntu Personal and Ubuntu Work
+
+```powershell
+# One-shot PowerShell script (template = "Ubuntu" alias):
+# - Installs "Ubuntu" (usually latest LTS)
+# - Exports it
+# - Imports TWO isolated clones: Ubuntu-Personal and Ubuntu-Work
+# - Sets BOTH clones to default user root
+# - Sets DEFAULT DISTRO to Ubuntu-Personal
+# - Unregisters the template "Ubuntu" at the end
+#
+# NOTE: If "Ubuntu" has never been launched before, you must complete first-run setup once.
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$templateDistro = "Ubuntu"
+$personalDistro = "Ubuntu-Personal"
+$workDistro     = "Ubuntu-Work"
+
+$baseTar = Join-Path $env:USERPROFILE "wsl-ubuntu-base.tar"
+$rootDir = Join-Path $env:USERPROFILE "WSL"
+$personalDir = Join-Path $rootDir $personalDistro
+$workDir     = Join-Path $rootDir $workDistro
+
+function Get-WslDistros {
+  $raw = & wsl.exe --list --quiet 2>$null
+  if ($LASTEXITCODE -ne 0) { return @() }
+  return $raw | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+}
+
+function Ensure-DistroInstalled([string]$distroName) {
+  $installed = Get-WslDistros
+  if ($installed -contains $distroName) { return }
+
+  Write-Host "Installing $distroName..."
+  & wsl.exe --install -d $distroName
+  if ($LASTEXITCODE -ne 0) {
+    throw "wsl --install failed. If Windows asks for a reboot, reboot and re-run this script."
+  }
+}
+
+function Ensure-Initialized([string]$distroName) {
+  try {
+    & wsl.exe -d $distroName -- bash -lc "echo ok" | Out-Null
+    if ($LASTEXITCODE -eq 0) { return }
+  } catch {}
+
+  Write-Host ""
+  Write-Host "WSL distro '$distroName' needs first-run initialization."
+  Write-Host "A window may open asking you to create a Linux username/password."
+  Write-Host "Complete that setup, then return here."
+  Write-Host ""
+
+  & wsl.exe -d $distroName
+  Read-Host "Press Enter to continue after completing the first-run setup"
+}
+
+function Export-Distro([string]$distroName, [string]$tarPath) {
+  if (Test-Path $tarPath) { Remove-Item -Force $tarPath }
+  Write-Host "Exporting $distroName to $tarPath ..."
+  & wsl.exe --export $distroName $tarPath
+  if ($LASTEXITCODE -ne 0) { throw "wsl --export failed." }
+}
+
+function Import-DistroIfMissing([string]$newName, [string]$installDir, [string]$tarPath) {
+  $installed = Get-WslDistros
+  if ($installed -contains $newName) {
+    Write-Host "$newName already exists. Skipping import."
+    return
+  }
+
+  if (-not (Test-Path $installDir)) { New-Item -ItemType Directory -Force -Path $installDir | Out-Null }
+
+  Write-Host "Importing $newName into $installDir ..."
+  & wsl.exe --import $newName $installDir $tarPath
+  if ($LASTEXITCODE -ne 0) { throw "wsl --import failed for $newName." }
+}
+
+function Invoke-WslRootBash([string]$distroName, [string]$bashCommand) {
+  $cmd = $bashCommand.Replace('"','\"')
+  & wsl.exe -d $distroName --user root -- bash -lc "$cmd"
+  if ($LASTEXITCODE -ne 0) { throw "Command failed in $distroName." }
+}
+
+function Set-DefaultRoot([string]$distroName) {
+  Write-Host "Setting default user to root in $distroName ..."
+  $script = @"
+set -euo pipefail
+cat >/etc/wsl.conf <<EOF
+[user]
+default=root
+EOF
+"@
+  Invoke-WslRootBash $distroName $script
+}
+
+# 1) Ensure template exists ("Ubuntu" alias)
+Ensure-DistroInstalled -distroName $templateDistro
+
+# 2) Ensure it can be exported (first-run may be required once)
+Ensure-Initialized -distroName $templateDistro
+
+# 3) Export template to tar
+Export-Distro -distroName $templateDistro -tarPath $baseTar
+
+# 4) Import clones
+if (-not (Test-Path $rootDir)) { New-Item -ItemType Directory -Force -Path $rootDir | Out-Null }
+Import-DistroIfMissing -newName $personalDistro -installDir $personalDir -tarPath $baseTar
+Import-DistroIfMissing -newName $workDistro     -installDir $workDir     -tarPath $baseTar
+
+# 5) Default BOTH clones to root
+Set-DefaultRoot -distroName $personalDistro
+Set-DefaultRoot -distroName $workDistro
+
+# 6) Set default distro to Personal
+Write-Host "Setting default distro to $personalDistro ..."
+& wsl.exe --set-default $personalDistro
+if ($LASTEXITCODE -ne 0) { throw "wsl --set-default failed." }
+
+# 7) Restart WSL to apply /etc/wsl.conf
+Write-Host "Restarting WSL..."
+& wsl.exe --shutdown | Out-Null
+
+# 8) Cleanup tar
+if (Test-Path $baseTar) { Remove-Item -Force $baseTar }
+
+# 9) Remove template distro (leave only Personal + Work)
+Write-Host "Unregistering template distro $templateDistro ..."
+& wsl.exe --unregister $templateDistro
+if ($LASTEXITCODE -ne 0) { throw "wsl --unregister failed." }
+
+Write-Host ""
+Write-Host "Done."
+Write-Host "Launch personal (root): wsl -d $personalDistro"
+Write-Host "Launch work (root):     wsl -d $workDistro"
+Write-Host "List distros:           wsl --list --verbose"
+Write-Host "Default distro:         $personalDistro"
+```
+
+## Delete Ubuntu Personal and Ubuntu Work
+
+```powershell
+# WSL CLEANUP (one-shot) — removes EVERYTHING from this setup:
+# - Unregisters: Ubuntu-Personal, Ubuntu-Work, Ubuntu (template if present)
+# - Deletes: %USERPROFILE%\WSL\Ubuntu-Personal and \Ubuntu-Work directories (if they exist)
+# - Deletes: exported tar file(s) if present
+#
+# IMPORTANT:
+# - This permanently deletes those distros and all their data.
+# - It does NOT remove docker-desktop (owned by Docker Desktop).
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$personalDistro = "Ubuntu-Personal"
+$workDistro     = "Ubuntu-Work"
+$templateDistro = "Ubuntu"
+
+$rootDir = Join-Path $env:USERPROFILE "WSL"
+$personalDir = Join-Path $rootDir $personalDistro
+$workDir     = Join-Path $rootDir $workDistro
+
+$tarCandidates = @(
+  (Join-Path $env:USERPROFILE "wsl-ubuntu-base.tar"),
+  (Join-Path $env:USERPROFILE "wsl-ubuntu-24.04-base.tar")
+)
+
+function Get-WslDistros {
+  $raw = & wsl.exe --list --quiet 2>$null
+  if ($LASTEXITCODE -ne 0) { return @() }
+  return $raw | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+}
+
+function Unregister-IfExists([string]$name) {
+  $installed = Get-WslDistros
+  if ($installed -contains $name) {
+    Write-Host "Unregistering $name ..."
+    & wsl.exe --unregister $name
+    if ($LASTEXITCODE -ne 0) { throw "Failed to unregister $name." }
+  } else {
+    Write-Host "$name not found. Skipping."
+  }
+}
+
+function Remove-DirIfExists([string]$path) {
+  if (Test-Path $path) {
+    Write-Host "Deleting directory $path ..."
+    Remove-Item -Recurse -Force $path
+  } else {
+    Write-Host "Directory not found: $path. Skipping."
+  }
+}
+
+function Remove-FileIfExists([string]$path) {
+  if (Test-Path $path) {
+    Write-Host "Deleting file $path ..."
+    Remove-Item -Force $path
+  }
+}
+
+Write-Host "Shutting down WSL..."
+& wsl.exe --shutdown | Out-Null
+
+# Unregister distros (this deletes their virtual disks)
+Unregister-IfExists $personalDistro
+Unregister-IfExists $workDistro
+Unregister-IfExists $templateDistro
+
+# Remove leftover directories (in case they remain)
+Remove-DirIfExists $personalDir
+Remove-DirIfExists $workDir
+
+# Remove any leftover export tar files
+foreach ($tar in $tarCandidates) {
+  Remove-FileIfExists $tar
+}
+
+Write-Host ""
+Write-Host "Cleanup complete."
+Write-Host "Remaining distros:"
+& wsl.exe --list --verbose
+```
