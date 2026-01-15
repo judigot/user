@@ -998,7 +998,7 @@ setupNodeEnv() {
 
                 # Install Node.js LTS (matching Apportable.sh syntax: nvm install lts)
                 echo "Installing Node.js LTS..." >&2
-                nvm install --lts || return 1
+                nvm install lts && nvm use lts || return 1
                 ;;
             Darwin*)
                 # macOS: Use nvm (nvm-sh/nvm)
@@ -1318,33 +1318,16 @@ apt() {
 }
 
 useAI() {
-    if ! installPackage "fzf"; then
-        msysInstallPackage "fzf" || return 1
-    fi
-
     local choices=("Claude Code" "Open Code")
-    
-    local fzf_opts=(
-        --prompt="Select AI: "
-        --pointer=">"
-        --height=10
-        --border=rounded
-        --info=hidden
-        --cycle
-        --no-multi
-        --bind="ctrl-c:abort"
-    )
+    local selected
 
-    local choice
-    choice=$(printf '%s\n' "${choices[@]}" | fzf "${fzf_opts[@]}")
+    selected=$(arrowKeySelect "Select AI (↑↓ arrows, Enter to select, q to quit):" "${choices[@]}")
 
-    # Handle cancellation (Ctrl+C or empty selection)
-    if [ -z "$choice" ]; then
+    if [ -z "$selected" ]; then
         return 130
     fi
 
-    # Execute the chosen AI command with passed arguments
-    case "$choice" in
+    case "$selected" in
         "Claude Code")
             if ! installPackage "claude"; then
                 printf '%s\n' "claude is not installed. Run: installClaudeCode" >&2
@@ -1358,10 +1341,6 @@ useAI() {
                 return 1
             fi
             opencode "$@"
-            ;;
-        *)
-            printf '%s\n' "Invalid choice: $choice" >&2
-            return 1
             ;;
     esac
 }

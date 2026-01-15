@@ -98,6 +98,9 @@ installClaudeCode:
 installclaude
 installclaudecode
 
+installOpenCode:
+installopencode
+
 installTerraform:
 installterraform
 terraforminstall
@@ -125,7 +128,7 @@ nodeenv
 installnodeenv
 installnvm
 
-claude:
+useAI:
 ai
 useai
 useaiagent
