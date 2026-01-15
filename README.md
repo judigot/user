@@ -684,6 +684,13 @@ Write-Host "Work:               wsl -d $workDistro"
 Write-Host "List distros:       wsl --list --verbose"
 ```
 
+## Enable Docker Integration
+
+- Open Docker Desktop
+- Settings → Resources → WSL Integration
+- Enable Ubuntu and Ubuntu-Work
+- Apply & Restart
+
 ## Delete Ubuntu Personal and Ubuntu Work
 
 ```powershell
