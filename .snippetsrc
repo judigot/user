@@ -494,7 +494,7 @@ initUbuntu() {
     set -eu
     sudo apt-get update -y
     sudo apt-get upgrade -y
-    sudo apt-get install -y ca-certificates curl git openssh-client unzip vim make
+    sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf
 }
 
 loginUbuntu() {
@@ -548,6 +548,78 @@ cloneTerraformRepo() {
 }
 
 
+# Simple arrow key selector (no external dependencies)
+arrowKeySelect() {
+    local prompt="$1"
+    shift
+    local choices=("$@")
+    local selected=0
+    local lines=$((${#choices[@]} + 1))
+    
+    # Hide cursor
+    printf '\033[?25l' >&2
+    
+    while true; do
+        # Clear previous menu (move up lines and clear)
+        printf '\033[%dA\r' "$lines" >&2
+        printf '\033[J' >&2
+        
+        # Display prompt
+        printf '%s\n' "$prompt" >&2
+        
+        # Display choices with > for selected
+        for i in "${!choices[@]}"; do
+            if [ $i -eq $selected ]; then
+                printf '  \033[7m> %s\033[0m\n' "${choices[$i]}" >&2
+            else
+                printf '    %s\n' "${choices[$i]}" >&2
+            fi
+        done
+        
+        # Read single character (including escape sequences)
+        local key
+        IFS= read -rsn1 key 2>/dev/null || break
+        
+        # Check for escape sequence (arrow keys)
+        if [ "$key" = $'\033' ]; then
+            IFS= read -rsn2 key 2>/dev/null
+            case "$key" in
+                '[A') # Up arrow
+                    [ $selected -gt 0 ] && selected=$((selected - 1))
+                    ;;
+                '[B') # Down arrow
+                    [ $selected -lt $((${#choices[@]} - 1)) ] && selected=$((selected + 1))
+                    ;;
+            esac
+        elif [ "$key" = "" ]; then
+            # Enter key
+            break
+        elif [ "$key" = "q" ] || [ "$key" = "Q" ]; then
+            # Quit
+            selected=-1
+            break
+        elif [[ "$key" =~ ^[1-9]$ ]]; then
+            # Number selection (1-based)
+            local num=$((key - 1))
+            if [ $num -lt ${#choices[@]} ]; then
+                selected=$num
+                break
+            fi
+        fi
+    done
+    
+    # Clear menu and show cursor
+    printf '\033[%dA\r' "$lines" >&2
+    printf '\033[J' >&2
+    printf '\033[?25h' >&2
+    
+    if [ $selected -ge 0 ] && [ $selected -lt ${#choices[@]} ]; then
+        printf '%s\n' "${choices[$selected]}"
+        return 0
+    else
+        return 1
+    fi
+}
 
 useSSH() {
     # Load nvm if available (needed for npm on Linux/Ubuntu)
@@ -613,7 +685,24 @@ useSSH() {
 
     # Export PATH to ensure script sees ~/.local/bin
     export PATH="$HOME/.local/bin:$PATH"
-    bash "$script_path" "$@"
+    
+    # If no arguments provided, prompt for key selection
+    if [ $# -eq 0 ]; then
+        local choices=("SSH Personal" "SSH Work")
+        local selected
+        
+        # Use simple arrow key selector (no external dependencies)
+        selected=$(arrowKeySelect "Select SSH key (↑↓ arrows, Enter to select, ctrl + c or q to quit):" "${choices[@]}")
+        
+        if [ -z "$selected" ]; then
+            echo "No selection made" >&2
+            return 130
+        fi
+        
+        bash "$script_path" "$selected" --simple-filename
+    else
+        bash "$script_path" "$@"
+    fi
     
     # Ensure SSH directory and keys have proper permissions
     if [ -d "$HOME/.ssh" ]; then
@@ -756,148 +845,204 @@ EOF
 }
 
 setupNodeEnv() {
-    if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
-        node --version
-        npm --version
-        return 0
-    fi
+    local installed_something=false
 
-    if ! command -v curl >/dev/null 2>&1; then
-        echo "Node environment setup requires curl." >&2
-        return 1
-    fi
-
+    # Load nvm if it exists (needed for version display)
     case "$(uname -s 2>/dev/null)" in
-        MINGW*|MSYS*|CYGWIN*)
-            # Windows/MSYS2: Use nvm-windows
-            local root_dir="/c/apportable/Programming"
-            local nvm_home="$root_dir/nvm"
-            local nvm_symlink="$root_dir/nodejs"
-            local nvm_zip_url="https://github.com/coreybutler/nvm-windows/releases/download/1.2.2/nvm-noinstall.zip"
-
-            mkdir -p "$nvm_home" "$nvm_symlink" 2>/dev/null || true
-
-            if ! command -v nvm >/dev/null 2>&1; then
-                local tmp_dir=""
-                tmp_dir=$(mktemp -d "/tmp/nvm-windows.XXXXXXXX" 2>/dev/null) || tmp_dir=""
-                [ -n "$tmp_dir" ] || { echo "Failed to create a temp directory." >&2; return 1; }
-
-                local zip="$tmp_dir/nvm-noinstall.zip"
-                if ! curl -fsSL --retry 3 --retry-delay 1 "$nvm_zip_url" -o "$zip" 2>/dev/null; then
-                    rm -rf "$tmp_dir" 2>/dev/null || true
-                    echo "Failed to download nvm-windows." >&2
-                    return 1
-                fi
-
-                if command -v unzip >/dev/null 2>&1; then
-                    unzip -o "$zip" -d "$nvm_home" >/dev/null 2>&1 || {
-                        rm -rf "$tmp_dir" 2>/dev/null || true
-                        echo "Failed to extract nvm-windows (unzip failed)." >&2
-                        return 1
-                    }
-                elif command -v powershell.exe >/dev/null 2>&1; then
-                    powershell.exe -NoProfile -Command "Expand-Archive -Force -Path '$zip' -DestinationPath '$nvm_home'" >/dev/null 2>&1 || {
-                        rm -rf "$tmp_dir" 2>/dev/null || true
-                        echo "Failed to extract nvm-windows (Expand-Archive failed)." >&2
-                        return 1
-                    }
-                else
-                    rm -rf "$tmp_dir" 2>/dev/null || true
-                    echo "unzip (or powershell Expand-Archive) is required to extract nvm-windows." >&2
-                    return 1
-                fi
-
-                rm -rf "$tmp_dir" 2>/dev/null || true
-            fi
-
-            export NVM_HOME="$nvm_home"
-            export NVM_SYMLINK="$nvm_symlink"
-            export PATH="$PATH:$NVM_HOME:$NVM_SYMLINK"
-
-            : >"$NVM_HOME/PATH.txt"
-            : >"$NVM_HOME/settings.txt"
-            echo "PATH=$PATH" >"$NVM_HOME/PATH.txt"
-
-            local sys_arch="64"
-            [ -d "/c/Program Files (x86)" ] || sys_arch="32"
-            echo "root: $NVM_HOME" >"$NVM_HOME/settings.txt"
-            echo "path: $NVM_SYMLINK" >>"$NVM_HOME/settings.txt"
-            echo "arch: $sys_arch" >>"$NVM_HOME/settings.txt"
-            echo "proxy: none" >>"$NVM_HOME/settings.txt"
-
-            nvm install lts && nvm use lts || return 1
-
-            if [ -f "$root_dir/PortableGit/bin/bash.exe" ]; then
-                npm config set script-shell "$root_dir/PortableGit/bin/bash.exe" >/dev/null 2>&1 || true
-            fi
-            ;;
-        Linux*)
-            # Linux/Ubuntu: Use nvm (nvm-sh/nvm)
+        Linux*|Darwin*)
             local nvm_dir="$HOME/.nvm"
-            
-            # Install dependencies if needed (Ubuntu syntax)
-            if ! command -v git >/dev/null 2>&1; then
-                echo "Installing git..." >&2
-                apt update >/dev/null 2>&1 && apt install -y git >/dev/null 2>&1 || {
-                    echo "✗ Failed to install git. Please install manually: apt update && apt install -y git" >&2
-                    return 1
-                }
-            fi
-            
-            # Check if nvm is already installed
-            if [ ! -s "$nvm_dir/nvm.sh" ]; then
-                echo "Installing nvm..." >&2
-                if curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash >/dev/null 2>&1; then
-                    # Source nvm in current shell
-                    export NVM_DIR="$nvm_dir"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-                else
-                    echo "✗ Failed to install nvm" >&2
-                    return 1
-                fi
-            else
-                # Source nvm if already installed
+            if [ -s "$nvm_dir/nvm.sh" ]; then
                 export NVM_DIR="$nvm_dir"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 2>/dev/null || true
             fi
-
-            # Install Node.js LTS (matching Apportable.sh syntax: nvm install lts)
-            echo "Installing Node.js LTS..." >&2
-            nvm install lts && nvm use lts || return 1
             ;;
-        Darwin*)
-            # macOS: Use nvm (nvm-sh/nvm)
-            local nvm_dir="$HOME/.nvm"
-            
-            # Check if nvm is already installed
-            if [ ! -s "$nvm_dir/nvm.sh" ]; then
-                echo "Installing nvm..." >&2
-                if curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash >/dev/null 2>&1; then
-                    # Source nvm in current shell
-                    export NVM_DIR="$nvm_dir"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-                else
-                    echo "✗ Failed to install nvm" >&2
-                    return 1
-                fi
-            else
-                # Source nvm if already installed
-                export NVM_DIR="$nvm_dir"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-            fi
+    esac
 
-            # Install Node.js LTS
-            echo "Installing Node.js LTS..." >&2
-            nvm install --lts && nvm use --lts || return 1
-            nvm alias default lts/* >/dev/null 2>&1 || true
-            ;;
-        *)
-            echo "Unsupported operating system: $(uname -s)" >&2
+    # Display current versions immediately (instant feedback)
+    if command -v nvm >/dev/null 2>&1; then
+        case "$(uname -s 2>/dev/null)" in
+            MINGW*|MSYS*|CYGWIN*)
+                printf 'nvm: %s\n' "$(nvm version 2>/dev/null || echo 'N/A')"
+                ;;
+            *)
+                printf 'nvm: %s\n' "$(nvm --version 2>/dev/null || echo 'N/A')"
+                ;;
+        esac
+    else
+        printf 'nvm: not installed\n'
+    fi
+    if command -v node >/dev/null 2>&1; then
+        printf 'node: %s\n' "$(node --version 2>/dev/null || echo 'N/A')"
+    else
+        printf 'node: not installed\n'
+    fi
+    if command -v npm >/dev/null 2>&1; then
+        printf 'npm: %s\n' "$(npm --version 2>/dev/null || echo 'N/A')"
+    else
+        printf 'npm: not installed\n'
+    fi
+    if command -v pnpm >/dev/null 2>&1; then
+        printf 'pnpm: %s\n' "$(pnpm --version 2>/dev/null || echo 'N/A')"
+    else
+        printf 'pnpm: not installed\n'
+    fi
+    if command -v bun >/dev/null 2>&1; then
+        printf 'bun: %s\n' "$(bun --version 2>/dev/null || echo 'N/A')"
+    else
+        printf 'bun: not installed\n'
+    fi
+
+    # Install node/npm if needed
+    if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+        installed_something=true
+        if ! command -v curl >/dev/null 2>&1; then
+            echo "Node environment setup requires curl." >&2
             return 1
+        fi
+
+        case "$(uname -s 2>/dev/null)" in
+            MINGW*|MSYS*|CYGWIN*)
+                # Windows/MSYS2: Use nvm-windows
+                local root_dir="/c/apportable/Programming"
+                local nvm_home="$root_dir/nvm"
+                local nvm_symlink="$root_dir/nodejs"
+                local nvm_zip_url="https://github.com/coreybutler/nvm-windows/releases/download/1.2.2/nvm-noinstall.zip"
+
+                mkdir -p "$nvm_home" "$nvm_symlink" 2>/dev/null || true
+
+                if ! command -v nvm >/dev/null 2>&1; then
+                    local tmp_dir=""
+                    tmp_dir=$(mktemp -d "/tmp/nvm-windows.XXXXXXXX" 2>/dev/null) || tmp_dir=""
+                    [ -n "$tmp_dir" ] || { echo "Failed to create a temp directory." >&2; return 1; }
+
+                    local zip="$tmp_dir/nvm-noinstall.zip"
+                    if ! curl -fsSL --retry 3 --retry-delay 1 "$nvm_zip_url" -o "$zip" 2>/dev/null; then
+                        rm -rf "$tmp_dir" 2>/dev/null || true
+                        echo "Failed to download nvm-windows." >&2
+                        return 1
+                    fi
+
+                    if command -v unzip >/dev/null 2>&1; then
+                        unzip -o "$zip" -d "$nvm_home" >/dev/null 2>&1 || {
+                            rm -rf "$tmp_dir" 2>/dev/null || true
+                            echo "Failed to extract nvm-windows (unzip failed)." >&2
+                            return 1
+                        }
+                    elif command -v powershell.exe >/dev/null 2>&1; then
+                        powershell.exe -NoProfile -Command "Expand-Archive -Force -Path '$zip' -DestinationPath '$nvm_home'" >/dev/null 2>&1 || {
+                            rm -rf "$tmp_dir" 2>/dev/null || true
+                            echo "Failed to extract nvm-windows (Expand-Archive failed)." >&2
+                            return 1
+                        }
+                    else
+                        rm -rf "$tmp_dir" 2>/dev/null || true
+                        echo "unzip (or powershell Expand-Archive) is required to extract nvm-windows." >&2
+                        return 1
+                    fi
+
+                    rm -rf "$tmp_dir" 2>/dev/null || true
+                fi
+
+                export NVM_HOME="$nvm_home"
+                export NVM_SYMLINK="$nvm_symlink"
+                export PATH="$PATH:$NVM_HOME:$NVM_SYMLINK"
+
+                : >"$NVM_HOME/PATH.txt"
+                : >"$NVM_HOME/settings.txt"
+                echo "PATH=$PATH" >"$NVM_HOME/PATH.txt"
+
+                local sys_arch="64"
+                [ -d "/c/Program Files (x86)" ] || sys_arch="32"
+                echo "root: $NVM_HOME" >"$NVM_HOME/settings.txt"
+                echo "path: $NVM_SYMLINK" >>"$NVM_HOME/settings.txt"
+                echo "arch: $sys_arch" >>"$NVM_HOME/settings.txt"
+                echo "proxy: none" >>"$NVM_HOME/settings.txt"
+
+                nvm install --lts || return 1
+
+                if [ -f "$root_dir/PortableGit/bin/bash.exe" ]; then
+                    npm config set script-shell "$root_dir/PortableGit/bin/bash.exe" >/dev/null 2>&1 || true
+                fi
+                ;;
+            Linux*)
+                # Linux/Ubuntu: Use nvm (nvm-sh/nvm)
+                local nvm_dir="$HOME/.nvm"
+                
+                # Install dependencies if needed (Ubuntu syntax)
+                if ! command -v git >/dev/null 2>&1; then
+                    echo "Installing git..." >&2
+                    apt update >/dev/null 2>&1 && apt install -y git >/dev/null 2>&1 || {
+                        echo "✗ Failed to install git. Please install manually: apt update && apt install -y git" >&2
+                        return 1
+                    }
+                fi
+                
+                # Check if nvm is already installed
+                if [ ! -s "$nvm_dir/nvm.sh" ]; then
+                    echo "Installing nvm..." >&2
+                    if curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash >/dev/null 2>&1; then
+                        # Source nvm in current shell
+                        export NVM_DIR="$nvm_dir"
+                        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                    else
+                        echo "✗ Failed to install nvm" >&2
+                        return 1
+                    fi
+                else
+                    # Source nvm if already installed
+                    export NVM_DIR="$nvm_dir"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                fi
+
+                # Install Node.js LTS (matching Apportable.sh syntax: nvm install lts)
+                echo "Installing Node.js LTS..." >&2
+                nvm install lts && nvm use lts || return 1
+                ;;
+            Darwin*)
+                # macOS: Use nvm (nvm-sh/nvm)
+                local nvm_dir="$HOME/.nvm"
+                
+                # Check if nvm is already installed
+                if [ ! -s "$nvm_dir/nvm.sh" ]; then
+                    echo "Installing nvm..." >&2
+                    if curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash >/dev/null 2>&1; then
+                        # Source nvm in current shell
+                        export NVM_DIR="$nvm_dir"
+                        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                    else
+                        echo "✗ Failed to install nvm" >&2
+                        return 1
+                    fi
+                else
+                    # Source nvm if already installed
+                    export NVM_DIR="$nvm_dir"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                fi
+
+                # Install Node.js LTS
+                echo "Installing Node.js LTS..." >&2
+                nvm install --lts && nvm use --lts || return 1
+                nvm alias default lts/* >/dev/null 2>&1 || true
+                ;;
+            *)
+                echo "Unsupported operating system: $(uname -s)" >&2
+                return 1
+                ;;
+        esac
+    fi
+
+    # Ensure nvm is loaded (in case it was just installed)
+    case "$(uname -s 2>/dev/null)" in
+        Linux*|Darwin*)
+            local nvm_dir="$HOME/.nvm"
+            if [ -s "$nvm_dir/nvm.sh" ]; then
+                export NVM_DIR="$nvm_dir"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 2>/dev/null || true
+            fi
             ;;
     esac
 
@@ -905,8 +1050,158 @@ setupNodeEnv() {
     npm install -g bun pnpm >/dev/null 2>&1 || true
     pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || true
 
-    node --version
-    npm --version
+    # Display final versions only if we installed something
+    if [ "$installed_something" = true ]; then
+        printf '%s\n' "Final versions:"
+        if command -v nvm >/dev/null 2>&1; then
+            case "$(uname -s 2>/dev/null)" in
+                MINGW*|MSYS*|CYGWIN*)
+                    printf 'nvm: %s\n' "$(nvm version 2>/dev/null || echo 'N/A')"
+                    ;;
+                *)
+                    printf 'nvm: %s\n' "$(nvm --version 2>/dev/null || echo 'N/A')"
+                    ;;
+            esac
+        fi
+        printf 'node: %s\n' "$(node --version 2>/dev/null || echo 'N/A')"
+        printf 'npm: %s\n' "$(npm --version 2>/dev/null || echo 'N/A')"
+        if command -v pnpm >/dev/null 2>&1; then
+            printf 'pnpm: %s\n' "$(pnpm --version 2>/dev/null || echo 'N/A')"
+        fi
+        if command -v bun >/dev/null 2>&1; then
+            printf 'bun: %s\n' "$(bun --version 2>/dev/null || echo 'N/A')"
+        fi
+    fi
+}
+
+installJavaEnv() {
+    local installed_something=false
+    local sdkman_dir="$HOME/.sdkman"
+
+    # Display current versions immediately (instant feedback)
+    if [ -s "$sdkman_dir/bin/sdkman-init.sh" ]; then
+        export SDKMAN_DIR="$sdkman_dir"
+        # shellcheck source=/dev/null
+        [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && \. "$SDKMAN_DIR/bin/sdkman-init.sh" 2>/dev/null || true
+    fi
+
+    if command -v java >/dev/null 2>&1; then
+        printf 'java: %s\n' "$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 || echo 'N/A')"
+    else
+        printf 'java: not installed\n'
+    fi
+    if command -v mvn >/dev/null 2>&1; then
+        printf 'maven: %s\n' "$(mvn --version 2>&1 | head -n 1 | sed 's/.*Maven //' | cut -d' ' -f1 || echo 'N/A')"
+    else
+        printf 'maven: not installed\n'
+    fi
+
+    # Install SDKMAN if needed
+    if [ ! -s "$sdkman_dir/bin/sdkman-init.sh" ]; then
+        if ! command -v curl >/dev/null 2>&1; then
+            echo "Java environment setup requires curl." >&2
+            return 1
+        fi
+
+        # Install required dependencies (zip and unzip)
+        if ! command -v zip >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1; then
+            echo "Installing zip and unzip (required for SDKMAN)..." >&2
+            case "$(uname -s 2>/dev/null)" in
+                Linux*)
+                    if command -v apt-get >/dev/null 2>&1; then
+                        sudo apt-get update -y >/dev/null 2>&1 && sudo apt-get install -y zip unzip >/dev/null 2>&1 || {
+                            echo "✗ Failed to install zip/unzip. Please install manually: sudo apt-get install -y zip unzip" >&2
+                            return 1
+                        }
+                    elif command -v yum >/dev/null 2>&1; then
+                        sudo yum install -y zip unzip >/dev/null 2>&1 || {
+                            echo "✗ Failed to install zip/unzip. Please install manually: sudo yum install -y zip unzip" >&2
+                            return 1
+                        }
+                    elif command -v pacman >/dev/null 2>&1; then
+                        sudo pacman -S --noconfirm zip unzip >/dev/null 2>&1 || {
+                            echo "✗ Failed to install zip/unzip. Please install manually: sudo pacman -S zip unzip" >&2
+                            return 1
+                        }
+                    else
+                        echo "✗ Could not determine package manager. Please install zip and unzip manually." >&2
+                        return 1
+                    fi
+                    ;;
+                Darwin*)
+                    if command -v brew >/dev/null 2>&1; then
+                        brew install zip unzip >/dev/null 2>&1 || {
+                            echo "✗ Failed to install zip/unzip. Please install manually: brew install zip unzip" >&2
+                            return 1
+                        }
+                    else
+                        echo "✗ Homebrew not found. Please install zip and unzip manually." >&2
+                        return 1
+                    fi
+                    ;;
+                *)
+                    echo "✗ Unsupported OS. Please install zip and unzip manually." >&2
+                    return 1
+                    ;;
+            esac
+        fi
+
+        echo "Installing SDKMAN..." >&2
+        curl -s "https://get.sdkman.io" | bash || {
+            echo "✗ Failed to install SDKMAN" >&2
+            return 1
+        }
+
+        # Source SDKMAN
+        export SDKMAN_DIR="$sdkman_dir"
+        # shellcheck source=/dev/null
+        [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && \. "$SDKMAN_DIR/bin/sdkman-init.sh" || {
+            echo "✗ Failed to source SDKMAN" >&2
+            return 1
+        }
+        installed_something=true
+    else
+        # Source SDKMAN if already installed
+        export SDKMAN_DIR="$sdkman_dir"
+        # shellcheck source=/dev/null
+        [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && \. "$SDKMAN_DIR/bin/sdkman-init.sh" 2>/dev/null || true
+    fi
+
+    # Install Java (default)
+    if ! command -v java >/dev/null 2>&1; then
+        echo "Installing Java..." >&2
+        yes | sdk install java 2>/dev/null || {
+            echo "✗ Failed to install Java" >&2
+            return 1
+        }
+        installed_something=true
+    fi
+
+    # Install Maven (default)
+    if ! command -v mvn >/dev/null 2>&1; then
+        echo "Installing Maven..." >&2
+        yes | sdk install maven 2>/dev/null || {
+            echo "✗ Failed to install Maven" >&2
+            return 1
+        }
+        installed_something=true
+    fi
+
+    # Ensure SDKMAN is loaded
+    export SDKMAN_DIR="$sdkman_dir"
+    # shellcheck source=/dev/null
+    [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && \. "$SDKMAN_DIR/bin/sdkman-init.sh" 2>/dev/null || true
+
+    # Display final versions only if we installed something
+    if [ "$installed_something" = true ]; then
+        printf '%s\n' "Final versions:"
+        if command -v java >/dev/null 2>&1; then
+            printf 'java: %s\n' "$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 || echo 'N/A')"
+        fi
+        if command -v mvn >/dev/null 2>&1; then
+            printf 'maven: %s\n' "$(mvn --version 2>&1 | head -n 1 | sed 's/.*Maven //' | cut -d' ' -f1 || echo 'N/A')"
+        fi
+    fi
 }
 
 claude() {
