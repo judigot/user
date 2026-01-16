@@ -534,6 +534,7 @@ Command:
 curl -o script.sh https://raw.githubusercontent.com/judestp/alpha-tokyo-dev-env-setup/main/script.sh && sh script.sh
 ```
 ## Install Ubuntu Personal and Ubuntu Work
+Terminal: `Ubuntu`
 
 ```powershell
 # Fresh Windows setup script:
