@@ -785,55 +785,76 @@ Write-Host "Remaining distros:"
 ## Neovim & LazyVIm
 
 ```bash
-# Neovim + LazyVim one-shot installer for Ubuntu (x86_64)
-# Installs: latest Neovim, LazyVim starter, ripgrep, fd, build tools.
-
+#!/usr/bin/env bash
 set -euo pipefail
 
-### 1) Base dependencies
-sudo apt-get update
-sudo apt-get install -y \
-  git curl ripgrep fd-find build-essential unzip
-
-### 2) Make `fd` available (LazyVim expects `fd`, Ubuntu package is `fdfind`)
-mkdir -p "$HOME/.local/bin"
-ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
-
-# Ensure ~/.local/bin is on PATH for future shells
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bashrc"; then
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
-fi
-export PATH="$HOME/.local/bin:$PATH"
-
-### 3) Install latest Neovim (Linux x86_64) to /opt/nvim
-cd /tmp
-curl -L -o nvim-linux-x86_64.tar.gz \
-  https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-
-sudo rm -rf /opt/nvim
-sudo mkdir -p /opt
-sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
-sudo mv /opt/nvim-linux-x86_64 /opt/nvim
-sudo ln -sfn /opt/nvim/bin/nvim /usr/local/bin/nvim
-
-### 4) Install LazyVim starter config
-mkdir -p "$HOME/.config"
-if [ -d "$HOME/.config/nvim" ]; then
-  echo "WARNING: $HOME/.config/nvim already exists; not overwriting." >&2
+echo "[*] Detecting privilege helper..."
+if [ "$(id -u)" -eq 0 ]; then
+  SUDO=""
 else
-  git clone https://github.com/LazyVim/starter "$HOME/.config/nvim"
-  rm -rf "$HOME/.config/nvim/.git"
+  SUDO="sudo"
 fi
 
-### 5) Pre-install/update LazyVim plugins
-hash -r
-echo "Neovim version:"
-nvim --version | head -n 3 || true
+echo "[*] Updating APT..."
+$SUDO apt update
 
-echo "Syncing LazyVim plugins (this may take a bit)..."
-nvim --headless "+Lazy! sync" +qa || true
+echo "[*] Installing base packages (compiler, tools, etc.)..."
+$SUDO apt install -y \
+  software-properties-common \
+  build-essential \
+  git \
+  curl wget unzip \
+  ripgrep \
+  fd-find \
+  python3 python3-venv python3-pip \
+  nodejs npm
+
+echo "[*] Ensuring fd is available as 'fd' (required by many plugins)..."
+if ! command -v fd >/dev/null 2>&1; then
+  if command -v fdfind >/dev/null 2>&1; then
+    $SUDO ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+  fi
+fi
+
+echo "[*] Adding Neovim stable PPA (if not already added) and installing Neovim..."
+if ! grep -qi neovim-ppa /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
+  $SUDO add-apt-repository -y ppa:neovim-ppa/stable
+  $SUDO apt update
+fi
+$SUDO apt install -y neovim
+
+echo "[*] Installing tree-sitter CLI (optional but recommended)..."
+if ! command -v tree-sitter >/dev/null 2>&1; then
+  $SUDO npm install -g tree-sitter-cli
+fi
+
+NVIM_CONFIG_DIR="${HOME}/.config/nvim"
+BACKUP_SUFFIX="$(date +%Y%m%d-%H%M%S)"
+
+echo "[*] Preparing Neovim config directory..."
+mkdir -p "${HOME}/.config"
+
+if [ -d "${NVIM_CONFIG_DIR}" ]; then
+  echo "[*] Existing Neovim config found, backing up to ${NVIM_CONFIG_DIR}.bak-${BACKUP_SUFFIX}"
+  mv "${NVIM_CONFIG_DIR}" "${NVIM_CONFIG_DIR}.bak-${BACKUP_SUFFIX}"
+fi
+
+echo "[*] Cloning LazyVim starter config..."
+git clone https://github.com/LazyVim/starter "${NVIM_CONFIG_DIR}"
+
+# Optional: remove git history so your config starts clean
+rm -rf "${NVIM_CONFIG_DIR}/.git"
+
+echo "[*] Clearing old Neovim data (if any) so install is clean..."
+rm -rf "${HOME}/.local/share/nvim" \
+       "${HOME}/.local/state/nvim" \
+       "${HOME}/.cache/nvim"
+
+echo "[*] Running headless Neovim to install plugins and Treesitter parsers..."
+nvim --headless "+Lazy! sync" +qa
 
 echo
-echo "Done. Restart your shell (so PATH updates), then run: nvim"
-echo "Inside Neovim, try: <space> f f (file finder), :checkhealth, :Lazy"
+echo "[✓] Neovim + LazyVim installation complete."
+echo "    Start Neovim with: nvim"
+echo "    Inside Neovim, you can check everything with: :checkhealth nvim-treesitter"
 ```
