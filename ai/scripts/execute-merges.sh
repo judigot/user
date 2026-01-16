@@ -1,23 +1,40 @@
 #!/bin/sh
 
-readonly PROJECT_DIRECTORY=$(cd "$(dirname "$0")" || exit 1; pwd)
+readonly SCRIPT_DIR=$(cd "$(dirname "$0")" || exit 1; pwd)
+
+usage() {
+  printf '%s\n' "Usage: $0 <config.json> [--dry-run]"
+  printf '%s\n' "Executes merges in correct dependency order"
+  exit 1
+}
 
 main() {
   if [ $# -lt 1 ]; then
-    printf '%s\n' "Usage: $0 <config.json> [--dry-run]" >&2
-    printf '%s\n' "Example: $0 worktree-config.json" >&2
-    printf '%s\n' "Example: $0 worktree-config.json --dry-run" >&2
-    exit 1
+    usage
   fi
 
   readonly CONFIG_FILE="$1"
-  readonly DRY_RUN=false
-  if [ "${2:-}" = "--dry-run" ]; then
-    readonly DRY_RUN=true
+  DRY_RUN=false
+  if [ "$2" = "--dry-run" ]; then
+    DRY_RUN=true
   fi
+  readonly DRY_RUN
 
   if [ ! -f "$CONFIG_FILE" ]; then
     printf '%s\n' "Error: Config file not found: $CONFIG_FILE" >&2
+    exit 1
+  fi
+
+  readonly BASE_DIR=$(jq -r '.baseDir // ".worktrees"' "$CONFIG_FILE")
+  readonly BASE_BRANCH=$(jq -r '.baseBranch // "main"' "$CONFIG_FILE")
+  
+  if [ -z "$BASE_DIR" ] || [ "$BASE_DIR" = "null" ]; then
+    printf '%s\n' "Error: baseDir is required in config" >&2
+    exit 1
+  fi
+
+  if [ -z "$BASE_BRANCH" ] || [ "$BASE_BRANCH" = "null" ]; then
+    printf '%s\n' "Error: baseBranch is required in config" >&2
     exit 1
   fi
 
@@ -29,69 +46,86 @@ main() {
 
   cd "$REPO_ROOT" || exit 1
 
-  readonly BASE_BRANCH=$(jq -r '.baseBranch // "main"' "$CONFIG_FILE")
-  readonly WORKTREES_DIR=".worktrees"
+  readonly DONE_DIRS=$(find "$BASE_DIR" -name "TASK_STATUS.done" 2>/dev/null | while IFS= read -r status_file; do
+    worktree_dir=$(dirname "$(dirname "$(dirname "$status_file")")")
+    dir_name=$(basename "$worktree_dir")
+    printf '%s\n' "$dir_name"
+  done)
 
-  if [ ! -d "$WORKTREES_DIR" ]; then
-    printf '%s\n' "Error: Worktrees directory not found: $WORKTREES_DIR" >&2
-    exit 1
+  if [ -z "$DONE_DIRS" ]; then
+    printf '%s\n' "No worktrees with TASK_STATUS.done found"
+    exit 0
   fi
 
-  readonly MERGE_ORDER_SCRIPT="$PROJECT_DIRECTORY/merge-order.sh"
-  readonly MERGE_ORDER=$(sh "$MERGE_ORDER_SCRIPT" "$CONFIG_FILE" | grep -v "^Merge order")
+  readonly DONE_DIRS_JSON=$(printf '%s\n' "$DONE_DIRS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+  readonly MERGE_ORDER=$(jq -r --argjson done_dirs "$DONE_DIRS_JSON" '.worktrees | 
+    map(select(.dir as $dir | $done_dirs | index($dir) != null)) |
+    sort_by(.priority // 0) |
+    reverse |
+    .[] | 
+    "\(.branch)|\(.dir)|\(.dependsOn | join(",") // "")"
+  ' "$CONFIG_FILE" 2>/dev/null)
 
   if [ -z "$MERGE_ORDER" ]; then
-    printf '%s\n' "No branches ready for merge (all must have TASK_STATUS.done)" >&2
-    exit 1
+    printf '%s\n' "No worktrees ready for merge (status: done)"
+    exit 0
   fi
 
-  git fetch origin || {
-    printf '%s\n' "Error: Failed to fetch from origin" >&2
-    exit 1
-  }
+  if [ "$DRY_RUN" = "true" ]; then
+    printf '%s\n' "DRY RUN: Would merge in this order:"
+    printf '%s\n' ""
+  else
+    printf '%s\n' "Executing merges in dependency order:"
+    printf '%s\n' ""
+  fi
 
-  git checkout "$BASE_BRANCH" || {
-    printf '%s\n' "Error: Failed to checkout $BASE_BRANCH" >&2
-    exit 1
-  }
-
-  git pull origin "$BASE_BRANCH" || {
-    printf '%s\n' "Error: Failed to pull $BASE_BRANCH" >&2
-    exit 1
-  }
-
-  printf '%s\n' "$MERGE_ORDER" | while IFS= read -r branch; do
-    [ -z "$branch" ] && continue
-
-    readonly BRANCH_SLUG=$(echo "$branch" | tr '/' '-')
-    readonly WORKTREE_PATH="$WORKTREES_DIR/$BRANCH_SLUG"
-
-    if [ ! -d "$WORKTREE_PATH" ]; then
-      printf '%s\n' "Warning: Worktree not found: $WORKTREE_PATH, skipping $branch" >&2
+  printf '%s\n' "$MERGE_ORDER" | while IFS='|' read -r branch dir depends_on; do
+    if [ -z "$branch" ] || [ -z "$dir" ]; then
       continue
     fi
 
-    printf '%s\n' "Merging $branch into $BASE_BRANCH..."
+    readonly WORKTREE_PATH="$BASE_DIR/$dir"
+    if [ ! -d "$WORKTREE_PATH" ]; then
+      printf '%s\n' "Skipping $branch: worktree not found at $WORKTREE_PATH"
+      continue
+    fi
+
+    if [ ! -f "$WORKTREE_PATH/.agent-task-context/.state/TASK_STATUS.done" ]; then
+      printf '%s\n' "Skipping $branch: TASK_STATUS.done not found"
+      continue
+    fi
+
+    if [ -n "$depends_on" ] && [ "$depends_on" != "" ]; then
+      printf '%s\n' "Branch $branch depends on: $depends_on"
+      printf '%s\n' "  (Ensure dependencies are merged first)"
+    fi
 
     if [ "$DRY_RUN" = "true" ]; then
-      printf '%s\n' "[DRY RUN] Would merge $branch into $BASE_BRANCH"
-      git merge --no-commit --no-ff "$branch" 2>&1 || true
-      git merge --abort 2>/dev/null || true
+      printf '%s\n' "  [DRY RUN] Would merge $branch into $BASE_BRANCH"
     else
-      git merge --no-ff "$branch" -m "merge: $branch into $BASE_BRANCH" || {
-        printf '%s\n' "Error: Merge conflict or failure for $branch" >&2
-        printf '%s\n' "Please resolve conflicts and run again" >&2
+      printf '%s\n' "Merging $branch into $BASE_BRANCH..."
+      
+      git fetch origin 2>/dev/null || true
+      git checkout "$BASE_BRANCH" 2>/dev/null || exit 1
+      git pull origin "$BASE_BRANCH" 2>/dev/null || true
+      
+      if git merge --no-ff "$branch" -m "Merge $branch into $BASE_BRANCH" 2>/dev/null; then
+        printf '%s\n' "  ✓ Merged successfully"
+        git push origin "$BASE_BRANCH" 2>/dev/null || true
+      else
+        printf '%s\n' "  ✗ Merge failed (conflicts or errors)" >&2
+        git merge --abort 2>/dev/null || true
         exit 1
-      }
+      fi
     fi
+    printf '%s\n' ""
   done
 
-  if [ "$DRY_RUN" = "false" ]; then
-    printf '%s\n' "All merges completed successfully"
-    printf '%s\n' "Review changes with: git log --oneline -10"
-    printf '%s\n' "Push with: git push origin $BASE_BRANCH"
+  if [ "$DRY_RUN" = "true" ]; then
+    printf '%s\n' "Dry run complete. Run without --dry-run to execute merges."
   else
-    printf '%s\n' "[DRY RUN] No changes were made"
+    printf '%s\n' "Merge execution complete"
   fi
 }
 

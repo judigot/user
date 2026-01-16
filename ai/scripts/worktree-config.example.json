@@ -1,17 +1,22 @@
 {
+  "baseDir": ".worktrees/w",
   "baseBranch": "main",
   "worktrees": [
     {
-      "dir": "repo--feat-auth-refresh",
+      "id": "feat-auth-refresh",
       "branch": "feat/auth-refresh",
-      "priority": 1,
-      "dependsOn": []
+      "dir": "repo--feat-auth-refresh",
+      "priority": 10,
+      "dependsOn": [],
+      "status": "ready"
     },
     {
-      "dir": "repo--fix-payment-webhook",
+      "id": "fix-payment-webhook",
       "branch": "fix/payment-webhook",
+      "dir": "repo--fix-payment-webhook",
       "priority": 2,
-      "dependsOn": ["feat/auth-refresh"]
+      "dependsOn": ["feat/auth-refresh"],
+      "status": "ready"
     }
   ]
 }
