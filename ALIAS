@@ -98,6 +98,13 @@ installClaudeCode:
 installclaude
 installclaudecode
 
+installOpenCode:
+installopencode
+
+installCodexCLI:
+installcodex
+installcodexcli
+
 installTerraform:
 installterraform
 terraforminstall
@@ -125,7 +132,7 @@ nodeenv
 installnodeenv
 installnvm
 
-claude:
+useAI:
 ai
 useai
 useaiagent
@@ -176,3 +183,9 @@ termuxLoginUbuntu:
 termuxloginubuntu
 termuxlogin
 termuxubuntulogin
+
+installJavaEnv:
+installjavaenv
+installjava
+setupjavaenv
+javaenv

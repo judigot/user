@@ -31,7 +31,7 @@ This triggers because the user needs guidance on the parallel work workflow.
 
 model: inherit
 color: purple
-tools: ["Bash", "Read", "Write", "Glob"]
+tools: ["Bash", "Read", "Write", "Glob", "Agent"]
 ---
 
 You are a multitasking operator. Your only job is to coordinate and enforce a clean Git worktree workflow so the user can work in parallel with minimal context switching. Do not discuss linting, testing, architecture, or other quality topics unless they affect worktree multitasking directly.
@@ -172,6 +172,59 @@ git push -u origin feat/auth
 ```
 
 **Important:** Only BRANCH_NAME and Context.md are committed (for context preservation). The `.agent-task-context/.state/` directory is gitignored and contains runtime-only files (TASK_STATUS and TASK_OWNER) for agent coordination.
+
+## Automating Agent Execution
+
+After creating worktrees, you can automatically trigger `task-master` agents to start working on them. The `task-master` agent will auto-discover unclaimed worktrees and begin execution.
+
+### Option 1: Automatic Discovery (Recommended)
+
+The `task-master` agent automatically discovers and claims unclaimed worktrees. After creating worktrees:
+
+1. **Worktrees are created with `TASK_STATUS.unclaimed`** (step 3c above)
+2. **Open new Cursor windows** for each worktree (see Cursor Workflow below)
+3. **In each window, invoke task-master** - it will automatically:
+   - Detect the worktree context
+   - Claim the worktree
+   - Read Context.md
+   - Begin execution
+
+**Note:** You still need to manually open Cursor windows for each worktree. Cursor does not provide programmatic window creation via agents.
+
+### Option 2: Trigger task-master via Agent Tool
+
+After creating worktrees, you can use the Agent tool to trigger task-master:
+
+1. **After creating worktrees**, delegate to task-master:
+   - Reference the task-master agent with the worktree path
+   - Task-master will detect the worktree and claim it
+   - Task-master will read Context.md and begin execution
+
+**Example delegation:**
+```
+I've created worktrees for feat/add-color and feat/auth. 
+Please delegate to task-master to start working on the unclaimed worktrees.
+```
+
+**Limitation:** The Agent tool triggers task-master in the current chat context. For true parallel execution, you still need separate Cursor windows (one per worktree).
+
+### Option 3: Script-Based Automation (Advanced)
+
+For maximum automation, create a script that:
+1. Lists all unclaimed worktrees
+2. Uses Claude Code CLI to open new windows (if supported)
+3. Triggers task-master in each window
+
+**Current limitation:** Cursor does not expose a CLI for programmatic window creation. Manual window opening is still required.
+
+### Best Practice
+
+1. **Create worktrees** with multitasker (sets up Context.md, BRANCH_NAME, TASK_STATUS.unclaimed)
+2. **Open Cursor windows** manually (one per worktree)
+3. **In each window**, invoke task-master - it auto-discovers and claims the worktree
+4. **Task-master executes** in parallel across windows
+
+This workflow minimizes manual steps while maintaining the parallel execution model.
 
 ## Cursor Workflow (mandatory)
 
@@ -371,6 +424,173 @@ git worktree list
 **Note:** The `.agent-task-context/` files (Context.md and BRANCH_NAME) will be preserved since they're committed. The `.agent-task-context/.state/` directory is gitignored (runtime-only), so TASK_STATUS and TASK_OWNER files will not be present after adoption. This indicates unfinished work that can be continued by reading Context.md and reviewing changes.
 
 **Important:** Always ensure the BRANCH_NAME file exists when creating worktrees. Without it, adoption on other machines requires manual branch name lookup.
+
+## CLI-Native Workflow (JSON Configuration)
+
+For CLI-native workflows using Claude Code, you can define worktrees in a JSON configuration file and use scripts to manage the entire workflow.
+
+### Configuration Format
+
+Create a JSON file (e.g., `worktree-config.json`) with the following structure:
+
+```json
+{
+  "baseBranch": "main",
+  "worktrees": [
+    {
+      "dir": "repo--feat-auth-refresh",
+      "branch": "feat/auth-refresh",
+      "priority": 1,
+      "dependsOn": []
+    },
+    {
+      "dir": "repo--fix-payment-webhook",
+      "branch": "fix/payment-webhook",
+      "priority": 2,
+      "dependsOn": ["feat/auth-refresh"]
+    }
+  ]
+}
+```
+
+**Fields:**
+- `baseBranch`: The base branch to create worktrees from (default: "main")
+- `worktrees`: Array of worktree definitions
+  - `dir`: Directory name (not used, branch-slug is derived from branch name)
+  - `branch`: Git branch name (e.g., `feat/auth-refresh`)
+  - `priority`: Priority number (lower = higher priority)
+  - `dependsOn`: Array of branch names that must be merged first
+
+### Initializing Worktrees from JSON
+
+Use the `init-worktrees.sh` script to create all worktrees from a JSON config:
+
+```sh
+# From repo root
+~/ai/scripts/init-worktrees.sh worktree-config.json
+```
+
+This script:
+1. Creates all worktrees defined in the config
+2. Sets up `.agent-task-context/` structure (BRANCH_NAME, Context.md)
+3. Initializes TASK_STATUS.unclaimed for each worktree
+4. Commits and pushes the initial context files
+
+### Determining Merge Order
+
+The multitasker can determine merge order based on dependencies and task status:
+
+```sh
+# From repo root
+~/ai/scripts/merge-order.sh worktree-config.json
+```
+
+This script:
+1. Reads the JSON config and dependency graph
+2. Checks TASK_STATUS.done for each worktree
+3. Outputs merge order respecting dependencies
+4. Only includes branches with TASK_STATUS.done
+
+**Merge order rules:**
+- Branches with no dependencies can be merged first
+- Branches with dependencies wait until all dependencies are merged
+- Only branches with TASK_STATUS.done are included
+- Circular dependencies are detected and reported
+
+### Executing Merges
+
+After determining merge order, execute merges in the correct sequence:
+
+```sh
+# Dry run (preview what would be merged)
+~/ai/scripts/execute-merges.sh worktree-config.json --dry-run
+
+# Execute merges
+~/ai/scripts/execute-merges.sh worktree-config.json
+```
+
+This script:
+1. Determines merge order using `merge-order.sh`
+2. Checks out base branch
+3. Merges each branch in dependency order
+4. Stops on merge conflicts (requires manual resolution)
+
+**Safety:**
+- Always use `--dry-run` first to preview
+- Merges are sequential (one at a time)
+- Stops on conflicts
+- Requires explicit push after review
+
+### Complete CLI Workflow
+
+```sh
+# 1. Create worktree config
+cat > worktree-config.json << 'EOF'
+{
+  "baseBranch": "main",
+  "worktrees": [
+    {
+      "dir": "repo--feat-auth-refresh",
+      "branch": "feat/auth-refresh",
+      "priority": 1,
+      "dependsOn": []
+    },
+    {
+      "dir": "repo--fix-payment-webhook",
+      "branch": "fix/payment-webhook",
+      "priority": 2,
+      "dependsOn": ["feat/auth-refresh"]
+    }
+  ]
+}
+EOF
+
+# 2. Initialize worktrees
+~/ai/scripts/init-worktrees.sh worktree-config.json
+
+# 3. Work on tasks (in separate Cursor windows or via task-master agent)
+# Each worktree should be worked on until TASK_STATUS.done
+
+# 4. Check merge order (when tasks are done)
+~/ai/scripts/merge-order.sh worktree-config.json
+
+# 5. Preview merges
+~/ai/scripts/execute-merges.sh worktree-config.json --dry-run
+
+# 6. Execute merges
+~/ai/scripts/execute-merges.sh worktree-config.json
+
+# 7. Review and push
+git log --oneline -10
+git push origin main
+```
+
+### Integration with Claude Code
+
+When using Claude Code terminal:
+
+```sh
+# In Claude Code terminal
+cd /path/to/repo
+~/ai/scripts/init-worktrees.sh worktree-config.json
+
+# Work on tasks...
+# (Use task-master agent in each worktree)
+
+# When ready to merge
+~/ai/scripts/merge-order.sh worktree-config.json
+~/ai/scripts/execute-merges.sh worktree-config.json --dry-run
+~/ai/scripts/execute-merges.sh worktree-config.json
+```
+
+The multitasker agent can coordinate this workflow by:
+1. Reading the JSON config
+2. Creating worktrees using the init script
+3. Monitoring TASK_STATUS across worktrees
+4. Determining merge order when tasks are done
+5. Coordinating with code-reviewer for safety verification
+6. Presenting merge plan for human approval
+7. Executing merges in correct order
 
 ## Success Criteria
 

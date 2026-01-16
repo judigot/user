@@ -32,11 +32,11 @@ curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o 
 
 initubuntu
 usessh
-installAWS
-useaws
 installnodeenv
 installterraform
 cloneterraformrepo
+installAWS
+useaws
 ```
 
 Initialize Ubuntu
@@ -448,3 +448,414 @@ See `ai/README.md` for details.
 | [judigot/ai](https://github.com/judigot/ai) | Claude Code plugin (standalone) | `user/ai/` |
 | [judigot/cursor](https://github.com/judigot/cursor) | Cursor IDE template (standalone) | Files in `PROJECT_CORE` |
 | [judigot/ide](https://github.com/judigot/ide) | Editor settings (standalone) | `user/ide/` |
+
+# Development Environment Setup (WSL 2)
+
+## Required Programs
+- WSL 2
+- Docker
+
+
+## Enable WSL 2 (Windows Subsystem for Linux)
+Open PowerShell as Administrator (Start menu > PowerShell > right-click > Run as Administrator) and enter this command:  
+  
+Terminal: `PowerShell`  
+  
+Command:  
+```powershell
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+```
+
+## Install Ubuntu
+Terminal: `PowerShell`  
+  
+Command:  
+```powershell
+wsl --install
+```
+
+**once you open Ubuntu for the first time, **skip** creating a new UNIX username*  
+  
+If you want to remove old versions of Ubuntu, run the commands below:  
+Terminal: `PowerShell`  
+  
+Command:  
+```powershell
+wsl --unregister Ubuntu
+wsl --install -d Ubuntu
+wsl --set-default Ubuntu
+```
+
+## Open Ubuntu in VS Code
+Terminal: `Ubuntu`  
+  
+Command:  
+```sh
+code .
+```
+
+## Configure Git Credentials
+Terminal: `Ubuntu`  
+  
+Command:  
+```sh
+git config --global user.name "example-username"
+git config --global user.email "example@gmail.com"
+```
+
+## SSH Key Generation for Github
+Terminal: `Ubuntu`  
+  
+Command:  
+```sh
+ssh-keygen -f ~/.ssh/id_rsa -P "" && clear && echo -e "Copy and paste the public key below to your GitHub account:\n\n\e[32m$(cat ~/.ssh/id_rsa.pub) \e[0m\n" # Green
+```
+
+**copy & paste the generated SSH key to your GitHub account*
+
+## Test SSH Connection
+Terminal: `Ubuntu`  
+  
+Command:  
+```sh
+ssh -T git@github.com -o StrictHostKeyChecking=no
+```
+
+Expected output:
+```
+Hi <username>! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+## Download and Run the Environment-Setup.sh
+Terminal: `Ubuntu`  
+  
+Command:  
+```sh
+curl -o script.sh https://raw.githubusercontent.com/judestp/alpha-tokyo-dev-env-setup/main/script.sh && sh script.sh
+```
+## Install Ubuntu Personal and Ubuntu Work
+Terminal: `Ubuntu`
+
+```powershell
+# Fresh Windows setup script:
+# Goal:
+#   - "Ubuntu" = PERSONAL (default WSL distro)
+#   - "Ubuntu-Work" = WORK (separate cloned distro)
+#   - BOTH default to root (/etc/wsl.conf)
+#
+# Notes (important realities):
+#   1) On first-ever Ubuntu launch, WSL forces an initial user-creation step in an interactive window.
+#      You must complete that once. After that, this script will set default user to root.
+#   2) This script is safe to re-run. It will skip steps when already done.
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$personalDistro = "Ubuntu"
+$workDistro     = "Ubuntu-Work"
+
+$baseTar  = Join-Path $env:USERPROFILE "wsl-ubuntu-personal-base.tar"
+$rootDir  = Join-Path $env:USERPROFILE "WSL"
+$workDir  = Join-Path $rootDir $workDistro
+
+function Get-WslDistros {
+  $raw = & wsl.exe --list --quiet 2>$null
+  if ($LASTEXITCODE -ne 0) { return @() }
+  return $raw | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+}
+
+function Ensure-WslAvailable {
+  & wsl.exe --status 2>$null | Out-Null
+  if ($LASTEXITCODE -eq 0) { return }
+
+  Write-Host "WSL not ready. Attempting 'wsl --install'..."
+  & wsl.exe --install
+  if ($LASTEXITCODE -ne 0) {
+    throw "wsl --install failed. If Windows requested a reboot, reboot and run this script again."
+  }
+
+  throw "WSL installation started. If Windows requests a reboot, reboot and run this script again."
+}
+
+function Ensure-DistroInstalled([string]$distroName) {
+  $installed = Get-WslDistros
+  if ($installed -contains $distroName) { return }
+
+  Write-Host "Installing distro: $distroName ..."
+  & wsl.exe --install -d $distroName
+  if ($LASTEXITCODE -ne 0) {
+    throw "Install failed. If Windows requested a reboot, reboot and run this script again."
+  }
+}
+
+function Ensure-Initialized([string]$distroName) {
+  try {
+    & wsl.exe -d $distroName -- bash -lc "echo ok" | Out-Null
+    if ($LASTEXITCODE -eq 0) { return }
+  } catch {}
+
+  Write-Host ""
+  Write-Host "FIRST-RUN REQUIRED for '$distroName'."
+  Write-Host "An Ubuntu window will open. Create the temporary Linux username/password once."
+  Write-Host "After it finishes and you get a shell prompt, type: exit"
+  Write-Host ""
+
+  & wsl.exe -d $distroName
+  Read-Host "Press Enter here AFTER you completed the first-run Ubuntu setup"
+}
+
+function Export-Distro([string]$distroName, [string]$tarPath) {
+  if (Test-Path $tarPath) { Remove-Item -Force $tarPath }
+  Write-Host "Exporting '$distroName' to '$tarPath' ..."
+  & wsl.exe --export $distroName $tarPath
+  if ($LASTEXITCODE -ne 0) { throw "Export failed." }
+}
+
+function Import-DistroIfMissing([string]$newName, [string]$installDir, [string]$tarPath) {
+  $installed = Get-WslDistros
+  if ($installed -contains $newName) {
+    Write-Host "'$newName' already exists. Skipping import."
+    return
+  }
+
+  if (-not (Test-Path $installDir)) { New-Item -ItemType Directory -Force -Path $installDir | Out-Null }
+
+  Write-Host "Importing '$newName' into '$installDir' ..."
+  & wsl.exe --import $newName $installDir $tarPath
+  if ($LASTEXITCODE -ne 0) { throw "Import failed for $newName." }
+}
+
+function Invoke-WslRootBash([string]$distroName, [string]$bashCommand) {
+  $cmd = $bashCommand.Replace('"','\"')
+  & wsl.exe -d $distroName --user root -- bash -lc "$cmd"
+  if ($LASTEXITCODE -ne 0) { throw "Command failed in $distroName." }
+}
+
+function Set-DefaultRoot([string]$distroName) {
+  Write-Host "Setting default user to root in '$distroName' (/etc/wsl.conf) ..."
+  Invoke-WslRootBash $distroName @"
+set -euo pipefail
+cat >/etc/wsl.conf <<EOF
+[user]
+default=root
+EOF
+"@
+}
+
+# --- Execution ---
+
+Ensure-WslAvailable
+
+# 1) Install PERSONAL distro named "Ubuntu"
+Ensure-DistroInstalled $personalDistro
+
+# 2) Complete first-run once (unavoidable on fresh install)
+Ensure-Initialized $personalDistro
+
+# 3) Export PERSONAL to create WORK clone
+Write-Host "Shutting down WSL to safely export..."
+& wsl.exe --shutdown | Out-Null
+
+Export-Distro $personalDistro $baseTar
+
+# 4) Import WORK distro as "Ubuntu-Work"
+if (-not (Test-Path $rootDir)) { New-Item -ItemType Directory -Force -Path $rootDir | Out-Null }
+Import-DistroIfMissing $workDistro $workDir $baseTar
+
+# 5) Make BOTH distros default to root
+Set-DefaultRoot $personalDistro
+Set-DefaultRoot $workDistro
+
+# 6) Set default distro to PERSONAL (Ubuntu)
+Write-Host "Setting default distro to '$personalDistro' ..."
+& wsl.exe --set-default $personalDistro
+if ($LASTEXITCODE -ne 0) { throw "Failed to set default distro." }
+
+# 7) Apply changes
+Write-Host "Restarting WSL..."
+& wsl.exe --shutdown | Out-Null
+
+# 8) Cleanup tar
+if (Test-Path $baseTar) { Remove-Item -Force $baseTar }
+
+Write-Host ""
+Write-Host "Done."
+Write-Host "Personal (default): wsl"
+Write-Host "Work:               wsl -d $workDistro"
+Write-Host "List distros:       wsl --list --verbose"
+```
+
+## Enable Docker Integration
+
+- Open Docker Desktop
+- Settings → Resources → WSL Integration
+- Enable Ubuntu and Ubuntu-Work
+- Apply & Restart
+
+## Delete Ubuntu Personal and Ubuntu Work
+
+```powershell
+# Fresh-setup CLEANUP / UNINSTALL script (one-shot)
+# Removes everything created by the setup:
+#   - Unregisters: Ubuntu-Work
+#   - Unregisters: Ubuntu  (your personal)
+#   - Deletes:     %USERPROFILE%\WSL\Ubuntu-Work (import location) if it remains
+#   - Deletes:     any leftover tar export files used by the setup
+#
+# IMPORTANT:
+# - This permanently deletes BOTH distros and all their files.
+# - It does NOT remove docker-desktop (that is owned by Docker Desktop).
+# - If you want to remove WSL itself, see the optional section at the bottom.
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$personalDistro = "Ubuntu"
+$workDistro     = "Ubuntu-Work"
+
+$rootDir = Join-Path $env:USERPROFILE "WSL"
+$workDir = Join-Path $rootDir $workDistro
+
+$tarCandidates = @(
+  (Join-Path $env:USERPROFILE "wsl-ubuntu-personal-base.tar"),
+  (Join-Path $env:USERPROFILE "wsl-ubuntu-base.tar"),
+  (Join-Path $env:USERPROFILE "wsl-ubuntu-24.04-base.tar")
+)
+
+function Get-WslDistros {
+  $raw = & wsl.exe --list --quiet 2>$null
+  if ($LASTEXITCODE -ne 0) { return @() }
+  return $raw | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+}
+
+function Unregister-IfExists([string]$name) {
+  $installed = Get-WslDistros
+  if ($installed -contains $name) {
+    Write-Host "Unregistering $name ..."
+    & wsl.exe --unregister $name
+    if ($LASTEXITCODE -ne 0) { throw "Failed to unregister $name." }
+  } else {
+    Write-Host "$name not found. Skipping."
+  }
+}
+
+function Remove-DirIfExists([string]$path) {
+  if (Test-Path $path) {
+    Write-Host "Deleting directory $path ..."
+    Remove-Item -Recurse -Force $path
+  } else {
+    Write-Host "Directory not found: $path. Skipping."
+  }
+}
+
+function Remove-FileIfExists([string]$path) {
+  if (Test-Path $path) {
+    Write-Host "Deleting file $path ..."
+    Remove-Item -Force $path
+  }
+}
+
+Write-Host "Shutting down WSL..."
+& wsl.exe --shutdown | Out-Null
+
+# Remove distros (this deletes their VHDX/filesystem)
+Unregister-IfExists $workDistro
+Unregister-IfExists $personalDistro
+
+# Remove the imported-work directory (often already gone after unregister, but safe to try)
+Remove-DirIfExists $workDir
+
+# Remove any leftover tar exports
+foreach ($tar in $tarCandidates) {
+  Remove-FileIfExists $tar
+}
+
+Write-Host ""
+Write-Host "Cleanup complete."
+Write-Host "Remaining distros:"
+& wsl.exe --list --verbose
+
+# OPTIONAL: Remove WSL entirely (commented out).
+# Only use this if you truly want to uninstall WSL from Windows.
+# Requires an elevated PowerShell (Run as Administrator) and a reboot afterward.
+#
+# DISM /online /disable-feature /featurename:Microsoft-Windows-Subsystem-Linux /norestart
+# DISM /online /disable-feature /featurename:VirtualMachinePlatform /norestart
+# Write-Host "WSL features disabled. Reboot Windows to complete uninstallation."
+```
+## Neovim & LazyVIm
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[*] Detecting privilege helper..."
+if [ "$(id -u)" -eq 0 ]; then
+  SUDO=""
+else
+  SUDO="sudo"
+fi
+
+echo "[*] Updating APT..."
+$SUDO apt update
+
+echo "[*] Installing base packages (compiler, tools, etc.)..."
+$SUDO apt install -y \
+  software-properties-common \
+  build-essential \
+  git \
+  curl wget unzip \
+  ripgrep \
+  fd-find \
+  python3 python3-venv python3-pip \
+  nodejs npm
+
+echo "[*] Ensuring fd is available as 'fd' (required by many plugins)..."
+if ! command -v fd >/dev/null 2>&1; then
+  if command -v fdfind >/dev/null 2>&1; then
+    $SUDO ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+  fi
+fi
+
+echo "[*] Adding Neovim stable PPA (if not already added) and installing Neovim..."
+if ! grep -qi neovim-ppa /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
+  $SUDO add-apt-repository -y ppa:neovim-ppa/stable
+  $SUDO apt update
+fi
+$SUDO apt install -y neovim
+
+echo "[*] Installing tree-sitter CLI (optional but recommended)..."
+if ! command -v tree-sitter >/dev/null 2>&1; then
+  $SUDO npm install -g tree-sitter-cli
+fi
+
+NVIM_CONFIG_DIR="${HOME}/.config/nvim"
+BACKUP_SUFFIX="$(date +%Y%m%d-%H%M%S)"
+
+echo "[*] Preparing Neovim config directory..."
+mkdir -p "${HOME}/.config"
+
+if [ -d "${NVIM_CONFIG_DIR}" ]; then
+  echo "[*] Existing Neovim config found, backing up to ${NVIM_CONFIG_DIR}.bak-${BACKUP_SUFFIX}"
+  mv "${NVIM_CONFIG_DIR}" "${NVIM_CONFIG_DIR}.bak-${BACKUP_SUFFIX}"
+fi
+
+echo "[*] Cloning LazyVim starter config..."
+git clone https://github.com/LazyVim/starter "${NVIM_CONFIG_DIR}"
+
+# Optional: remove git history so your config starts clean
+rm -rf "${NVIM_CONFIG_DIR}/.git"
+
+echo "[*] Clearing old Neovim data (if any) so install is clean..."
+rm -rf "${HOME}/.local/share/nvim" \
+       "${HOME}/.local/state/nvim" \
+       "${HOME}/.cache/nvim"
+
+echo "[*] Running headless Neovim to install plugins and Treesitter parsers..."
+nvim --headless "+Lazy! sync" +qa
+
+echo
+echo "[✓] Neovim + LazyVim installation complete."
+echo "    Start Neovim with: nvim"
+echo "    Inside Neovim, you can check everything with: :checkhealth nvim-treesitter"
+```

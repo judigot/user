@@ -4,14 +4,32 @@
 
 set -eu
 
-# Default to both personal and work if no arguments provided
-if [ $# -eq 0 ]; then
-    ITEM_NAMES=("SSH Personal" "SSH Work")
-else
-    ITEM_NAMES=("$@")
-fi
+SIMPLE_FILENAME=false
+ITEM_NAMES=()
+KEY_FILENAME_OVERRIDE=""
 
-KEY_FILENAME="${2:-}"  # Auto-detect if not provided (legacy support)
+# Parse arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --simple-filename)
+            SIMPLE_FILENAME=true
+            shift
+            ;;
+        *)
+            if [ -z "${ITEM_NAMES[*]}" ]; then
+                ITEM_NAMES=("$1")
+            else
+                ITEM_NAMES+=("$1")
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Default to both personal and work if no arguments provided
+if [ ${#ITEM_NAMES[@]} -eq 0 ]; then
+    ITEM_NAMES=("SSH Personal" "SSH Work")
+fi
 
 # Fix HOME if malformed (MSYS2 sometimes has issues)
 [[ "$HOME" != /* ]] && [[ "$HOME" != /c/* ]] && HOME="/c/Users/$USERNAME"
@@ -100,7 +118,7 @@ fi
 # Function to process a single SSH key item
 process_ssh_key() {
     local ITEM_NAME="$1"
-    local KEY_FILENAME_OVERRIDE="$2"
+    local KEY_FILENAME_OVERRIDE_PARAM="$2"
     
     echo ""
     echo "=== Processing: $ITEM_NAME ==="
@@ -242,8 +260,11 @@ mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" 2>/dev/null || true
     
     # Auto-generate filename if not provided
     local KEY_FILENAME
-    if [ -n "$KEY_FILENAME_OVERRIDE" ]; then
-        KEY_FILENAME="$KEY_FILENAME_OVERRIDE"
+    if [ -n "$KEY_FILENAME_OVERRIDE_PARAM" ]; then
+        KEY_FILENAME="$KEY_FILENAME_OVERRIDE_PARAM"
+    elif [ "$SIMPLE_FILENAME" = true ]; then
+        # Use simple format: id_${key_type} (no suffix)
+        KEY_FILENAME="id_${key_type}"
     else
         # Extract just the descriptive part (remove "SSH " prefix if present)
         item_part="$(echo "$ITEM_NAME" | sed 's/^[Ss][Ss][Hh][[:space:]]*//' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
