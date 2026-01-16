@@ -1089,9 +1089,9 @@ setupNodeEnv() {
                     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
                 fi
 
-                # Install Node.js LTS (matching Apportable.sh syntax: nvm install lts)
+                # Install Node.js LTS (matching Apportable.sh syntax: nvm install --lts)
                 echo "Installing Node.js LTS..." >&2
-                nvm install lts && nvm use lts || return 1
+                nvm install --lts && nvm use --lts || return 1
                 ;;
             Darwin*)
                 # macOS: Use nvm (nvm-sh/nvm)
@@ -1139,9 +1139,10 @@ setupNodeEnv() {
             ;;
     esac
 
-    # Install global packages (matching Apportable.sh)
-    npm install -g bun pnpm >/dev/null 2>&1 || true
-    pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || true
+    # Install global packages (matching Apportable.sh) - only if not already installed
+    command -v bun >/dev/null 2>&1 || npm install -g bun >/dev/null 2>&1 || true
+    command -v pnpm >/dev/null 2>&1 || npm install -g pnpm >/dev/null 2>&1 || true
+    command -v pnpm >/dev/null 2>&1 && pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || true
 
     # Display final versions only if we installed something
     if [ "$installed_something" = true ]; then
