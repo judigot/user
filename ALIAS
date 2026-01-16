@@ -101,6 +101,10 @@ installclaudecode
 installOpenCode:
 installopencode
 
+installCodexCLI:
+installcodex
+installcodexcli
+
 installTerraform:
 installterraform
 terraforminstall

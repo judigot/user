@@ -490,6 +490,15 @@ installClaudeCode() {
     esac
 }
 
+installCodexCLI() {
+    if ! command -v npm >/dev/null 2>&1; then
+        echo "npm is required to install Codex CLI." >&2
+        return 1
+    fi
+
+    npm i -g @openai/codex
+}
+
 initUbuntu() {
     set -eu
     sudo apt-get update -y
@@ -1402,7 +1411,7 @@ apt() {
 }
 
 useAI() {
-    local choices=("Claude Code" "Open Code")
+    local choices=("Claude Code" "Open Code" "Codex CLI")
     local selected
 
     selected=$(arrowKeySelect "Select AI (↑↓ arrows, Enter to select, q to quit):" "${choices[@]}")
@@ -1414,17 +1423,36 @@ useAI() {
     case "$selected" in
         "Claude Code")
             if ! installPackage "claude"; then
-                printf '%s\n' "claude is not installed. Run: installClaudeCode" >&2
-                return 1
+                printf '%s\n' "Claude Code is not installed, installing..." >&2
+                installClaudeCode
+                if ! installPackage "claude"; then
+                    printf '%s\n' "Failed to install Claude Code" >&2
+                    return 1
+                fi
             fi
             claude "$@"
             ;;
         "Open Code")
             if ! installPackage "opencode"; then
-                printf '%s\n' "opencode is not installed. Run: installOpenCode" >&2
-                return 1
+                printf '%s\n' "Open Code is not installed, installing..." >&2
+                installOpenCode
+                if ! installPackage "opencode"; then
+                    printf '%s\n' "Failed to install Open Code" >&2
+                    return 1
+                fi
             fi
             opencode "$@"
+            ;;
+        "Codex CLI")
+            if ! installPackage "codex"; then
+                printf '%s\n' "Codex CLI is not installed, installing..." >&2
+                installCodexCLI
+                if ! installPackage "codex"; then
+                    printf '%s\n' "Failed to install Codex CLI" >&2
+                    return 1
+                fi
+            fi
+            codex "$@"
             ;;
     esac
 }
