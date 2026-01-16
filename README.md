@@ -782,3 +782,58 @@ Write-Host "Remaining distros:"
 # DISM /online /disable-feature /featurename:VirtualMachinePlatform /norestart
 # Write-Host "WSL features disabled. Reboot Windows to complete uninstallation."
 ```
+## Neovim & LazyVIm
+
+```bash
+# Neovim + LazyVim one-shot installer for Ubuntu (x86_64)
+# Installs: latest Neovim, LazyVim starter, ripgrep, fd, build tools.
+
+set -euo pipefail
+
+### 1) Base dependencies
+sudo apt-get update
+sudo apt-get install -y \
+  git curl ripgrep fd-find build-essential unzip
+
+### 2) Make `fd` available (LazyVim expects `fd`, Ubuntu package is `fdfind`)
+mkdir -p "$HOME/.local/bin"
+ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+
+# Ensure ~/.local/bin is on PATH for future shells
+if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bashrc"; then
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+fi
+export PATH="$HOME/.local/bin:$PATH"
+
+### 3) Install latest Neovim (Linux x86_64) to /opt/nvim
+cd /tmp
+curl -L -o nvim-linux-x86_64.tar.gz \
+  https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+
+sudo rm -rf /opt/nvim
+sudo mkdir -p /opt
+sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
+sudo mv /opt/nvim-linux-x86_64 /opt/nvim
+sudo ln -sfn /opt/nvim/bin/nvim /usr/local/bin/nvim
+
+### 4) Install LazyVim starter config
+mkdir -p "$HOME/.config"
+if [ -d "$HOME/.config/nvim" ]; then
+  echo "WARNING: $HOME/.config/nvim already exists; not overwriting." >&2
+else
+  git clone https://github.com/LazyVim/starter "$HOME/.config/nvim"
+  rm -rf "$HOME/.config/nvim/.git"
+fi
+
+### 5) Pre-install/update LazyVim plugins
+hash -r
+echo "Neovim version:"
+nvim --version | head -n 3 || true
+
+echo "Syncing LazyVim plugins (this may take a bit)..."
+nvim --headless "+Lazy! sync" +qa || true
+
+echo
+echo "Done. Restart your shell (so PATH updates), then run: nvim"
+echo "Inside Neovim, try: <space> f f (file finder), :checkhealth, :Lazy"
+```
