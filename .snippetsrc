@@ -1412,7 +1412,7 @@ apt() {
 }
 
 useAI() {
-    local choices=("Claude Code" "Open Code" "Codex CLI")
+    local choices=("Claude Code" "Codex CLI" "Open Code")
     local selected
 
     selected=$(arrowKeySelect "Select AI (↑↓ arrows, Enter to select, q to quit):" "${choices[@]}")
