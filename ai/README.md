@@ -112,6 +112,26 @@ This applies your agents, skills, hooks, and settings globally without copying f
 | `lint-master` | Multi-tool linting workflow (ESLint > Oxlint > Biome) |
 | `test-master` | Testing infrastructure and implementation |
 
+## Sprint Modes (Choose One Per Sprint)
+
+You can run this plugin in two modes depending on task overlap and how hands-off you want to be.
+
+### Mode A: Parallel Worktrees (Fastest When Tasks Do Not Overlap)
+
+- Best for many small, independent tasks.
+- One worktree per task; one agent per worktree.
+- Uses `task-master` and `multitasker`.
+
+**Start here:** `ai/scripts/README.md` → "CLI-Native Worktree Workflow"
+
+### Mode B: Sequential Ralph Loop (Safest When Tasks Overlap)
+
+- Best for tasks that touch the same files or require strict sequencing.
+- Uses a single loop that runs one small task per iteration.
+- Ralph memory is persisted in git, `progress.txt`, and `prd.json`.
+
+**Start here:** `ai/scripts/ralph/` and `ai/scripts/README.md` → "Ralph Loop Workflow"
+
 ## Combining with Project-Specific Config
 
 Local projects can have their own settings that extend the global ones:

@@ -11,6 +11,117 @@ The CLI-native workflow provides:
 - **CLI-native**: All scripts work in Claude Code terminal
 - **Safety**: Dry-run mode to preview merges before execution
 
+## Ralph Loop Workflow (Sequential, Hands-Off)
+
+The Ralph loop runs one small task per iteration with a fresh agent context. Use this when tasks overlap or you want strict sequencing.
+
+**Files:**
+- `ai/scripts/ralph/ralph.sh` - the loop runner
+- `ai/scripts/ralph/prompt.md` - instructions for each iteration
+- `ai/scripts/ralph/prd.json.example` - example task format
+
+**Minimum setup:**
+1) Copy `ai/scripts/ralph/` into the target project (or reference it directly).
+2) Create a `prd.json` in `ai/scripts/ralph/` (same folder as `ralph.sh`).
+3) Run the loop:
+```sh
+./ai/scripts/ralph/ralph.sh 10
+```
+
+**How it works:**
+- Picks the highest priority story where `passes: false`
+- Implements that single story
+- Runs checks (as defined in `prompt.md`)
+- Commits if checks pass
+- Marks the story as `passes: true`
+- Appends learnings to `progress.txt`
+- Repeats until all stories pass or max iterations reached
+
+## Worked Examples (Beginner-Friendly)
+
+These examples are intentionally simple and boring so any low-tier agent or beginner can follow them.
+
+### Example A: Two Tiny Tasks in Parallel (Worktrees)
+
+**Goal:** Create two files in parallel: `file1.txt` and `file2.txt`.
+
+1) Create a worktree config:
+```sh
+cat > worktree-config.json << 'EOF'
+{
+  "baseDir": ".worktrees",
+  "baseBranch": "main",
+  "worktrees": [
+    { "id": "file1", "branch": "feat/file1", "dir": "feat-file1", "status": "unclaimed" },
+    { "id": "file2", "branch": "feat/file2", "dir": "feat-file2", "status": "unclaimed" }
+  ]
+}
+EOF
+```
+
+2) Initialize worktrees:
+```sh
+~/ai/scripts/init-worktrees.sh worktree-config.json
+```
+
+3) Open two editor windows:
+- Window A: `.worktrees/feat-file1`
+- Window B: `.worktrees/feat-file2`
+
+4) In Window A:
+- Create `.worktrees/feat-file1/file1.txt` with any text
+- Commit: `feat: add file1`
+- Mark status done: `touch .agent-task-context/.state/TASK_STATUS.done`
+
+5) In Window B:
+- Create `.worktrees/feat-file2/file2.txt` with any text
+- Commit: `feat: add file2`
+- Mark status done: `touch .agent-task-context/.state/TASK_STATUS.done`
+
+6) Merge in order:
+```sh
+~/ai/scripts/merge-order.sh worktree-config.json
+~/ai/scripts/execute-merges.sh worktree-config.json --dry-run
+~/ai/scripts/execute-merges.sh worktree-config.json
+```
+
+### Example B: Two Tiny Tasks Sequentially (Ralph Loop)
+
+**Goal:** Create two files one after another in the same branch.
+
+1) Create `prd.json` in `ai/scripts/ralph/`:
+```sh
+cat > ai/scripts/ralph/prd.json << 'EOF'
+{
+  "branchName": "ralph/tiny-files",
+  "userStories": [
+    {
+      "id": "story-1",
+      "title": "Create fileA.txt",
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "story-2",
+      "title": "Create fileB.txt",
+      "priority": 1,
+      "passes": false
+    }
+  ]
+}
+EOF
+```
+
+2) Run the loop:
+```sh
+./ai/scripts/ralph/ralph.sh 5
+```
+
+3) Expected result:
+- Iteration 1 creates `fileA.txt` and marks story-1 as `passes: true`
+- Iteration 2 creates `fileB.txt` and marks story-2 as `passes: true`
+- The loop prints `<promise>COMPLETE</promise>`
+
 ## Configuration Format
 
 Create a JSON configuration file (e.g., `worktree-config.json`):
