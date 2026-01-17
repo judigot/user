@@ -1,0 +1,48 @@
+name: test-bash-mode
+on:
+  push:
+  pull_request:
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          update: false
+          install: bash
+
+      - name: Set MSYS2_ROOT
+        shell: pwsh
+        run: |
+          $msys2Root = "C:\msys64"
+          if (Test-Path "D:\msys64") { $msys2Root = "D:\msys64" }
+          if (Test-Path "$env:RUNNER_TEMP\msys64") { $msys2Root = "$env:RUNNER_TEMP\msys64" }
+          Write-Host "MSYS2_ROOT=$msys2Root"
+          echo "MSYS2_ROOT=$msys2Root" >> $env:GITHUB_ENV
+
+      - name: Verify bash exists
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bashPath = "$env:MSYS2_ROOT\usr\bin\bash.exe"
+          if (-not (Test-Path $bashPath)) {
+            throw "bash.exe not found at $bashPath"
+          }
+          Write-Host "Found bash at: $bashPath"
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Install-Module Pester -Force -Scope CurrentUser -MinimumVersion 5.0
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Invoke-Pester -Path tests -CI -Output Detailed
