@@ -72,7 +72,7 @@ user/                          ← judigot/user (source of truth)
 │   ├── cursor/                → syncs to ~/AppData/Roaming/Cursor/User
 │   └── zed/                   → syncs to ~/AppData/Roaming/Zed
 ├── .cursor/                   ─┐
-├── agents/                     │→ syncs to ~/.apportable/cursor → pushes to judigot/cursor
+├── agents/                     │→ syncs to ~/.apportable/cursor → pushes to judigot/project-core
 ├── AGENTS.md                   │
 ├── CLAUDE.md                  ─┘
 ├── .bashrc                    ─┐
@@ -167,7 +167,7 @@ $HOME\.ssh
 
 #### PROJECT_CORE Manifest
 
-**Purpose:** Sync files from repository to the Cursor repository (`~/.apportable/cursor`), which then gets pushed to `judigot/cursor`.
+**Purpose:** Sync files from repository to the Cursor repository (`~/.apportable/cursor`), which then gets pushed to `judigot/project-core`.
 
 **How it works:**
 1. Script reads `PROJECT_CORE` line by line
@@ -290,7 +290,7 @@ Both shells read from the same file, so aliases stay in sync automatically.
 |--------|-------------|----------------|
 | Files in `DOTFILES` | `~/` | - |
 | `ai/` | `~/ai` | `judigot/ai` |
-| Files in `PROJECT_CORE` | `~/.apportable/cursor` | `judigot/cursor` |
+| Files in `PROJECT_CORE` | `~/.apportable/cursor` | `judigot/project-core` |
 | `ide/` | `~/.apportable/ide` | `judigot/ide` |
 | `ide/cursor/` | `~/AppData/Roaming/Cursor/User` | - |
 | `ide/zed/` | `~/AppData/Roaming/Zed` | - |
@@ -322,7 +322,7 @@ Both shells read from the same file, so aliases stay in sync automatically.
 | `ai/settings/rules.md` | Coding standards and rules |
 | `ai/skills/` | Specialized skills (lint-master, test-master) |
 
-### Cursor Templates (sync to `~/.apportable/cursor` → `judigot/cursor`)
+### Cursor Templates (sync to `~/.apportable/cursor` → `judigot/project-core`)
 
 | File | Description |
 |------|-------------|
@@ -355,7 +355,7 @@ This will:
 1. Commit & push changes to `judigot/user`
 2. Sync files listed in `DOTFILES` to `~/`
 3. Sync `ai/` to `~/ai` → commit & push to `judigot/ai`
-4. Sync files listed in `PROJECT_CORE` to `~/.apportable/cursor` → push to `judigot/cursor`
+4. Sync files listed in `PROJECT_CORE` to `~/.apportable/cursor` → push to `judigot/project-core`
 5. Sync `ide/` to `~/.apportable/ide` → push to `judigot/ide`
 6. Sync Cursor settings + create VS Code symlinks
 7. Sync Zed settings
@@ -367,7 +367,7 @@ This will:
 addcursorfiles
 ```
 
-This downloads `.cursor/`, `agents/`, `AGENTS.md`, `CLAUDE.md` from `judigot/cursor` to the current directory.
+This downloads `.cursor/`, `agents/`, `AGENTS.md`, `CLAUDE.md` from `judigot/project-core` to the current directory.
 
 ### Load Snippets/Aliases
 
@@ -423,7 +423,7 @@ See `ai/README.md` for details.
 |------------|---------|-------------|
 | [judigot/user](https://github.com/judigot/user) | Monorepo (source of truth) | - |
 | [judigot/ai](https://github.com/judigot/ai) | Claude Code plugin (standalone) | `user/ai/` |
-| [judigot/cursor](https://github.com/judigot/cursor) | Cursor IDE template (standalone) | Files in `PROJECT_CORE` |
+| [judigot/project-core](https://github.com/judigot/project-core) | Cursor IDE template (standalone) | Files in `PROJECT_CORE` |
 | [judigot/ide](https://github.com/judigot/ide) | Editor settings (standalone) | `user/ide/` |
 
 # Development Environment Setup (WSL 2)

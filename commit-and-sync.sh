@@ -134,14 +134,14 @@ sync_cursor_repo() {
         return 1
     fi
     
-    printf '%s\n' "Syncing files from $manifest to judigot/cursor..."
+    printf '%s\n' "Syncing files from $manifest to judigot/project-core..."
     
     cursor_local="$HOME/.apportable/cursor"
     
     # Fresh install: doesn't exist
     if [ ! -d "$cursor_local" ]; then
         mkdir -p "$HOME/.apportable"
-        git clone git@github.com:judigot/cursor.git "$cursor_local"
+        git clone git@github.com:judigot/project-core.git "$cursor_local"
     fi
     
     # Preserve .git, sync files
@@ -173,7 +173,7 @@ sync_cursor_repo() {
     
     if [ ! -d ".git" ]; then
         git init
-        git remote add origin git@github.com:judigot/cursor.git
+        git remote add origin git@github.com:judigot/project-core.git
         git add -A
         git commit -m "chore: initial sync from user repo"
         git branch -M main

@@ -113,7 +113,7 @@ For snippets:
 bash "
 
 . ~/.snippetsrc
-downloadGithubRepo judigot/cursor
+downloadGithubRepo judigot/project-core
 
 "
 ```
