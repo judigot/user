@@ -27,6 +27,7 @@ cachebustkey="$(date +%s)"; source <(curl -fsSL "https://raw.githubusercontent.c
 Set Up Termux
 ```sh
 cachebustkey="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cachebust=$cachebustkey" | bash
+
 termuxubuntu
 termuxloginubuntu
 ```
@@ -37,42 +38,12 @@ Setup Mobile Workflow
 cachebustkey="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cachebust=$cachebustkey" | bash
 
 initubuntu
-usessh
 installnodeenv
+usessh
 installterraform
 cloneterraformrepo
 installAWS
 useaws
-```
-
-Initialize Ubuntu
-
-```sh
-set -eu; sudo apt-get update -y; sudo apt-get upgrade -y; sudo apt-get install -y ca-certificates curl git openssh-client unzip vim
-```
-
-Install Terraform (Ubuntu/Debian)
-
-```sh
-sudo apt-get update && sudo apt-get install -y ca-certificates curl gnupg && . /etc/os-release && curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${VERSION_CODENAME} main" | sudo tee /etc/apt/sources.list.d/hashicorp.list >/dev/null && sudo apt-get update && sudo apt-get install -y terraform
-```
-
-Setup Node environment (Windows/MSYS2)
-
-```sh
-curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && setupNodeEnv
-```
-
-Generate SSH Keys Using Bitwarden
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/judigot/user/main/setup-ssh-bitwarden.sh | bash
-```
-
-Auto-load `.snippetsrc` in `.bashrc`
-
-```sh
-grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 ```
 
 Windows Setup (PowerShell as Administrator)
