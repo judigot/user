@@ -24,6 +24,7 @@ persist_bashrc=1
 
 while [ $# -gt 0 ]; do
     case "$1" in
+        --) shift; break ;;
         --guest) mode="guest" ;;
         --persist) mode="persist" ;;
         --no-bashrc) persist_bashrc=0 ;;
