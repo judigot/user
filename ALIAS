@@ -189,3 +189,9 @@ installjavaenv
 installjava
 setupjavaenv
 javaenv
+
+testUpdaterAlias:
+updatertest
+
+testUpdaterAlias:
+updatertest
