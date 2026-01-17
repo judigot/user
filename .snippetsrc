@@ -1753,7 +1753,3 @@ nr() { bun run "$1"; }                                    # Node run: execute a 
 #</AGENT_ALIASES>
 
 loadAliasFile
-
-testUpdaterSnippetsrc() {
-    echo "updater test"
-}
