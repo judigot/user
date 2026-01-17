@@ -710,54 +710,163 @@ useSSH() {
         hash -r 2>/dev/null || true
     fi
 
-    local script_path=""
-    
-    # Check local locations first
-    if [ -f "./setup-ssh-bitwarden.sh" ]; then
-        script_path="./setup-ssh-bitwarden.sh"
-    elif [ -f "$HOME/setup-ssh-bitwarden.sh" ]; then
-        # Verify the local script uses npm installation (check for "npm install -g @bitwarden/cli")
-        if ! grep -q "npm install -g @bitwarden/cli" "$HOME/setup-ssh-bitwarden.sh" 2>/dev/null; then
-            # Old version detected, remove it to force re-download of fixed version
-            echo "⚠ Removing old setup-ssh-bitwarden.sh to get fixed version..." >&2
-            rm -f "$HOME/setup-ssh-bitwarden.sh" 2>/dev/null || true
-        else
-            script_path="$HOME/setup-ssh-bitwarden.sh"
+    setupSSHFromBitwarden() {
+        # Install Bitwarden CLI if needed
+        if ! command -v bw >/dev/null 2>&1 || ! bw --version >/dev/null 2>&1; then
+            if ! command -v npm >/dev/null 2>&1; then
+                echo "✗ Node.js/npm is required to install Bitwarden CLI" >&2
+                echo "  Please install Node.js first: run 'installnodeenv' or install npm manually" >&2
+                return 1
+            fi
+
+            npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+            export PATH="$npm_prefix/bin:$PATH"
+
+            echo "Installing Bitwarden CLI via npm..." >&2
+            if ! npm install -g @bitwarden/cli >/dev/null 2>&1; then
+                echo "✗ Failed to install Bitwarden CLI via npm" >&2
+                return 1
+            fi
         fi
-    fi
-    
-    # Download from GitHub if not found locally
-    if [ -z "$script_path" ]; then
-        local tmp_script="$HOME/setup-ssh-bitwarden.sh"
-        if downloadGithubFiles judigot/user "setup-ssh-bitwarden.sh" --dest "$HOME" --branch "main" >/dev/null 2>&1 && [ -f "$tmp_script" ]; then
-            script_path="$tmp_script"
-        else
-            echo "✗ Failed to download setup-ssh-bitwarden.sh" >&2
+
+        npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+        export PATH="$npm_prefix/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+        hash -r 2>/dev/null || true
+
+        bw login --check >/dev/null 2>&1 || bw login
+        export BW_SESSION="$(bw unlock --raw)"
+        [ -n "$BW_SESSION" ] || { echo "✗ Failed to unlock Bitwarden vault" >&2; return 1; }
+
+        if ! command -v node >/dev/null 2>&1; then
+            echo "✗ Node.js not found. Please install Node.js to use this function." >&2
             return 1
         fi
-    fi
+
+        process_ssh_key() {
+            local ITEM_NAME="$1"
+
+            echo ""
+            echo "=== Processing: $ITEM_NAME ==="
+
+            item_id="$(bw list items 2>/dev/null | node -e "
+                try {
+                    const normalize = (s) => s ? s.toLowerCase().replace(/[\\s_-]+/g, '').trim() : '';
+                    const searchTerm = normalize(process.argv[1]);
+                    const input = require('fs').readFileSync(0, 'utf-8').trim();
+                    if (!input) process.exit(1);
+                    const data = JSON.parse(input);
+                    if (!Array.isArray(data)) process.exit(1);
+
+                    const sshItems = data.filter(i => i && (i.type === 5 || (i.type === 4 && i.login)));
+                    let matches = sshItems.filter(i => i.name && normalize(i.name) === searchTerm);
+
+                    if (matches.length === 0) {
+                        matches = sshItems.filter(i => i.name && normalize(i.name).includes(searchTerm));
+                    }
+
+                    if (matches.length >= 1) {
+                        console.log(matches[0].id);
+                    } else {
+                        process.exit(1);
+                    }
+                } catch (e) {
+                    process.exit(1);
+                }
+            " "$ITEM_NAME")"
+
+            [ -n "$item_id" ] || {
+                echo "✗ Bitwarden item not found: $ITEM_NAME" >&2
+                return 1
+            }
+
+            key_data="$(bw get item "$item_id" | node -e "
+                const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+                const result = { privateKey: null, publicKey: null, keyType: null };
+
+                if (data.type === 5 && data.sshKey) {
+                    result.privateKey = data.sshKey.privateKey || null;
+                    result.publicKey = data.sshKey.publicKey || null;
+                    if (result.privateKey) result.privateKey = result.privateKey.replace(/\\\\n/g, '\\n');
+                    if (result.publicKey) result.publicKey = result.publicKey.replace(/\\\\n/g, '\\n');
+                }
+
+                if (!result.privateKey && data.fields) {
+                    const findField = (name) => data.fields.find(f => f && f.name && f.name.toLowerCase().includes(name));
+                    const priv = findField('private');
+                    const pub = findField('public');
+                    if (priv && priv.value) result.privateKey = priv.value;
+                    if (pub && pub.value) result.publicKey = pub.value;
+                    if (result.privateKey) result.privateKey = result.privateKey.replace(/\\\\n/g, '\\n');
+                    if (result.publicKey) result.publicKey = result.publicKey.replace(/\\\\n/g, '\\n');
+                }
+
+                if (result.privateKey) {
+                    if (result.privateKey.includes('BEGIN OPENSSH PRIVATE KEY')) result.keyType = 'ed25519';
+                    else if (result.privateKey.includes('BEGIN RSA PRIVATE KEY')) result.keyType = 'rsa';
+                    else if (result.privateKey.includes('BEGIN EC PRIVATE KEY')) result.keyType = 'ecdsa';
+                    else if (result.privateKey.includes('BEGIN DSA PRIVATE KEY')) result.keyType = 'dsa';
+                }
+
+                console.log(JSON.stringify(result));
+            ")"
+
+            private_key="$(echo "$key_data" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf-8')); console.log(d.privateKey || '')")"
+            public_key="$(echo "$key_data" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf-8')); console.log(d.publicKey || '')")"
+            key_type="$(echo "$key_data" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf-8')); console.log(d.keyType || 'ed25519')")"
+
+            local KEY_FILENAME
+            item_part="$(echo "$ITEM_NAME" | sed 's/^[Ss][Ss][Hh][[:space:]]*//' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
+            if [ "$item_part" = "personal" ]; then
+                KEY_FILENAME="id_${key_type}"
+            else
+                KEY_FILENAME="id_${key_type}_${item_part}"
+            fi
+            [ -z "$item_part" ] && KEY_FILENAME="id_${key_type}"
+
+            if [ -z "$private_key" ] || [ "$private_key" = "null" ]; then
+                echo "✗ Private key not found in item '$ITEM_NAME'" >&2
+                return 1
+            fi
+
+            mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" 2>/dev/null || true
+            printf '%s\n' "$private_key" > "$HOME/.ssh/$KEY_FILENAME"
+            chmod 600 "$HOME/.ssh/$KEY_FILENAME" 2>/dev/null || true
+            echo "✓ Private key saved: ~/.ssh/$KEY_FILENAME"
+
+            if [ -n "$public_key" ] && [ "$public_key" != "null" ]; then
+                printf '%s\n' "$public_key" > "$HOME/.ssh/${KEY_FILENAME}.pub"
+                chmod 644 "$HOME/.ssh/${KEY_FILENAME}.pub" 2>/dev/null || true
+                echo "✓ Public key saved: ~/.ssh/${KEY_FILENAME}.pub"
+            else
+                ssh-keygen -y -f "$HOME/.ssh/$KEY_FILENAME" > "$HOME/.ssh/${KEY_FILENAME}.pub" 2>/dev/null && \
+                    chmod 644 "$HOME/.ssh/${KEY_FILENAME}.pub" 2>/dev/null && \
+                    echo "✓ Public key generated: ~/.ssh/${KEY_FILENAME}.pub" || \
+                    echo "⚠ Could not generate public key"
+            fi
+
+            [ "$(uname -s | tr '[:upper:]' '[:lower:]')" = "linux" ] && eval "$(ssh-agent -s)" >/dev/null 2>&1 || true
+            ssh-add "$HOME/.ssh/$KEY_FILENAME"
+
+            echo "✓ SSH key ready: ~/.ssh/$KEY_FILENAME"
+        }
+
+        for ITEM_NAME in "$@"; do
+            process_ssh_key "$ITEM_NAME" || echo "⚠ Failed to process: $ITEM_NAME" >&2
+        done
+    }
 
     # Export PATH to ensure script sees ~/.local/bin
     export PATH="$HOME/.local/bin:$PATH"
 
     local selected=""
 
-    # If no arguments provided, prompt for key selection
+    # Default: set up both keys without prompting
     if [ $# -eq 0 ]; then
-        local choices=("SSH Personal" "SSH Work")
-
-        # Use simple arrow key selector (no external dependencies)
-        selected=$(arrowKeySelect "Select SSH key (↑↓ arrows, Enter to select, ctrl + c or q to quit):" "${choices[@]}")
-
-        if [ -z "$selected" ]; then
-            echo "No selection made" >&2
-            return 130
-        fi
-
-        bash "$script_path" "$selected" --simple-filename
+        selected="SSH Personal"
+        setupSSHFromBitwarden "SSH Personal" "SSH Work"
     else
         selected="$1"
-        bash "$script_path" "$@"
+        setupSSHFromBitwarden "$@"
     fi
 
     # Ensure SSH directory and keys have proper permissions
@@ -803,6 +912,61 @@ useSSH() {
             fi
         fi
     fi
+
+    # Configure includeIf for automatic SSH key selection by folder
+    local work_dir="$HOME/work"
+    local personal_dir="$HOME/personal"
+    mkdir -p "$work_dir" "$personal_dir" 2>/dev/null || true
+
+    local ssh_config="$HOME/.ssh/config"
+    local ssh_block_start="# BEGIN JUDIGOT SSH CONFIG"
+    local ssh_block_end="# END JUDIGOT SSH CONFIG"
+    local ssh_block="$ssh_block_start
+Host github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+$ssh_block_end"
+
+    if [ -f "$ssh_config" ]; then
+        if grep -q "$ssh_block_start" "$ssh_config" 2>/dev/null; then
+            awk -v start="$ssh_block_start" -v end="$ssh_block_end" -v block="$ssh_block" '
+                $0 == start { print block; inblock=1; next }
+                inblock && $0 == end { inblock=0; next }
+                !inblock { print }
+            ' "$ssh_config" > "${ssh_config}.tmp" && mv "${ssh_config}.tmp" "$ssh_config"
+        else
+            printf '\n%s\n' "$ssh_block" >> "$ssh_config"
+        fi
+    else
+        printf '%s\n' "$ssh_block" > "$ssh_config"
+    fi
+    chmod 600 "$ssh_config" 2>/dev/null || true
+
+    local gitconfig="$HOME/.gitconfig"
+    local git_block_start="# BEGIN JUDIGOT INCLUDEIF"
+    local git_block_end="# END JUDIGOT INCLUDEIF"
+    local git_block="$git_block_start
+[includeIf \"gitdir:$work_dir/\"]
+  path = $HOME/.gitconfig-work
+$git_block_end"
+
+    if [ -f "$gitconfig" ]; then
+        if grep -q "$git_block_start" "$gitconfig" 2>/dev/null; then
+            awk -v start="$git_block_start" -v end="$git_block_end" -v block="$git_block" '
+                $0 == start { print block; inblock=1; next }
+                inblock && $0 == end { inblock=0; next }
+                !inblock { print }
+            ' "$gitconfig" > "${gitconfig}.tmp" && mv "${gitconfig}.tmp" "$gitconfig"
+        else
+            printf '\n%s\n' "$git_block" >> "$gitconfig"
+        fi
+    else
+        printf '%s\n' "$git_block" > "$gitconfig"
+    fi
+
+    local gitconfig_work="$HOME/.gitconfig-work"
+    printf '%s\n' "[core]" "  sshCommand = ssh -i $HOME/.ssh/id_ed25519_work -o IdentitiesOnly=yes" > "$gitconfig_work"
 
     echo "✓ Git configuration complete"
 }
