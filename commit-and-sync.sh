@@ -153,8 +153,15 @@ sync_cursor_repo() {
     mkdir -p "$cursor_local"
     
     # Sync only what's listed in the manifest (handle files without trailing newline)
+    # If the manifest points to a directory (e.g., project-core), copy its contents.
     while read -r item || [ -n "$item" ]; do
-        [ -n "$item" ] && cp -r "$PROJECT_DIRECTORY/$item" "$cursor_local/"
+        [ -n "$item" ] || continue
+        src="$PROJECT_DIRECTORY/$item"
+        if [ -d "$src" ]; then
+            cp -r "$src/." "$cursor_local/" 2>/dev/null || true
+        else
+            cp -r "$src" "$cursor_local/" 2>/dev/null || true
+        fi
     done < "$manifest"
     
     if [ -d "$HOME/.apportable/cursor-git-tmp" ]; then
