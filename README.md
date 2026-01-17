@@ -15,12 +15,12 @@ This is the **single source of truth** for:
 Download and use `.snippetsrc`
 
 ```sh
-curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+cb="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cb" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cb" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 ```
 
 Set Up Termux
 ```sh
-curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc"
+cb="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cb" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cb" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc"
 termuxubuntu
 termuxloginubuntu
 ```
@@ -28,7 +28,7 @@ termuxloginubuntu
 Setup Mobile Workflow
 
 ```sh
-curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+cb="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cb" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cb" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 
 initubuntu
 usessh
@@ -37,6 +37,12 @@ installterraform
 cloneterraformrepo
 installAWS
 useaws
+```
+
+Guest Mode (No .bashrc Changes)
+
+```sh
+cb="$(date +%s)"; source <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cb"); current_func=""; while IFS= read -r line || [ -n "$line" ]; do line="${line%%#*}"; line="${line#"${line%%[![:space:]]*}"}"; line="${line%"${line##*[![:space:]]}"}"; if [ -z "$line" ]; then current_func=""; continue; fi; if [[ "$line" == *: ]]; then current_func="${line%:}"; current_func="${current_func#"${current_func%%[![:space:]]*}"}"; current_func="${current_func%"${current_func##*[![:space:]]}"}"; elif [ -n "$current_func" ]; then alias "$line"="$current_func"; fi; done < <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cb")
 ```
 
 Initialize Ubuntu

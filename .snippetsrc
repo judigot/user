@@ -15,7 +15,9 @@ snippetsrcSelfUpdateOnSource() {
     SNIPPETSRC_SELF_UPDATE_ATTEMPTED="true"
     export SNIPPETSRC_SELF_UPDATE_ATTEMPTED
 
-    local url="https://raw.githubusercontent.com/judigot/user/main/.snippetsrc"
+    local cache_bust=""
+    cache_bust=$(date +%s 2>/dev/null || echo "0")
+    local url="https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cache_bust"
     local tmp="$HOME/.snippetsrc.tmp.$$"
 
     if ! command -v curl >/dev/null 2>&1; then
@@ -300,8 +302,10 @@ syncSnippetsrcAndAliasFromRemote() {
         fi
     fi
 
-    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o "$HOME/.snippetsrc" \
-        && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS" -o "$HOME/ALIAS"
+    local cache_bust=""
+    cache_bust=$(date +%s 2>/dev/null || echo "0")
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cache_bust" -o "$HOME/.snippetsrc" \
+        && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cache_bust" -o "$HOME/ALIAS"
 }
 
 updateUserEnv() {
@@ -348,7 +352,9 @@ updateUserEnv() {
     if ! hasApportableRoot; then
         if ! downloadGithubFiles judigot/user ".bashrc" ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
             syncSnippetsrcAndAliasFromRemote || true
-            curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc" -o "$HOME/.bashrc" 2>/dev/null || true
+            local cache_bust=""
+            cache_bust=$(date +%s 2>/dev/null || echo "0")
+            curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc?cachebust=$cache_bust" -o "$HOME/.bashrc" 2>/dev/null || true
         fi
         sourceShellConfig
         echo "Terminal files updated and sourced successfully."
@@ -404,11 +410,15 @@ updateUserEnv() {
 }
 
 bigBangVite() {
-    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangVite.sh" | bash
+    local cache_bust=""
+    cache_bust=$(date +%s 2>/dev/null || echo "0")
+    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangVite.sh?cachebust=$cache_bust" | bash
 }
 
 bigBangLaravel() {
-    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangLaravel.sh" | bash
+    local cache_bust=""
+    cache_bust=$(date +%s 2>/dev/null || echo "0")
+    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangLaravel.sh?cachebust=$cache_bust" | bash
 }
 
 logSSH() {
