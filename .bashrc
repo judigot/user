@@ -5,9 +5,9 @@
 export BASHRC_SOURCED=1
 
 # Load aliases
-#<SNIPPETS>
+#<DEVRC>
 [[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"
-#</SNIPPETS>
+#</DEVRC>
 
 # Configuration
 PATH_REMOTE_URL="https://raw.githubusercontent.com/judigot/user/main/PATH"

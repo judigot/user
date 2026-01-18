@@ -118,8 +118,8 @@ mv "$alias_tmp" "$HOME/ALIAS"
 # shellcheck source=/dev/null
 . "$HOME/.devrc"
 
-if [ "$persist_bashrc" -eq 1 ] && ! grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null; then
-    printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"' '#</SNIPPETS>' \
+if [ "$persist_bashrc" -eq 1 ] && ! grep -q '#<DEVRC>' "$HOME/.bashrc" 2>/dev/null; then
+    printf '%s\n' '#<DEVRC>' '[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"' '#</DEVRC>' \
         >> "$HOME/.bashrc"
 fi
 

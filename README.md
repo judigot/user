@@ -384,7 +384,7 @@ This downloads `.cursor/`, `agents/`, `AGENTS.md`, `CLAUDE.md` from `judigot/pro
 Add to `.bashrc` to auto-load aliases:
 
 ```sh
-grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+grep -q '#<DEVRC>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<DEVRC>' '[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"' '#</DEVRC>' >> "$HOME/.bashrc"
 ```
 
 ### Manual Dotfile Sync
