@@ -15,6 +15,7 @@ This repository (`judigot/user`) is the source of truth for personal dotfiles, A
 - Avoid deleting manifest files (`DOTFILES`, `PROJECT_CORE`, `IDE_FILES`, `UBUNTU`).
 - When changing sync logic, update docs and manifest explanations.
 - Keep `load-devrc.sh` safe to source in the current shell (no `set -e` when sourced).
+- `updateUserEnv` must never overwrite `~/.bashrc`; only `updaterFull` may do so with explicit confirmation.
 - Do not modify guest-mode behavior to write to `~/.bashrc` unless explicitly requested.
 - Make minimal, request-scoped changes (avoid unrelated refactors).
 - Keep root `AGENTS.md` repo-specific; template guidance belongs in `project-core/`.

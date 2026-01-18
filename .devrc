@@ -348,13 +348,10 @@ updateUserEnv() {
         return 0
     fi
 
-    # If Apportable isn't present, only refresh terminal essentials.
+    # If Apportable isn't present, only refresh terminal essentials (no .bashrc writes).
     if ! hasApportableRoot; then
-        if ! downloadGithubFiles judigot/user ".bashrc" ".devrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
+        if ! downloadGithubFiles judigot/user ".devrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
             syncSnippetsrcAndAliasFromRemote || true
-            local cache_bust=""
-            cache_bust=$(date +%s 2>/dev/null || echo "0")
-            curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc?cachebust=$cache_bust" -o "$HOME/.bashrc" 2>/dev/null || true
         fi
         sourceShellConfig
         echo "Terminal files updated and sourced successfully."
@@ -407,6 +404,32 @@ updateUserEnv() {
 
     sourceShellConfig
     echo "Configuration files updated and sourced successfully."
+}
+
+updaterFull() {
+    local choices=("Yes, overwrite ~/.bashrc" "No, cancel")
+    local selected
+
+    selected=$(arrowKeySelect "Do you own this machine or have permission to overwrite ~/.bashrc?" "${choices[@]}")
+
+    if [ -z "$selected" ] || [ "$selected" = "No, cancel" ]; then
+        printf '%s\n' "Updater cancelled."
+        return 130
+    fi
+
+    updateUserEnv "$@" || return $?
+
+    local cache_bust=""
+    cache_bust=$(date +%s 2>/dev/null || echo "0")
+    if ! curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.bashrc?cachebust=$cache_bust" -o "$HOME/.bashrc"; then
+        printf '%s\n' "Failed to download .bashrc" >&2
+        return 1
+    fi
+
+    # shellcheck source=/dev/null
+    source "$HOME/.bashrc"
+
+    printf '%s\n' "Full update complete."
 }
 
 bigBangVite() {

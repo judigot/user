@@ -262,9 +262,12 @@ updateenv
 This creates:
 - `hi` → calls `helloWorld`
 - `hello` → calls `helloWorld`
-- `updater` → calls `updateUserEnv`
-- `updaterc` → calls `updateUserEnv`
-- `updateenv` → calls `updateUserEnv`
+- `updater` → calls `updateUserEnv` (safe, does not overwrite `.bashrc`)
+- `updaterc` → calls `updateUserEnv` (safe)
+- `updateenv` → calls `updateUserEnv` (safe)
+- `updaterfull` → calls `updaterFull` (overwrites `.bashrc` after confirmation)
+- `updateradmin` → calls `updaterFull` (overwrites `.bashrc` after confirmation)
+- `updaterdestructive` → calls `updaterFull` (overwrites `.bashrc` after confirmation)
 
 ### Adding a New Alias
 
@@ -399,7 +402,8 @@ curl -sL "https://raw.githubusercontent.com/judigot/user/main/.zshrc" -o ~/.zshr
 
 | Alias | Description |
 |-------|-------------|
-| `updater` | Update all configs from GitHub |
+| `updater` | Update `.devrc` and `ALIAS` from GitHub |
+| `updaterfull` | Full update including `.bashrc` (confirmation) |
 | `syncdotfiles` | Sync only dotfiles |
 | `syncidefiles` | Sync only IDE settings |
 | `addcursorfiles` | Add Cursor boilerplate to current project |

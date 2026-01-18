@@ -41,10 +41,15 @@ sourceshellconfig
 reloadshell
 
 updateUserEnv:
-updateuserenv
 updater
 updaterc
 updateenv
+
+updaterFull:
+updaterfull
+updateradmin
+updaterdestructive
+
 updatercfiles
 updatebashsnippets
 
