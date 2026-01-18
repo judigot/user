@@ -50,4 +50,5 @@ project/
 
 - Check agent descriptions to understand when to invoke them
 - Follow coding standards from `~/ai/settings/rules.md`
+- After making changes, run `./commit-and-sync.sh` (pass a descriptive commit message when possible)
 
