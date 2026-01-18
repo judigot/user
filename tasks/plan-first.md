@@ -1,0 +1,1 @@
+I want the AI to always create a plan first before executing anything or touching any functions. I want the AI agent to insist on creating a plan first so that every action is documented and not left to chat history. I want the AI agent to be better than me. How can we enfore this in every chat?
