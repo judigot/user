@@ -1,2 +1,2 @@
-@README.md
-@settings/rules.md
+@AGENTS.md
+
