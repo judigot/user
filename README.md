@@ -15,12 +15,12 @@ This is the **single source of truth** for:
 Download and use `.snippetsrc`
 
 ```sh
-cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
+cb="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cb=$cb" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cb=$cb" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && { grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"; }
 ```
 
 Set Up Termux
 ```sh
-cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
+cb="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cb=$cb" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cb=$cb" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && { grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"; }
 
 termuxubuntu
 termuxloginubuntu
@@ -29,7 +29,7 @@ termuxloginubuntu
 Setup Mobile Workflow
 
 ```sh
-cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
+cb="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cb=$cb" -o "$HOME/.snippetsrc" && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cb=$cb" -o "$HOME/ALIAS" && . "$HOME/.snippetsrc" && { grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"; }
 
 initubuntu
 installnodeenv
