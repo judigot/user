@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Keep this file up-to-date as soon as it's sourced, so any functions you run
-# in the current shell session come from the latest `.snippetsrc`.
-snippetsrcSelfUpdateOnSource() {
+# in the current shell session come from the latest `.devrc`.
+devrcSelfUpdateOnSource() {
     # CI should test the checked-out version deterministically (no network mutation).
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         return 1
@@ -17,8 +17,8 @@ snippetsrcSelfUpdateOnSource() {
 
     local cache_bust=""
     cache_bust=$(date +%s 2>/dev/null || echo "0")
-    local url="https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cache_bust"
-    local tmp="$HOME/.snippetsrc.tmp.$$"
+    local url="https://raw.githubusercontent.com/judigot/user/main/.devrc?cachebust=$cache_bust"
+    local tmp="$HOME/.devrc.tmp.$$"
 
     if ! command -v curl >/dev/null 2>&1; then
         return 1
@@ -34,22 +34,22 @@ snippetsrcSelfUpdateOnSource() {
         return 1
     fi
 
-    if [ -f "$HOME/.snippetsrc" ] && cmp -s "$tmp" "$HOME/.snippetsrc" 2>/dev/null; then
+    if [ -f "$HOME/.devrc" ] && cmp -s "$tmp" "$HOME/.devrc" 2>/dev/null; then
         rm -f "$tmp" 2>/dev/null || true
         return 1
     fi
 
-    mv "$tmp" "$HOME/.snippetsrc"
+    mv "$tmp" "$HOME/.devrc"
 
     SNIPPETSRC_SELF_UPDATED="true"
     export SNIPPETSRC_SELF_UPDATED
 
     # shellcheck source=/dev/null
-    source "$HOME/.snippetsrc"
+    source "$HOME/.devrc"
     return 0
 }
 
-if snippetsrcSelfUpdateOnSource; then
+if devrcSelfUpdateOnSource; then
     return 0
 fi
 
@@ -287,24 +287,24 @@ sourceShellConfig() {
     fi
 
     # Source the shared snippets configuration
-    [[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"
+    [[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"
 }
 
 syncSnippetsrcAndAliasFromRemote() {
-    if [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${GITHUB_WORKSPACE:-}" ] && [ -f "$GITHUB_WORKSPACE/.snippetsrc" ] && [ -f "$GITHUB_WORKSPACE/ALIAS" ]; then
-        cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc" && cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
+    if [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${GITHUB_WORKSPACE:-}" ] && [ -f "$GITHUB_WORKSPACE/.devrc" ] && [ -f "$GITHUB_WORKSPACE/ALIAS" ]; then
+        cp "$GITHUB_WORKSPACE/.devrc" "$HOME/.devrc" && cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
         return $?
     fi
 
     if command -v downloadGithubFiles >/dev/null 2>&1; then
-        if downloadGithubFiles judigot/user ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
+        if downloadGithubFiles judigot/user ".devrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
             return 0
         fi
     fi
 
     local cache_bust=""
     cache_bust=$(date +%s 2>/dev/null || echo "0")
-    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc?cachebust=$cache_bust" -o "$HOME/.snippetsrc" \
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.devrc?cachebust=$cache_bust" -o "$HOME/.devrc" \
         && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cache_bust" -o "$HOME/ALIAS"
 }
 
@@ -324,7 +324,7 @@ updateUserEnv() {
         [ -d "/c/apportable" ] || [ -d "/mnt/c/apportable" ]
     }
 
-    # Self-heal: even old versions of `.snippetsrc` should be able to pull the latest
+    # Self-heal: even old versions of `.devrc` should be able to pull the latest
     # updater logic from GitHub, then re-run once using the refreshed definitions.
     if [ "${UPDATER_SELF_REFRESHED:-}" != "true" ]; then
         if syncSnippetsrcAndAliasFromRemote; then
@@ -332,17 +332,17 @@ updateUserEnv() {
             export UPDATER_SELF_REFRESHED
 
             # shellcheck source=/dev/null
-            . "$HOME/.snippetsrc"
+            . "$HOME/.devrc"
 
             updateUserEnv "$@"
             return $?
         fi
     fi
 
-    # Non-Windows: only keep `.snippetsrc` + `ALIAS` fresh.
+    # Non-Windows: only keep `.devrc` + `ALIAS` fresh.
     if ! isWindowsLikeShell; then
         # shellcheck source=/dev/null
-        [ -f "$HOME/.snippetsrc" ] && source "$HOME/.snippetsrc"
+        [ -f "$HOME/.devrc" ] && source "$HOME/.devrc"
 
         echo "Terminal files updated and sourced successfully."
         return 0
@@ -350,7 +350,7 @@ updateUserEnv() {
 
     # If Apportable isn't present, only refresh terminal essentials.
     if ! hasApportableRoot; then
-        if ! downloadGithubFiles judigot/user ".bashrc" ".snippetsrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
+        if ! downloadGithubFiles judigot/user ".bashrc" ".devrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
             syncSnippetsrcAndAliasFromRemote || true
             local cache_bust=""
             cache_bust=$(date +%s 2>/dev/null || echo "0")
@@ -394,7 +394,7 @@ updateUserEnv() {
 
     if [ -f "$dotfiles_manifest_in" ]; then
         awk '
-            $0 != ".bashrc" && $0 != ".snippetsrc" && $0 != "ALIAS" && $0 != "" { print $0 }
+            $0 != ".bashrc" && $0 != ".devrc" && $0 != "ALIAS" && $0 != "" { print $0 }
         ' "$dotfiles_manifest_in" > "$dotfiles_manifest_tmp"
         syncDotfiles "$(basename "$dotfiles_manifest_tmp")" "$src"
     else
@@ -465,7 +465,7 @@ deleteAll() {
 }
 
 loadSnippets() {
-    grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+    grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 }
 
 installOpenCode() {
@@ -1689,7 +1689,7 @@ downloadGithubRepo() {
 
 # Download files from GitHub repo (no caching issues, supports nested paths)
 # Usage: downloadGithubFiles <user/repo> [files...] [--dest dir] [--branch name]
-# Example: downloadGithubFiles judigot/user .bashrc .zshrc .snippetsrc
+# Example: downloadGithubFiles judigot/user .bashrc .zshrc .devrc
 # Example: downloadGithubFiles judigot/user src/index.ts --dest ./src --branch develop
 downloadGithubFiles() {
     local repo=""

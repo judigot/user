@@ -6,7 +6,7 @@ export BASHRC_SOURCED=1
 
 # Load aliases
 #<SNIPPETS>
-[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"
+[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"
 #</SNIPPETS>
 
 # Configuration
@@ -123,4 +123,4 @@ fi
 # Auto-update terminal files (commented out for manual control)
 # curl -sL https://raw.githubusercontent.com/judigot/user/main/.bashrc -o "$HOME/.bashrc" || { echo "Failed to download .bashrc"; return 1; }
 # curl -sL https://raw.githubusercontent.com/judigot/user/main/.zshrc -o "$HOME/.zshrc" || { echo "Failed to download .zshrc"; return 1; }
-# curl -sL https://raw.githubusercontent.com/judigot/user/main/.snippetsrc -o "$HOME/.snippetsrc" || { echo "Failed to download .snippetsrc"; return 1; }
+# curl -sL https://raw.githubusercontent.com/judigot/user/main/.devrc -o "$HOME/.devrc" || { echo "Failed to download .devrc"; return 1; }

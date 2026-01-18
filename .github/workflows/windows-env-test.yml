@@ -70,7 +70,7 @@ jobs:
       - name: Verify dotfiles exist
         shell: pwsh
         run: |
-          $files = @(".snippetsrc", ".bashrc", "ALIAS")
+          $files = @(".devrc", ".bashrc", "ALIAS")
           foreach ($file in $files) {
             $path = "$env:USERPROFILE\$file"
             if (Test-Path $path) {

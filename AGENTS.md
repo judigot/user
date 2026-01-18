@@ -14,7 +14,7 @@ This repository (`judigot/user`) is the source of truth for personal dotfiles, A
 - Treat `project-core/` as the only scaffold source for new projects.
 - Avoid deleting manifest files (`DOTFILES`, `PROJECT_CORE`, `IDE_FILES`, `UBUNTU`).
 - When changing sync logic, update docs and manifest explanations.
-- Keep `load-snippetsrc.sh` safe to source in the current shell (no `set -e` when sourced).
+- Keep `load-devrc.sh` safe to source in the current shell (no `set -e` when sourced).
 - Make minimal, request-scoped changes (avoid unrelated refactors).
 - Keep root `AGENTS.md` repo-specific; template guidance belongs in `project-core/`.
 

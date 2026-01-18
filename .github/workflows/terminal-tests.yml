@@ -38,7 +38,7 @@ jobs:
         shell: pwsh
         run: |
           # Download key dotfiles
-          $files = @(".bashrc", ".snippetsrc", "ALIAS")
+          $files = @(".bashrc", ".devrc", "ALIAS")
           foreach ($file in $files) {
             $url = "https://raw.githubusercontent.com/judigot/user/main/$file"
             $dest = "$env:USERPROFILE\$file"
@@ -51,35 +51,35 @@ jobs:
             }
           }
 
-      - name: Test .snippetsrc sourcing
+      - name: Test .devrc sourcing
         shell: pwsh
         run: |
           $env:HOME = $env:USERPROFILE
-          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && echo 'snippetsrc sourced successfully'"
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.devrc && echo 'devrc sourced successfully'"
 
       - name: Test aliases loaded
         shell: pwsh
         run: |
           $env:HOME = $env:USERPROFILE
-          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && alias hi && echo '✓ Aliases loaded'"
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.devrc && alias hi && echo '✓ Aliases loaded'"
 
       - name: Test updateUserEnv function
         shell: pwsh
         run: |
           $env:HOME = $env:USERPROFILE
-          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && updateUserEnv && echo '✓ updateUserEnv completed'"
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.devrc && updateUserEnv && echo '✓ updateUserEnv completed'"
 
       - name: Test idempotence (run updateUserEnv twice)
         shell: pwsh
         run: |
           $env:HOME = $env:USERPROFILE
-          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && updateUserEnv && updateUserEnv && echo '✓ Idempotence test passed'"
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.devrc && updateUserEnv && updateUserEnv && echo '✓ Idempotence test passed'"
 
       - name: Test downloadGithubFiles function
         shell: pwsh
         run: |
           $env:HOME = $env:USERPROFILE
-          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.snippetsrc && downloadGithubFiles judigot/user README.md --dest /tmp/test-download && [ -f /tmp/test-download/README.md ] && echo '✓ downloadGithubFiles works' || (echo '✗ downloadGithubFiles failed' && exit 1)"
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "source ~/.devrc && downloadGithubFiles judigot/user README.md --dest /tmp/test-download && [ -f /tmp/test-download/README.md ] && echo '✓ downloadGithubFiles works' || (echo '✗ downloadGithubFiles failed' && exit 1)"
 
   test-windows-unzip-missing-fallback:
     runs-on: windows-latest
@@ -89,7 +89,7 @@ jobs:
       - name: Download key dotfiles
         shell: pwsh
         run: |
-          $files = @(".bashrc", ".snippetsrc", "ALIAS")
+          $files = @(".bashrc", ".devrc", "ALIAS")
           foreach ($file in $files) {
             $url = "https://raw.githubusercontent.com/judigot/user/main/$file"
             $dest = "$env:USERPROFILE\$file"
@@ -101,7 +101,7 @@ jobs:
         shell: pwsh
         run: |
           $env:HOME = $env:USERPROFILE
-          & "C:\Program Files\Git\bin\bash.exe" --login -c "mkdir -p /tmp/fakeunzip && printf '%s\n' '#!/bin/sh' 'exit 1' > /tmp/fakeunzip/unzip && chmod +x /tmp/fakeunzip/unzip && PATH=/tmp/fakeunzip:\$PATH && source ~/.snippetsrc && updateUserEnv && echo '✓ updateUserEnv succeeded without unzip'"
+          & "C:\Program Files\Git\bin\bash.exe" --login -c "mkdir -p /tmp/fakeunzip && printf '%s\n' '#!/bin/sh' 'exit 1' > /tmp/fakeunzip/unzip && chmod +x /tmp/fakeunzip/unzip && PATH=/tmp/fakeunzip:\$PATH && source ~/.devrc && updateUserEnv && echo '✓ updateUserEnv succeeded without unzip'"
 
   test-ubuntu:
     runs-on: ubuntu-latest
@@ -110,7 +110,7 @@ jobs:
 
       - name: Test dotfiles download
         run: |
-          files=".bashrc .snippetsrc ALIAS"
+          files=".bashrc .devrc ALIAS"
           for file in $files; do
             curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/$file" -o "$HOME/$file"
             if [ -f "$HOME/$file" ]; then
@@ -121,16 +121,16 @@ jobs:
             fi
           done
 
-      - name: Test .snippetsrc sourcing
+      - name: Test .devrc sourcing
         run: |
           # shellcheck source=/dev/null
-          source ~/.snippetsrc
-          echo "snippetsrc sourced successfully"
+          source ~/.devrc
+          echo "devrc sourced successfully"
 
       - name: Test aliases loaded
         run: |
           # shellcheck source=/dev/null
-          source ~/.snippetsrc
+          source ~/.devrc
           # Verify ALIAS file was parsed
           if alias hi &>/dev/null; then
             echo "✓ Aliases loaded"
@@ -142,14 +142,14 @@ jobs:
       - name: Test updateUserEnv function
         run: |
           # shellcheck source=/dev/null
-          source ~/.snippetsrc
+          source ~/.devrc
           updateUserEnv
           echo "✓ updateUserEnv completed"
 
       - name: Test idempotence (run updateUserEnv twice)
         run: |
           # shellcheck source=/dev/null
-          source ~/.snippetsrc
+          source ~/.devrc
           updateUserEnv
           updateUserEnv
           echo "✓ Idempotence test passed"
@@ -157,7 +157,7 @@ jobs:
       - name: Test downloadGithubFiles function
         run: |
           # shellcheck source=/dev/null
-          source ~/.snippetsrc
+          source ~/.devrc
           # Test downloading a single file
           downloadGithubFiles judigot/user README.md --dest /tmp/test-download
           if [ -f "/tmp/test-download/README.md" ]; then
@@ -182,7 +182,7 @@ jobs:
 
       - name: Set up isolated HOME
         run: |
-          test_home="/tmp/snippetsrc-test-home-unzip-missing"
+          test_home="/tmp/devrc-test-home-unzip-missing"
           rm -rf "$test_home"
           mkdir -p "$test_home"
           printf '%s\n' "baseline" >"$test_home/.bashrc"
@@ -190,7 +190,7 @@ jobs:
 
       - name: Assert updateUserEnv works without unzip
         run: |
-          cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
+          cp "$GITHUB_WORKSPACE/.devrc" "$HOME/.devrc"
           cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
           mkdir -p /tmp/fakeunzip
           printf '%s\n' '#!/bin/sh' 'exit 1' > /tmp/fakeunzip/unzip
@@ -198,7 +198,7 @@ jobs:
           export PATH="/tmp/fakeunzip:$PATH"
 
           # shellcheck source=/dev/null
-          source ~/.snippetsrc
+          source ~/.devrc
 
           bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
           updateUserEnv >/tmp/updateUserEnv-unzip-missing.txt 2>&1
@@ -218,7 +218,7 @@ jobs:
 
       - name: Set up isolated HOME
         run: |
-          test_home="/tmp/snippetsrc-test-home"
+          test_home="/tmp/devrc-test-home"
           rm -rf "$test_home"
           mkdir -p "$test_home"
           printf '%s\n' "baseline" >"$test_home/.bashrc"
@@ -226,10 +226,10 @@ jobs:
 
       - name: Assert updateUserEnv is minimal on non-Windows
         run: |
-          cp "$GITHUB_WORKSPACE/.snippetsrc" "$HOME/.snippetsrc"
+          cp "$GITHUB_WORKSPACE/.devrc" "$HOME/.devrc"
           cp "$GITHUB_WORKSPACE/ALIAS" "$HOME/ALIAS"
           # shellcheck disable=SC1090
-          source ~/.snippetsrc
+          source ~/.devrc
 
           bashrc_before="$(cksum "$HOME/.bashrc" | awk '{print $1 ":" $2}')"
           output_file="/tmp/updateUserEnv-output.txt"

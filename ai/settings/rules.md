@@ -112,7 +112,7 @@ For snippets:
 ```powershell
 bash "
 
-. ~/.snippetsrc
+. ~/.devrc
 downloadGithubRepo judigot/project-core
 
 "
@@ -151,12 +151,12 @@ Format: `<type>: <description>`
 
 Examples: `feat: add user auth`, `fix: null check in parser`, `chore: update deps`
 
-# Snippets (~/.snippetsrc)
+# Snippets (~/.devrc)
 
-- Location: `~/.snippetsrc` (sourced by .bashrc)
+- Location: `~/.devrc` (sourced by .bashrc)
 - Prefer using existing snippets over writing new scripts
-- When adding new utilities, add them to `~/.snippetsrc` with descriptive function names and multiple aliases. But always ask permission first.
-- Usage: `bash -c ". ~/.snippetsrc && functionName"`
+- When adding new utilities, add them to `~/.devrc` with descriptive function names and multiple aliases. But always ask permission first.
+- Usage: `bash -c ". ~/.devrc && functionName"`
 
 ## User Aliases
 
@@ -173,7 +173,7 @@ Examples: `feat: add user auth`, `fix: null check in parser`, `chore: update dep
 | `personalssh` | Switch to personal SSH key |
 | `workssh` | Switch to work SSH key |
 | `deleteall` | Delete all files in cwd (confirm) |
-| `loadsnippets` | Add snippetsrc to .bashrc |
+| `loadsnippets` | Add devrc to .bashrc |
 | `newagent` | Create Cursor/agents structure |
 | `downloadGithubRepo user/repo` | Download GitHub repo without .git |
 

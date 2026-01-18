@@ -17,21 +17,21 @@ This is the **single source of truth** for:
 
 ## Easy-Copy Snippets
 
-Download and use `.snippetsrc`
+Download and use `.devrc`
 
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey")
 ```
 
 Guest Mode (No .bashrc Changes)
 
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey") -- --guest
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey") -- --guest
 ```
 
 Set Up Termux
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey")
 
 termuxubuntu
 termuxloginubuntu
@@ -40,7 +40,7 @@ termuxloginubuntu
 Setup Mobile Workflow
 
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey")
 
 initubuntu
 installnodeenv
@@ -84,7 +84,7 @@ user/                          ← judigot/user (source of truth)
 │   └── CLAUDE.md
 ├── AGENTS.md                  ← repo-specific agent guidance
 ├── .bashrc                    ─┐
-├── .snippetsrc                 │→ syncs to ~/
+├── .devrc                 │→ syncs to ~/
 ├── .zshrc                      │
 ├── profile.ps1                 │
 ├── PATH                        │
@@ -109,7 +109,7 @@ These files act as single sources of truth for file lists. Each manifest file li
 | `IDE_FILES` | List of IDE settings files | Reference |
 | `UBUNTU` | List of files to sync to WSL Ubuntu | `commit-and-sync.sh` |
 | `PATH` | List of PATH entries | `.bashrc` |
-| `ALIAS` | Centralized aliases | `.snippetsrc`, `profile.ps1` |
+| `ALIAS` | Centralized aliases | `.devrc`, `profile.ps1` |
 
 **To add/remove a file from sync:** Edit the manifest file - scripts pick up changes automatically.
 
@@ -131,14 +131,14 @@ The syncing mechanism reads manifest files line-by-line and copies each listed f
 **Example `DOTFILES` content:**
 ```
 .bashrc
-.snippetsrc
+.devrc
 ALIAS
 DOTFILES
 ```
 
 **Result:** 
 - `.bashrc` → copied to `~/.bashrc`
-- `.snippetsrc` → copied to `~/.snippetsrc`
+- `.devrc` → copied to `~/.devrc`
 - `ALIAS` → copied to `~/ALIAS`
 - `DOTFILES` → copied to `~/DOTFILES` (because it's listed)
 
@@ -151,7 +151,7 @@ DOTFILES
 **How it works:**
 1. Script reads `UBUNTU` line by line
 2. Each line can be:
-   - A **repo file** (e.g., `.snippetsrc`) → copied from repo to WSL
+   - A **repo file** (e.g., `.devrc`) → copied from repo to WSL
    - A **Windows path** starting with `$HOME` (e.g., `$HOME\.ssh`) → copied from Windows home to WSL
 3. `$HOME` in entries refers to **Windows home directory** (`C:\Users\YourName\`), not WSL's home
 4. Files are synced to both WSL root (`/root/`) and user home (`/home/username/`)
@@ -159,12 +159,12 @@ DOTFILES
 
 **Example `UBUNTU` content:**
 ```
-.snippetsrc
+.devrc
 $HOME\.ssh
 ```
 
 **Result:**
-- `.snippetsrc` → copied from repo to `/root/.snippetsrc` and `/home/username/.snippetsrc`
+- `.devrc` → copied from repo to `/root/.devrc` and `/home/username/.devrc`
 - `$HOME\.ssh` → copied from `C:\Users\YourName\.ssh` to `/root/.ssh` and `/home/username/.ssh`
   - If `.ssh` already exists in WSL, files are merged (not replaced)
 
@@ -274,7 +274,7 @@ This creates:
 
 ### Adding a New Function
 
-1. Define the function in `.snippetsrc`
+1. Define the function in `.devrc`
 2. Add a new block in `ALIAS`:
    ```
    myNewFunction:
@@ -287,7 +287,7 @@ This creates:
 
 | Shell | Behavior |
 |-------|----------|
-| Bash | `.snippetsrc` parses `ALIAS` and creates bash aliases |
+| Bash | `.devrc` parses `ALIAS` and creates bash aliases |
 | PowerShell | `profile.ps1` parses `ALIAS` and creates functions that call bash |
 
 Both shells read from the same file, so aliases stay in sync automatically.
@@ -313,7 +313,7 @@ Both shells read from the same file, so aliases stay in sync automatically.
 |------|-------------|
 | `.bashrc` | Bash configuration with PATH loading and environment setup |
 | `.zshrc` | Zsh configuration (mirrors .bashrc functionality) |
-| `.snippetsrc` | Shell functions and alias loader |
+| `.devrc` | Shell functions and alias loader |
 | `profile.ps1` | PowerShell profile with bash integration |
 | `PATH` | Portable PATH entries for development tools |
 | `ALIAS` | Centralized aliases for bash and PowerShell |
@@ -384,14 +384,14 @@ This downloads `.cursor/`, `agents/`, `AGENTS.md`, `CLAUDE.md` from `judigot/pro
 Add to `.bashrc` to auto-load aliases:
 
 ```sh
-grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
+grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<SNIPPETS>' '[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"' '#</SNIPPETS>' >> "$HOME/.bashrc"
 ```
 
 ### Manual Dotfile Sync
 
 ```sh
 curl -sL "https://raw.githubusercontent.com/judigot/user/main/.bashrc" -o ~/.bashrc
-curl -sL "https://raw.githubusercontent.com/judigot/user/main/.snippetsrc" -o ~/.snippetsrc
+curl -sL "https://raw.githubusercontent.com/judigot/user/main/.devrc" -o ~/.devrc
 curl -sL "https://raw.githubusercontent.com/judigot/user/main/.zshrc" -o ~/.zshrc
 ```
 

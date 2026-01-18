@@ -90,7 +90,7 @@ deleteeverything
 
 loadSnippets:
 loadsnippets
-loadsnippetsrc
+loaddevrc
 usesnippets
 usesnippetssrc
 
