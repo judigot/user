@@ -40,18 +40,7 @@ termuxloginubuntu
 Setup Mobile Workflow
 
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
-
-initubuntu
-installnodeenv
-usessh
-
-cloneuserrepo
-
-installterraform
-cloneterraformrepo
-installAWS
-useaws
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey"); initubuntu; installnodeenv; usessh; cloneuserrepo; installterraform; cloneterraformrepo; installAWS; useaws
 ```
 
 Windows Setup (PowerShell as Administrator)
