@@ -86,13 +86,13 @@ fi
 download "$snippetsrc_url" > "$HOME/.snippetsrc"
 download "$alias_url" > "$HOME/ALIAS"
 
-# shellcheck source=/dev/null
-[ -f "$HOME/.snippetsrc" ] && source "$HOME/.snippetsrc"
-
 if [ "$persist_bashrc" -eq 1 ]; then
     grep -q '#<SNIPPETS>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' \
         '#<SNIPPETS>' '[[ -f "$HOME/.snippetsrc" ]] && source "$HOME/.snippetsrc"' '#</SNIPPETS>' \
         >> "$HOME/.bashrc"
 fi
+
+# shellcheck source=/dev/null
+[ -f "$HOME/.snippetsrc" ] && source "$HOME/.snippetsrc"
 
 finish 0

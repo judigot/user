@@ -15,18 +15,12 @@ This is the **single source of truth** for:
 Download and use `.snippetsrc`
 
 ```sh
-cachebustkey="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cachebust=$cachebustkey" | bash
-```
-
-Guest Mode (No .bashrc Changes)
-
-```sh
-cachebustkey="$(date +%s)"; source <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cachebust=$cachebustkey") -- --guest
+cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
 ```
 
 Set Up Termux
 ```sh
-cachebustkey="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cachebust=$cachebustkey" | bash
+cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
 
 termuxubuntu
 termuxloginubuntu
@@ -35,7 +29,7 @@ termuxloginubuntu
 Setup Mobile Workflow
 
 ```sh
-cachebustkey="$(date +%s)"; curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cachebust=$cachebustkey" | bash
+cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
 
 initubuntu
 installnodeenv
