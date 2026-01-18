@@ -44,8 +44,8 @@ while [ $# -gt 0 ]; do
 
 cachebustkey="$(date +%s 2>/dev/null || echo 0)"
 base_url="https://raw.githubusercontent.com/judigot/user/main"
-devrc_url="$base_url/.devrc?cb=$cachebustkey"
-alias_url="$base_url/ALIAS?cb=$cachebustkey"
+devrc_url="$base_url/.devrc?cachebustkey=$cachebustkey"
+alias_url="$base_url/ALIAS?cachebustkey=$cachebustkey"
 
 devrc_tmp="$(mktemp "${TMPDIR:-/tmp}/devrc.XXXXXX")" || finish 1
 alias_tmp="$(mktemp "${TMPDIR:-/tmp}/alias.XXXXXX")" || {

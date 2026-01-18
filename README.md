@@ -20,18 +20,18 @@ This is the **single source of truth** for:
 Download and use `.devrc`
 
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey")
+. <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebustkey=$(date +%s)")
 ```
 
 Guest Mode (No .bashrc Changes)
 
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey") -- --guest
+. <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebustkey=$(date +%s)") -- --guest
 ```
 
 Set Up Termux
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey")
+. <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebustkey=$(date +%s)")
 
 termuxubuntu
 termuxloginubuntu
@@ -40,7 +40,7 @@ termuxloginubuntu
 Setup Mobile Workflow
 
 ```sh
-cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cb=$cachebustkey")
+. <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebustkey=$(date +%s)")
 
 initubuntu
 installnodeenv
