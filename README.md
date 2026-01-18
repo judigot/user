@@ -71,10 +71,12 @@ user/                          ← judigot/user (source of truth)
 ├── ide/                       → syncs to ~/.apportable/ide → pushes to judigot/ide
 │   ├── cursor/                → syncs to ~/AppData/Roaming/Cursor/User
 │   └── zed/                   → syncs to ~/AppData/Roaming/Zed
-├── .cursor/                   ─┐
-├── agents/                     │→ syncs to ~/.apportable/cursor → pushes to judigot/project-core
-├── AGENTS.md                   │
-├── CLAUDE.md                  ─┘
+├── project-core/              → template synced to ~/.apportable/cursor → pushes to judigot/project-core
+│   ├── .cursor/
+│   ├── agents/
+│   ├── AGENTS.md
+│   └── CLAUDE.md
+├── AGENTS.md                  ← repo-specific agent guidance
 ├── .bashrc                    ─┐
 ├── .snippetsrc                 │→ syncs to ~/
 ├── .zshrc                      │
@@ -348,8 +350,10 @@ Both shells read from the same file, so aliases stay in sync automatically.
 ### Commit and Sync Everything
 
 ```sh
-./commit-and-sync.sh
+./commit-and-sync.sh "<message>"
 ```
+
+If no message is provided, it defaults to `chore: update user files`.
 
 This will:
 1. Commit & push changes to `judigot/user`
