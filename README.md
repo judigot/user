@@ -18,6 +18,12 @@ Download and use `.snippetsrc`
 cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
 ```
 
+Guest Mode (no .bashrc changes)
+
+```sh
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey") -- --guest
+```
+
 Set Up Termux
 ```sh
 cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
