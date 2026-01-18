@@ -18,7 +18,7 @@ Download and use `.snippetsrc`
 cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
 ```
 
-Guest Mode (no .bashrc changes)
+Guest Mode (No .bashrc Changes)
 
 ```sh
 cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey") -- --guest
