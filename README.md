@@ -45,6 +45,10 @@ cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/ju
 initubuntu
 installnodeenv
 usessh
+
+mkdir -p ~/.apportable
+git clone git@github.com:judigot/user.git ~/.apportable/user
+
 installterraform
 cloneterraformrepo
 installAWS
