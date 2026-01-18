@@ -559,6 +559,11 @@ installTerraform() {
         && sudo apt-get install -y terraform
 }
 
+cloneUserRepo() {
+    mkdir -p "$HOME/.apportable"
+    git clone git@github.com:judigot/user.git "$HOME/.apportable/user"
+}
+
 cloneTerraformRepo() {
     git clone git@github.com:judigot/terraform.git "$HOME/terraform"
     cd "$HOME/terraform"

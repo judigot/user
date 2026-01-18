@@ -46,8 +46,7 @@ initubuntu
 installnodeenv
 usessh
 
-mkdir -p ~/.apportable
-git clone git@github.com:judigot/user.git ~/.apportable/user
+cloneuserrepo
 
 installterraform
 cloneterraformrepo
