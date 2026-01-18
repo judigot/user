@@ -10,6 +10,11 @@ This is the **single source of truth** for:
 - Cursor IDE templates
 - Editor settings (Cursor, VS Code, Zed)
 
+## AI and Project Templates
+
+- `ai/` is the global Claude Code plugin (agents, skills, hooks, rules) used across all projects via `--plugin-dir ~/ai`.
+- `project-core/` is the project template that references `~/ai` for global rules and adds project-specific agents.
+
 ## Easy-Copy Snippets
 
 Download and use `.snippetsrc`
