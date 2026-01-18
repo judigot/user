@@ -22,10 +22,10 @@ if [ "$is_sourced" -eq 0 ]; then
     set -euo pipefail
 fi
 
-cache_bust="$(date +%s 2>/dev/null || echo 0)"
+cachebustkey="$(date +%s 2>/dev/null || echo 0)"
 base_url="https://raw.githubusercontent.com/judigot/user/main"
-snippetsrc_url="$base_url/.snippetsrc?cb=$cache_bust"
-alias_url="$base_url/ALIAS?cb=$cache_bust"
+snippetsrc_url="$base_url/.snippetsrc?cb=$cachebustkey"
+alias_url="$base_url/ALIAS?cb=$cachebustkey"
 
 snippetsrc_tmp="$(mktemp "${TMPDIR:-/tmp}/snippetsrc.XXXXXX")" || finish 1
 alias_tmp="$(mktemp "${TMPDIR:-/tmp}/alias.XXXXXX")" || {

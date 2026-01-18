@@ -15,12 +15,12 @@ This is the **single source of truth** for:
 Download and use `.snippetsrc`
 
 ```sh
-cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
 ```
 
 Set Up Termux
 ```sh
-cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
 
 termuxubuntu
 termuxloginubuntu
@@ -29,7 +29,7 @@ termuxloginubuntu
 Setup Mobile Workflow
 
 ```sh
-cb="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cb")
+cachebustkey="$(date +%s)"; . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-snippetsrc.sh?cb=$cachebustkey")
 
 initubuntu
 installnodeenv
