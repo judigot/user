@@ -1510,6 +1510,10 @@ claude() {
     command claude --plugin-dir ~/ai --plugin-dir . "$@"
 }
 
+opencode() {
+    BASH_ENV="$HOME/.bashrc" command opencode "$@"
+}
+
 # Check if a package/command is installed (silent check)
 # Usage: installPackage <package_name>
 installPackage() {
