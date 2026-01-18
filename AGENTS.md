@@ -8,6 +8,7 @@ This repository (`judigot/user`) is the source of truth for personal dotfiles, A
 
 - Follow coding standards from `~/ai/settings/rules.md`.
 - After making changes, run `./commit-and-sync.sh "<message>"`.
+- Never run `git commit` directly in this repo; always use `./commit-and-sync.sh` for committing.
 - Keep `README.md` updated when repo structure or workflows change.
 - Avoid committing secrets (`.env`, credentials, API keys).
 - Prefer editing existing files over adding new ones.
