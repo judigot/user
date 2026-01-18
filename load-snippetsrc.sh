@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 is_sourced=0
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     is_sourced=1
