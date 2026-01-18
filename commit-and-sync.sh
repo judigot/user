@@ -1,19 +1,24 @@
 #!/bin/sh
 
+chmod +x "$0" 2>/dev/null || true
+
 readonly PROJECT_DIRECTORY=$(cd "$(dirname "$0")" || exit 1; pwd)
 
 main() {
-    commit_user_repo
+    commit_message="${1:-chore: update user files}"
+    commit_user_repo "$commit_message"
     sync_to_home "DOTFILES"
-    sync_ai_repo
-    sync_cursor_repo "PROJECT_CORE"
-    sync_ide_repo
+    sync_ai_repo "$commit_message"
+    sync_cursor_repo "PROJECT_CORE" "$commit_message"
+    sync_ide_repo "$commit_message"
     sync_ubuntu "UBUNTU"
     sync_zed_settings
     sync_cursor_settings
 }
 
 commit_user_repo() {
+    local commit_message="$1"
+
     cd "$PROJECT_DIRECTORY" || exit 1
     
     if [ -z "$(git status --porcelain)" ]; then
@@ -22,7 +27,7 @@ commit_user_repo() {
     fi
     
     git add -A
-    git commit -m "chore: update user files"
+    git commit -m "$commit_message"
     git push
 }
 
@@ -67,6 +72,8 @@ sync_to_home() {
 }
 
 sync_ai_repo() {
+    local commit_message="$1"
+
     cd "$PROJECT_DIRECTORY" || exit 1
     
     printf '%s\n' "Syncing ai folder to ~/ai..."
@@ -119,7 +126,7 @@ sync_ai_repo() {
     fi
     
     git add -A
-    git commit -m "chore: sync from user repo"
+    git commit -m "$commit_message"
     git push
     
     printf '%s\n' "AI repo synced and pushed"
@@ -127,6 +134,8 @@ sync_ai_repo() {
 
 sync_cursor_repo() {
     local manifest="$1"
+    local commit_message="$2"
+
     cd "$PROJECT_DIRECTORY" || exit 1
     
     if [ ! -f "$manifest" ]; then
@@ -188,13 +197,15 @@ sync_cursor_repo() {
     fi
     
     git add -A
-    git commit -m "chore: sync from user repo"
+    git commit -m "$commit_message"
     git push
     
     printf '%s\n' "Cursor repo synced and pushed"
 }
 
 sync_ide_repo() {
+    local commit_message="$1"
+
     cd "$PROJECT_DIRECTORY" || exit 1
     
     printf '%s\n' "Syncing ide folder to judigot/ide..."
@@ -240,7 +251,7 @@ sync_ide_repo() {
     fi
     
     git add -A
-    git commit -m "chore: sync from user repo"
+    git commit -m "$commit_message"
     git push
     
     printf '%s\n' "IDE repo synced and pushed"
