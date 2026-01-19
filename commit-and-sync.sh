@@ -9,7 +9,7 @@ main() {
     commit_user_repo "$commit_message"
     sync_to_home "DOTFILES"
     sync_ai_repo "$commit_message"
-    sync_opencode_assets
+    # sync_opencode_assets
     sync_cursor_repo "PROJECT_CORE" "$commit_message"
     sync_ide_repo "$commit_message"
     sync_ubuntu "UBUNTU"
