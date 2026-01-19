@@ -497,7 +497,7 @@ generateSSHKey() {
 }
 
 testSSH() {
-    ssh -T git@github.com -o StrictHostKeyChecking=no
+    ssh -T git@github.com -o StrictHostKeyChecking=no 2>&1
 }
 
 useSSHKey() {
