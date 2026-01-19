@@ -1,5 +1,6 @@
 .bashrc
 .devrc
+.devrc.d/opencode.sh
 .zshrc
 ALIAS
 Apportable.sh

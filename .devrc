@@ -89,6 +89,22 @@ loadAliasFile() {
     done < "$alias_file"
 }
 
+loadDevrcModules() {
+    local modules_dir="$HOME/.devrc.d"
+
+    if [ ! -d "$modules_dir" ]; then
+        return 0
+    fi
+
+    for module in "$modules_dir"/*.sh; do
+        [ -f "$module" ] || continue
+        # shellcheck source=/dev/null
+        . "$module"
+    done
+}
+
+loadDevrcModules
+
 helloWorld() {
     local user=${USER:-$USERNAME}
     echo -e "\e[32mHello, $user!\e[0m"
