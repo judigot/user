@@ -181,10 +181,10 @@ Examples: `feat: add user auth`, `fix: null check in parser`, `chore: update dep
 
 | Command | Purpose |
 |---------|---------|
-| `gc "msg"` | Stage all + commit (no push) |
-| `gcp` | Preview staged changes |
-| `gpr` | Create PR (gh cli) |
-| `nr "script"` | Run bun script |
+| `agc "msg"` | Stage all + commit (no push) |
+| `agcp` | Preview staged changes |
+| `agpr` | Create PR (gh cli) |
+| `anr "script"` | Run bun script |
 
 # TypeScript/JavaScript
 
