@@ -75,8 +75,6 @@ plugins=(
     zsh-autosuggestions
 )
 
-[[ -f "$HOME/.bashrc" ]] && source "$HOME/.bashrc"
-
 source $ZSH/oh-my-zsh.sh
 
 #<DEVRC>
