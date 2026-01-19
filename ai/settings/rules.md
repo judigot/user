@@ -164,6 +164,7 @@ Examples: `feat: add user auth`, `fix: null check in parser`, `chore: update dep
 - Prefer using existing snippets over writing new scripts
 - When adding new utilities, add them to `~/.devrc` with descriptive function names and multiple aliases. But always ask permission first.
 - Usage: `bash -c ". ~/.devrc && functionName"`
+- Always source `~/.devrc` at the start of every agent CLI session (OpenCode, Claude Code, Codex, etc.) and before running shell commands so aliases are available.
 
 ## User Aliases
 

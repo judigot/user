@@ -703,6 +703,84 @@ installCodexCLI() {
     npm i -g @openai/codex
 }
 
+installNeovim() {
+    if ! command -v apt-get >/dev/null 2>&1; then
+        printf '%s\n' "apt-get is required to install Neovim." >&2
+        return 1
+    fi
+
+    local sudo_cmd=""
+    if [ "$(id -u)" -eq 0 ]; then
+        sudo_cmd=""
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo_cmd="sudo"
+    else
+        printf '%s\n' "sudo is required to install system packages." >&2
+        return 1
+    fi
+
+    $sudo_cmd apt-get update -y || return 1
+    $sudo_cmd apt-get install -y \
+        software-properties-common \
+        build-essential \
+        git \
+        curl wget unzip \
+        ripgrep \
+        fd-find \
+        python3 python3-venv python3-pip \
+        nodejs npm || return 1
+
+    if ! command -v fd >/dev/null 2>&1 && command -v fdfind >/dev/null 2>&1; then
+        $sudo_cmd ln -sf "$(command -v fdfind)" /usr/local/bin/fd || return 1
+    fi
+
+    local ppa_found=""
+    local ppa_file=""
+    for ppa_file in /etc/apt/sources.list /etc/apt/sources.list.d/*; do
+        [ -f "$ppa_file" ] || continue
+        if awk 'BEGIN{IGNORECASE=1} /neovim-ppa/ {found=1; exit} END{exit !found}' "$ppa_file" 2>/dev/null; then
+            ppa_found="true"
+            break
+        fi
+    done
+
+    if [ -z "$ppa_found" ]; then
+        $sudo_cmd add-apt-repository -y ppa:neovim-ppa/stable || return 1
+        $sudo_cmd apt-get update -y || return 1
+    fi
+
+    $sudo_cmd apt-get install -y neovim || return 1
+
+    if ! command -v tree-sitter >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+        $sudo_cmd npm install -g tree-sitter-cli || return 1
+    fi
+
+    local nvim_config_dir="$HOME/.config/nvim"
+    local backup_suffix
+    backup_suffix=$(date +%Y%m%d-%H%M%S 2>/dev/null || date +%Y%m%d)
+
+    mkdir -p "$HOME/.config" || return 1
+
+    if [ -d "$nvim_config_dir" ]; then
+        mv "$nvim_config_dir" "${nvim_config_dir}.bak-${backup_suffix}" || return 1
+    fi
+
+    git clone git@github.com:LazyVim/starter.git "$nvim_config_dir" || return 1
+    rm -rf "$nvim_config_dir/.git" 2>/dev/null || true
+
+    rm -rf "$HOME/.local/share/nvim" \
+        "$HOME/.local/state/nvim" \
+        "$HOME/.cache/nvim" 2>/dev/null || true
+
+    if command -v nvim >/dev/null 2>&1; then
+        if ! nvim --headless "+Lazy! sync" +qa; then
+            printf '%s\n' "LazyVim sync failed. Open Neovim once to finish setup." >&2
+        fi
+    fi
+
+    printf '%s\n' "Neovim + LazyVim installed."
+}
+
 initUbuntu() {
     set -eu
     sudo apt-get update -y

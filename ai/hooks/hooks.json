@@ -5,6 +5,10 @@
       "hooks": [
         {
           "type": "command",
+          "command": "[ -f \"$HOME/.devrc\" ] && . \"$HOME/.devrc\""
+        },
+        {
+          "type": "command",
           "command": "cat ${CLAUDE_PLUGIN_ROOT}/settings/rules.md"
         }
       ]

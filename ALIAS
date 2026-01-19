@@ -110,6 +110,10 @@ installCodexCLI:
 installcodex
 installcodexcli
 
+installNeovim:
+installneovim
+installlazyvim
+
 installTerraform:
 installterraform
 terraforminstall
