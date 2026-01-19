@@ -21,6 +21,10 @@ This repository (`judigot/user`) is the source of truth for personal dotfiles, A
 - Make minimal, request-scoped changes (avoid unrelated refactors).
 - Keep root `AGENTS.md` repo-specific; template guidance belongs in `project-core/`.
 
+## Global Rules
+
+Always load and follow `~/ai/settings/rules.md` as the single canonical ruleset for all CLI agents and IDEs. Treat its instructions as mandatory for every task.
+
 ## More Context
 
 - See `README.md` for repository structure, usage, and setup details.
