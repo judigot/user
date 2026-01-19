@@ -46,28 +46,39 @@ cachebustkey="$(date +%s 2>/dev/null || echo 0)"
 base_url="https://raw.githubusercontent.com/judigot/user/main"
 devrc_url="$base_url/.devrc?cachebustkey=$cachebustkey"
 alias_url="$base_url/ALIAS?cachebustkey=$cachebustkey"
+devrc_modules_url="$base_url/.devrc.d/opencode.sh?cachebustkey=$cachebustkey"
 
 devrc_tmp="$(mktemp "${TMPDIR:-/tmp}/devrc.XXXXXX")" || finish 1
 alias_tmp="$(mktemp "${TMPDIR:-/tmp}/alias.XXXXXX")" || {
     rm -f "$devrc_tmp" 2>/dev/null || true
     finish 1
 }
+devrc_module_tmp="$(mktemp "${TMPDIR:-/tmp}/devrc-module.XXXXXX")" || {
+    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    finish 1
+}
 
 if ! curl -fsSL "$devrc_url" -o "$devrc_tmp"; then
     printf '%s\n' "Failed to download .devrc" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
     finish 1
 fi
 
 if ! curl -fsSL "$alias_url" -o "$alias_tmp"; then
     printf '%s\n' "Failed to download ALIAS" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
     finish 1
 fi
 
-if [ ! -s "$devrc_tmp" ] || [ ! -s "$alias_tmp" ]; then
+if ! curl -fsSL "$devrc_modules_url" -o "$devrc_module_tmp"; then
+    printf '%s\n' "Failed to download .devrc.d/opencode.sh" >&2
+    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
+    finish 1
+fi
+
+if [ ! -s "$devrc_tmp" ] || [ ! -s "$alias_tmp" ] || [ ! -s "$devrc_module_tmp" ]; then
     printf '%s\n' "Downloaded files are empty" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
     finish 1
 fi
 
@@ -100,7 +111,7 @@ load_aliases_from_content() {
 if [ "$mode" = "guest" ]; then
     if [ "$is_sourced" -eq 0 ]; then
         printf '%s\n' "Guest mode must be sourced to affect the current shell." >&2
-        rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+        rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
         finish 1
     fi
 
@@ -108,12 +119,14 @@ if [ "$mode" = "guest" ]; then
     . "$devrc_tmp"
     load_aliases_from_content "$alias_tmp"
 
-    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
     finish 0
 fi
 
 mv "$devrc_tmp" "$HOME/.devrc"
 mv "$alias_tmp" "$HOME/ALIAS"
+mkdir -p "$HOME/.devrc.d" 2>/dev/null || true
+mv "$devrc_module_tmp" "$HOME/.devrc.d/opencode.sh"
 
 # shellcheck source=/dev/null
 . "$HOME/.devrc"
