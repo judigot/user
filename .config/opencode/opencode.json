@@ -1,11 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [
-    "~/ai/AGENTS.md",
-    "~/ai/CLAUDE.md",
-    "~/ai/README.md",
-    "~/ai/settings/rules.md"
-  ],
+  "instructions": ["~/ai/AGENTS.md"],
   "mcp": {
     "context7": {
       "type": "remote",
