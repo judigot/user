@@ -763,22 +763,67 @@ installNeovim() {
         $sudo_cmd ln -sf "$(command -v fdfind)" /usr/local/bin/fd || return 1
     fi
 
-    local ppa_found=""
-    local ppa_file=""
-    for ppa_file in /etc/apt/sources.list /etc/apt/sources.list.d/*; do
-        [ -f "$ppa_file" ] || continue
-        if awk 'BEGIN{IGNORECASE=1} /neovim-ppa/ {found=1; exit} END{exit !found}' "$ppa_file" 2>/dev/null; then
-            ppa_found="true"
-            break
-        fi
-    done
+    local nvim_min_version="0.11.2"
+    local nvim_version=""
+    local needs_nvim="true"
 
-    if [ -z "$ppa_found" ]; then
-        $sudo_cmd add-apt-repository -y ppa:neovim-ppa/stable || return 1
-        $sudo_cmd apt-get update -y || return 1
+    if command -v nvim >/dev/null 2>&1; then
+        nvim_version=$(nvim --version 2>/dev/null | awk 'NR==1 {gsub("^v","",$2); print $2}')
     fi
 
-    $sudo_cmd apt-get install -y neovim || return 1
+    if [ -n "$nvim_version" ]; then
+        if [ "$(printf '%s\n' "$nvim_min_version" "$nvim_version" | sort -V | head -n1)" = "$nvim_min_version" ]; then
+            needs_nvim=""
+        fi
+    fi
+
+    if [ -n "$needs_nvim" ]; then
+        local nvim_tmp=""
+        local nvim_url=""
+        local nvim_asset=""
+        nvim_tmp=$(mktemp -d 2>/dev/null || mktemp -d -t nvim)
+
+        for nvim_asset in nvim-linux64.tar.gz nvim-linux-x86_64.tar.gz nvim.appimage; do
+            nvim_url="https://github.com/neovim/neovim/releases/latest/download/${nvim_asset}"
+            if curl -fsSL -L "$nvim_url" -o "$nvim_tmp/$nvim_asset"; then
+                break
+            fi
+            nvim_url=""
+        done
+
+        if [ -z "$nvim_url" ]; then
+            rm -rf "$nvim_tmp" 2>/dev/null || true
+            return 1
+        fi
+
+        $sudo_cmd rm -rf /opt/nvim || return 1
+        $sudo_cmd mkdir -p /opt/nvim /usr/local/bin || return 1
+
+        if [ "$nvim_asset" = "nvim.appimage" ]; then
+            $sudo_cmd mv "$nvim_tmp/$nvim_asset" /opt/nvim/nvim.appimage || return 1
+            $sudo_cmd chmod +x /opt/nvim/nvim.appimage || return 1
+            $sudo_cmd ln -sf /opt/nvim/nvim.appimage /usr/local/bin/nvim || return 1
+            rm -rf "$nvim_tmp" 2>/dev/null || true
+        else
+            if ! $sudo_cmd tar -xzf "$nvim_tmp/$nvim_asset" -C "$nvim_tmp"; then
+                rm -rf "$nvim_tmp" 2>/dev/null || true
+                return 1
+            fi
+
+            if [ -d "$nvim_tmp/nvim-linux64" ]; then
+                $sudo_cmd mv "$nvim_tmp/nvim-linux64" /opt/nvim/ || return 1
+                $sudo_cmd ln -sf /opt/nvim/nvim-linux64/bin/nvim /usr/local/bin/nvim || return 1
+            elif [ -d "$nvim_tmp/nvim-linux-x86_64" ]; then
+                $sudo_cmd mv "$nvim_tmp/nvim-linux-x86_64" /opt/nvim/ || return 1
+                $sudo_cmd ln -sf /opt/nvim/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim || return 1
+            else
+                rm -rf "$nvim_tmp" 2>/dev/null || true
+                return 1
+            fi
+
+            rm -rf "$nvim_tmp" 2>/dev/null || true
+        fi
+    fi
 
     if ! command -v tree-sitter >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
         $sudo_cmd npm install -g tree-sitter-cli || return 1
