@@ -491,13 +491,114 @@ loadSnippets() {
     grep -q '#<DEVRC>' "$HOME/.bashrc" 2>/dev/null || printf '%s\n' '#<DEVRC>' '[[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"' '#</DEVRC>' >> "$HOME/.bashrc"
 }
 
+installOpenCodeConfigFromBitwarden() {
+    local target="$HOME/.config/opencode/opencode.json"
+
+    if [ -f "$target" ]; then
+        return 0
+    fi
+
+    local choices=("No, skip" "Yes, install OpenCode config")
+    local selected
+    selected=$(arrowKeySelect "Install OpenCode settings from Bitwarden?" "${choices[@]}")
+
+    if [ -z "$selected" ] || [ "$selected" = "No, skip" ]; then
+        return 0
+    fi
+
+    if ! command -v bw >/dev/null 2>&1; then
+        echo "✗ Bitwarden CLI (bw) is required to install OpenCode config." >&2
+        return 1
+    fi
+
+    if ! bw --version >/dev/null 2>&1; then
+        echo "✗ Bitwarden CLI found but cannot execute. Please reinstall it." >&2
+        return 1
+    fi
+
+    if ! command -v node >/dev/null 2>&1; then
+        echo "✗ Node.js is required to read Bitwarden notes." >&2
+        return 1
+    fi
+
+    bw login --check >/dev/null 2>&1 || bw login
+    export BW_SESSION="$(bw unlock --raw)"
+    [ -n "$BW_SESSION" ] || { echo "✗ Failed to unlock Bitwarden vault" >&2; return 1; }
+
+    bw sync >/dev/null 2>&1
+
+    local note_name="Context7 API Key"
+    local item_id
+    item_id="$(bw list items --search "$note_name" 2>/dev/null | node -e "
+        const input = require('fs').readFileSync(0, 'utf-8').trim();
+        if (!input) process.exit(1);
+        const data = JSON.parse(input);
+        const match = data.find(i => i && i.name === process.argv[1] && i.type === 2);
+        if (match) console.log(match.id);
+        else process.exit(1);
+    " "$note_name" 2>/dev/null)"
+
+    [ -n "$item_id" ] || { echo "✗ Bitwarden note not found: $note_name" >&2; return 1; }
+
+    local api_key
+    api_key="$(bw get item "$item_id" 2>/dev/null | node -e "
+        const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+        if (data.notes) console.log(String(data.notes).trim());
+    " 2>/dev/null)"
+
+    [ -n "$api_key" ] || { echo "✗ Context7 API key missing in Bitwarden note." >&2; return 1; }
+
+    local template=""
+    local cleanup_dir=""
+
+    if [ -f "./.config/opencode/opencode.json" ]; then
+        template="./.config/opencode/opencode.json"
+    else
+        local repo_dir
+        repo_dir=$(downloadUserRepoTemp) || return 1
+        cleanup_dir=$(dirname "$repo_dir")
+        template="$repo_dir/.config/opencode/opencode.json"
+    fi
+
+    if [ ! -f "$template" ]; then
+        [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
+        echo "✗ OpenCode template not found: $template" >&2
+        return 1
+    fi
+
+    local tmp_file="/tmp/opencode.json.$$"
+    CONTEXT7_API_KEY="$api_key" node -e "
+        const fs = require('fs');
+        const template = fs.readFileSync(process.argv[1], 'utf-8');
+        const key = process.env.CONTEXT7_API_KEY || '';
+        if (!key) process.exit(1);
+        process.stdout.write(template.replace('__CONTEXT7_API_KEY__', key));
+    " "$template" > "$tmp_file" 2>/dev/null || {
+        rm -f "$tmp_file" 2>/dev/null || true
+        [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
+        echo "✗ Failed to build OpenCode config" >&2
+        return 1
+    }
+
+    mkdir -p "$HOME/.config/opencode" 2>/dev/null || true
+    mv "$tmp_file" "$target"
+
+    [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
+
+    echo "✓ OpenCode config installed"
+}
+
 installOpenCode() {
     if ! command -v npm >/dev/null 2>&1; then
         echo "npm is required to install Open Code (opencode-ai)." >&2
         return 1
     fi
 
-    npm i -g opencode-ai
+    npm i -g opencode-ai || return 1
+
+    if [ ! -f "$HOME/.config/opencode/opencode.json" ]; then
+        installOpenCodeConfigFromBitwarden || true
+    fi
 }
 
 installClaudeCode() {
