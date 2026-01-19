@@ -5,7 +5,7 @@
   "author": {
     "name": "judigot"
   },
-  "agents": "./agents",
+  "agents": ["./agents"],
   "skills": "./skills",
   "commands": "./commands",
   "mcpServers": "./.mcp.json"
