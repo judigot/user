@@ -5,9 +5,18 @@
   "author": {
     "name": "judigot"
   },
-  "agents": ["./agents/*.md"],
+  "agents": [
+    "./agents/README.md",
+    "./agents/agentic-workflow.md",
+    "./agents/app-bundler.md",
+    "./agents/code-reviewer.md",
+    "./agents/debugger.md",
+    "./agents/migrator.md",
+    "./agents/multitasker.md",
+    "./agents/task-master.md",
+    "./agents/test-generator.md"
+  ],
   "skills": "./skills",
-  "commands": "./commands",
   "hooks": "./hooks/hooks.json",
   "mcpServers": "./.mcp.json"
 }

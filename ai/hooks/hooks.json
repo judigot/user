@@ -1,5 +1,4 @@
 {
-  "description": "Global hooks for all projects - loads local rules and enforces coding standards",
   "SessionStart": [
     {
       "matcher": "*",
