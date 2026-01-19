@@ -726,12 +726,18 @@ installNeovim() {
     fi
 
     if ! $sudo_cmd dpkg --configure -a >/dev/null 2>&1; then
-        printf '%s\n' "dpkg configure failed. Run: dpkg --configure -a" >&2
-        return 1
+        if ! $sudo_cmd apt-get -f install -y; then
+            printf '%s\n' "dpkg recovery failed. Run: ${sudo_cmd:+$sudo_cmd }dpkg --configure -a" >&2
+            return 1
+        fi
+        if ! $sudo_cmd dpkg --configure -a >/dev/null 2>&1; then
+            printf '%s\n' "dpkg configure failed. Run: ${sudo_cmd:+$sudo_cmd }dpkg --configure -a" >&2
+            return 1
+        fi
     fi
 
     $sudo_cmd apt-get update -y || return 1
-    $sudo_cmd apt-get install -y \
+    if ! $sudo_cmd apt-get install -y \
         software-properties-common \
         build-essential \
         git \
@@ -739,7 +745,19 @@ installNeovim() {
         ripgrep \
         fd-find \
         python3 python3-venv python3-pip \
-        nodejs npm || return 1
+        nodejs npm; then
+        $sudo_cmd dpkg --configure -a >/dev/null 2>&1 || true
+        $sudo_cmd apt-get -f install -y || return 1
+        $sudo_cmd apt-get install -y \
+            software-properties-common \
+            build-essential \
+            git \
+            curl wget unzip \
+            ripgrep \
+            fd-find \
+            python3 python3-venv python3-pip \
+            nodejs npm || return 1
+    fi
 
     if ! command -v fd >/dev/null 2>&1 && command -v fdfind >/dev/null 2>&1; then
         $sudo_cmd ln -sf "$(command -v fdfind)" /usr/local/bin/fd || return 1

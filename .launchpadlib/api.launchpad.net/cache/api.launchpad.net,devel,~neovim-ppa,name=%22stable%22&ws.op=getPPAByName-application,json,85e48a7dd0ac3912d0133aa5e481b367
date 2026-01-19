@@ -1,0 +1,22 @@
+status: 200
+date: Mon, 19 Jan 2026 11:40:28 GMT
+server: gunicorn
+x-powered-by: Zope (www.zope.org), Python (www.python.org)
+content-security-policy: frame-ancestors 'self';
+content-type: application/json
+strict-transport-security: max-age=15552000
+vary: Accept,Accept-Encoding
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-launchpad-revision: 9fcfff1971229ac997140f06b41a902ac8ec69f4
+x-lazr-notifications: []
+x-xss-protection: 1; mode=block
+x-vcs-revision: 9fcfff1971229ac997140f06b41a902ac8ec69f4
+x-request-id: 316cd680-2d63-4a64-ae55-17156e3bcca0
+content-length: 1812
+-content-encoding: gzip
+content-location: https://api.launchpad.net/devel/~neovim-ppa?name=%22stable%22&ws.op=getPPAByName
+-varied-accept: application/json
+-varied-accept-encoding: gzip, deflate
+
+{"self_link": "https://api.launchpad.net/devel/~neovim-ppa/+archive/ubuntu/stable", "web_link": "https://launchpad.net/~neovim-ppa/+archive/ubuntu/stable", "resource_type_link": "https://api.launchpad.net/devel/#archive", "webhooks_collection_link": "https://api.launchpad.net/devel/~neovim-ppa/+archive/ubuntu/stable/webhooks", "owner_link": "https://api.launchpad.net/devel/~neovim-ppa", "name": "stable", "displayname": "Neovim Stable", "reference": "~neovim-ppa/ubuntu/stable", "distribution_link": "https://api.launchpad.net/devel/ubuntu", "private": false, "suppress_subscription_notifications": false, "dependencies_collection_link": "https://api.launchpad.net/devel/~neovim-ppa/+archive/ubuntu/stable/dependencies", "description": "Neovim releases backported from Debian.\n\nHomepage: https://neovim.io\nSource/Issues: https://github.com/neovim/neovim\nDocumentation: https://neovim.io/doc\nUser Manual: https://neovim.io/doc/user\nNeovim features: https://neovim.io/doc/user/nvim.html\nPackaging: https://launchpad.net/neovim-ppa", "signing_key_fingerprint": "9DBB0BE9366964F134855E2255F96FCF8231B6DD", "require_virtualized": true, "build_debug_symbols": true, "publish_debug_symbols": true, "permit_obsolete_series_uploads": false, "authorized_size": 2048, "status": "Active", "external_dependencies": null, "metadata_overrides": null, "processors_collection_link": "https://api.launchpad.net/devel/~neovim-ppa/+archive/ubuntu/stable/processors", "enabled_restricted_processors_collection_link": "https://api.launchpad.net/devel/~neovim-ppa/+archive/ubuntu/stable/enabled_restricted_processors", "publishing_method": "Local", "repository_format": "Debian", "publish": true, "relative_build_score": 0, "http_etag": "\"ba017b64ebb1c520dc77a3abccd63e6e8e6a514e-248edbe837c6ef62040e96e3fe1e8a2b5b8be6a3\""}
