@@ -521,9 +521,34 @@ installAWS() {
     sudo apt install -y awscli
 }
 
-usePersonalSSH() { useSSHKey "id_ed25519"; }
+copySSHDefaultKey() {
+    local source_key="$1"
+    local source_path="$HOME/.ssh/$source_key"
+    local target_path="$HOME/.ssh/id_ed25519"
 
-useWorkSSH() { useSSHKey "id_ed25519_work"; }
+    mkdir -p "$HOME/.ssh" 2>/dev/null || true
+    chmod 700 "$HOME/.ssh" 2>/dev/null || true
+
+    if [ ! -f "$source_path" ]; then
+        echo "✗ SSH key not found: $source_path" >&2
+        return 1
+    fi
+
+    cp "$source_path" "$target_path"
+    chmod 600 "$target_path" 2>/dev/null || true
+
+    if [ -f "${source_path}.pub" ]; then
+        cp "${source_path}.pub" "${target_path}.pub"
+        chmod 644 "${target_path}.pub" 2>/dev/null || true
+    else
+        ssh-keygen -y -f "$target_path" > "${target_path}.pub" 2>/dev/null && \
+            chmod 644 "${target_path}.pub" 2>/dev/null || true
+    fi
+}
+
+usePersonalSSH() { copySSHDefaultKey "id_ed25519_personal" && useSSHKey "id_ed25519"; }
+
+useWorkSSH() { copySSHDefaultKey "id_ed25519_work" && useSSHKey "id_ed25519"; }
 
 deleteAll() {
     read -rp 'Are you sure you want to delete everything? (y/N) ' confirm
@@ -997,13 +1022,15 @@ useSSH() {
             key_type="$(echo "$key_data" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf-8')); console.log(d.keyType || 'ed25519')")"
 
             local KEY_FILENAME
-            item_part="$(echo "$ITEM_NAME" | sed 's/^[Ss][Ss][Hh][[:space:]]*//' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
+            item_part="$(echo "$ITEM_NAME" | sed 's/^[Ss][Ss][Hh][[:space:]]*//' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^\-|-$//g')"
             if [ "$item_part" = "personal" ]; then
+                KEY_FILENAME="id_${key_type}_personal"
+            elif [ -z "$item_part" ]; then
                 KEY_FILENAME="id_${key_type}"
             else
                 KEY_FILENAME="id_${key_type}_${item_part}"
             fi
-            [ -z "$item_part" ] && KEY_FILENAME="id_${key_type}"
+
 
             if [ -z "$private_key" ] || [ "$private_key" = "null" ]; then
                 echo "✗ Private key not found in item '$ITEM_NAME'" >&2
@@ -1050,6 +1077,18 @@ useSSH() {
         selected="$1"
         setupSSHFromBitwarden "$@"
     fi
+
+    if [ ! -f "$HOME/.ssh/id_ed25519_personal" ]; then
+        echo "✗ Personal SSH key not found: ~/.ssh/id_ed25519_personal" >&2
+        return 1
+    fi
+
+    if [ ! -f "$HOME/.ssh/id_ed25519_work" ]; then
+        echo "✗ Work SSH key not found: ~/.ssh/id_ed25519_work" >&2
+        return 1
+    fi
+
+    copySSHDefaultKey "id_ed25519_personal" || return 1
 
     # Ensure SSH directory and keys have proper permissions
     if [ -d "$HOME/.ssh" ]; then
