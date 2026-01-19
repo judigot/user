@@ -1,2 +1,2 @@
-@README.md
-@settings/rules.md
+@~/ai/README.md
+@~/ai/settings/rules.md
