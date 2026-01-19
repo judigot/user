@@ -181,10 +181,22 @@ Examples: `feat: add user auth`, `fix: null check in parser`, `chore: update dep
 
 | Command | Purpose |
 |---------|---------|
-| `agc "msg"` | Stage all + commit (no push) |
-| `agcp` | Preview staged changes |
-| `agpr` | Create PR (gh cli) |
-| `anr "script"` | Run bun script |
+| `ai_gc "msg"` | Stage all + commit (no push) |
+| `ai_gcp` | Preview staged changes |
+| `ai_gpr` | Create PR (gh cli) |
+| `ai_nr "script"` | Run bun script |
+| `ai_status` | Git status (short) |
+| `ai_diff` | Git diff (unstaged) |
+| `ai_diffstaged` | Git diff (staged) |
+| `ai_log` | Git log (recent) |
+| `ai_add` | Git add all |
+| `ai_pull` | Git pull with rebase |
+| `ai_search "pattern" [path]` | Ripgrep search |
+| `ai_replace "file" "old" "new"` | Replace string in file |
+| `ai_mkdir "dir"` | Make directory (parents) |
+| `ai_touch "file"` | Touch file |
+| `ai_copy "src" "dest"` | Copy file/dir |
+| `ai_move "src" "dest"` | Move/rename file/dir |
 
 # TypeScript/JavaScript
 

@@ -1961,10 +1961,36 @@ termuxLoginUbuntu() {
 #</TERMUX>
 
 #<AGENT_ALIASES>
-agc() { git add -A && git status && git commit -m "$1"; }  # Git commit: stage all, show status, commit with message (no push)
-agcp() { git add -A && git status; }                       # Git commit preview: stage all and show what would be committed
-agpr() { gh pr create --fill; }                            # GitHub PR: create pull request with auto-filled title/body
-anr() { bun run "$1"; }                                    # Node run: execute a script from package.json using Bun
+ai_gc() { git add -A && git status && git commit -m "$1"; }        # Git commit: stage all, show status, commit with message (no push)
+ai_gcp() { git add -A && git status; }                             # Git commit preview: stage all and show what would be committed
+ai_gpr() { gh pr create --fill; }                                  # GitHub PR: create pull request with auto-filled title/body
+ai_nr() { bun run "$1"; }                                          # Node run: execute a script from package.json using Bun
+ai_status() { git status -sb; }                                   # Git status (short)
+ai_diff() { git diff; }                                           # Git diff (unstaged)
+ai_diffstaged() { git diff --staged; }                            # Git diff (staged)
+ai_log() { git log -5 --oneline; }                                # Git log (recent)
+ai_add() { git add -A; }                                          # Git add all
+ai_pull() { git pull --rebase; }                                  # Git pull with rebase
+ai_search() { rg "$1" "${2:-.}"; }                               # Ripgrep search: pattern [path]
+ai_replace() {
+    local target_file="$1"
+    local old_value="$2"
+    local new_value="$3"
+
+    [ -f "$target_file" ] || { echo "✗ File not found: $target_file" >&2; return 1; }
+    python - "$target_file" "$old_value" "$new_value" <<'PY'
+import sys
+path, old, new = sys.argv[1:4]
+with open(path, 'r', encoding='utf-8') as handle:
+    data = handle.read()
+with open(path, 'w', encoding='utf-8') as handle:
+    handle.write(data.replace(old, new))
+PY
+}
+ai_mkdir() { mkdir -p "$1"; }                                    # Make directory (parents)
+ai_touch() { touch "$1"; }                                       # Touch file
+ai_copy() { cp -R "$1" "$2"; }                                   # Copy file/dir
+ai_move() { mv "$1" "$2"; }                                      # Move/rename file/dir
 #</AGENT_ALIASES>
 
 loadAliasFile
