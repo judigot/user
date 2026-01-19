@@ -546,9 +546,9 @@ copySSHDefaultKey() {
     fi
 }
 
-usePersonalSSH() { copySSHDefaultKey "id_ed25519_personal" && useSSHKey "id_ed25519"; }
+usePersonalSSH() { copySSHDefaultKey "id_ed25519_personal" && useSSHKey "id_ed25519" && testSSH; }
 
-useWorkSSH() { copySSHDefaultKey "id_ed25519_work" && useSSHKey "id_ed25519"; }
+useWorkSSH() { copySSHDefaultKey "id_ed25519_work" && useSSHKey "id_ed25519" && testSSH; }
 
 deleteAll() {
     read -rp 'Are you sure you want to delete everything? (y/N) ' confirm
