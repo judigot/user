@@ -79,6 +79,10 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
+#<DEVRC>
+[ -f "$HOME/.devrc" ] && . "$HOME/.devrc"
+#</DEVRC>
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
