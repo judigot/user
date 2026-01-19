@@ -9,6 +9,7 @@ main() {
     commit_user_repo "$commit_message"
     sync_to_home "DOTFILES"
     sync_ai_repo "$commit_message"
+    sync_opencode_assets
     sync_cursor_repo "PROJECT_CORE" "$commit_message"
     sync_ide_repo "$commit_message"
     sync_ubuntu "UBUNTU"
@@ -130,6 +131,23 @@ sync_ai_repo() {
     git push
     
     printf '%s\n' "AI repo synced and pushed"
+}
+
+sync_opencode_assets() {
+    cd "$PROJECT_DIRECTORY" || exit 1
+
+    printf '%s\n' "Syncing OpenCode agents and skills..."
+
+    mkdir -p "$HOME/.config/opencode/agents" 2>/dev/null || true
+    mkdir -p "$HOME/.config/opencode/skills" 2>/dev/null || true
+
+    if [ -d "$PROJECT_DIRECTORY/ai/agents" ]; then
+        cp -r "$PROJECT_DIRECTORY/ai/agents/." "$HOME/.config/opencode/agents/" 2>/dev/null || true
+    fi
+
+    if [ -d "$PROJECT_DIRECTORY/ai/skills" ]; then
+        cp -r "$PROJECT_DIRECTORY/ai/skills/." "$HOME/.config/opencode/skills/" 2>/dev/null || true
+    fi
 }
 
 sync_cursor_repo() {
