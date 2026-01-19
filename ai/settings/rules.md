@@ -18,12 +18,16 @@
 - No "Here's what I found" phrases
 - Code blocks only - skip prose when code is self-explanatory
 - One-line answers when possible
+- Prefer explicit rules over implicit assumptions; restate key rules when asked
+- Use ai_* aliases when they map to the requested action
 
 ## Tool Usage
 - Batch file reads in parallel
 - Don't re-read files already in context
 - Use grep/codebase_search before reading large files
 - Skip node_modules, dist, .git, lock files, generated files
+- Prefer targeted reads and diffs; avoid full-file dumps
+- Use Context7 for docs lookup to avoid verbose explanations
 
 ## Code Output
 - Show only changed lines with context, not full files
