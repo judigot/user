@@ -312,16 +312,41 @@ syncSnippetsrcAndAliasFromRemote() {
         return $?
     fi
 
-    if command -v downloadGithubFiles >/dev/null 2>&1; then
-        if downloadGithubFiles judigot/user ".devrc" "ALIAS" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
-            return 0
-        fi
+    if ! command -v bash >/dev/null 2>&1; then
+        printf '%s\n' "bash is required to run load-devrc.sh" >&2
+        return 1
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        printf '%s\n' "curl is required to download load-devrc.sh" >&2
+        return 1
     fi
 
     local cache_bust=""
     cache_bust=$(date +%s 2>/dev/null || echo "0")
-    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.devrc?cachebust=$cache_bust" -o "$HOME/.devrc" \
-        && curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cache_bust" -o "$HOME/ALIAS"
+    local load_devrc_url="https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebust=$cache_bust"
+
+    if bash -c ". <(curl -fsSL \"$load_devrc_url\") -- --no-bashrc" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if command -v downloadGithubFiles >/dev/null 2>&1; then
+        if downloadGithubFiles judigot/user ".devrc" "ALIAS" ".devrc.d/opencode.sh" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
+            return 0
+        fi
+    fi
+
+    if ! curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.devrc?cachebust=$cache_bust" -o "$HOME/.devrc"; then
+        return 1
+    fi
+
+    if ! curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cache_bust" -o "$HOME/ALIAS"; then
+        return 1
+    fi
+
+    mkdir -p "$HOME/.devrc.d" 2>/dev/null || true
+    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.devrc.d/opencode.sh?cachebust=$cache_bust" \
+        -o "$HOME/.devrc.d/opencode.sh"
 }
 
 updateUserEnv() {
@@ -355,10 +380,12 @@ updateUserEnv() {
         fi
     fi
 
-    # Non-Windows: only keep `.devrc` + `ALIAS` fresh.
+    # Non-Windows: keep terminal files fresh via load-devrc.sh
     if ! isWindowsLikeShell; then
-        # shellcheck source=/dev/null
-        [ -f "$HOME/.devrc" ] && source "$HOME/.devrc"
+        if syncSnippetsrcAndAliasFromRemote; then
+            # shellcheck source=/dev/null
+            [ -f "$HOME/.devrc" ] && source "$HOME/.devrc"
+        fi
 
         echo "Terminal files updated and sourced successfully."
         return 0
