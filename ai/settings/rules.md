@@ -44,6 +44,7 @@
 # MCP Tools
 
 - Always use Context7 MCP for library/API documentation, code generation, setup, or configuration steps without requiring explicit request
+- MCP server binaries can be shared across tools, but each client (OpenCode, Claude Code, Codex) requires its own config pointing to those servers
 
 # File Operations
 
