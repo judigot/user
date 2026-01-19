@@ -45,6 +45,8 @@
 
 - Always use Context7 MCP for library/API documentation, code generation, setup, or configuration steps without requiring explicit request
 - MCP server binaries can be shared across tools, but each client (OpenCode, Claude Code, Codex) requires its own config pointing to those servers
+- Required MCP servers: Context7, GitHub
+- Required CLI tools for agents: gh
 
 # File Operations
 
