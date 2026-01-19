@@ -14,5 +14,5 @@ Loads shared agents, skills, and coding standards from `~/ai`.
 
 ## Coding Standards
 
-@~/ai/settings/rules.md
+@AGENTS.md
 

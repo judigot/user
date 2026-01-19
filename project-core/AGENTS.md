@@ -51,3 +51,7 @@ project/
 - Check agent descriptions to understand when to invoke them
 - Follow coding standards from `~/ai/settings/rules.md`
 
+## Global Rules
+
+Always load and follow `~/ai/settings/rules.md` as the single canonical ruleset for all CLI agents and IDEs. Treat its instructions as mandatory for every task.
+
