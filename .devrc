@@ -54,8 +54,10 @@ if devrcSelfUpdateOnSource; then
 fi
 
 loadAliasFile() {
-    shopt -s expand_aliases
-    
+    if command -v shopt >/dev/null 2>&1; then
+        shopt -s expand_aliases
+    fi
+
     local alias_file=""
     
     if [ -f "$HOME/ALIAS" ]; then
