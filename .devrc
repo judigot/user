@@ -725,6 +725,11 @@ installNeovim() {
         return 1
     fi
 
+    if ! $sudo_cmd dpkg --configure -a >/dev/null 2>&1; then
+        printf '%s\n' "dpkg configure failed. Run: dpkg --configure -a" >&2
+        return 1
+    fi
+
     $sudo_cmd apt-get update -y || return 1
     $sudo_cmd apt-get install -y \
         software-properties-common \
@@ -763,24 +768,37 @@ installNeovim() {
 
     local nvim_config_dir="$HOME/.config/nvim"
     local backup_suffix
+    local did_clone=""
     backup_suffix=$(date +%Y%m%d-%H%M%S 2>/dev/null || date +%Y%m%d)
 
     mkdir -p "$HOME/.config" || return 1
 
     if [ -d "$nvim_config_dir" ]; then
-        mv "$nvim_config_dir" "${nvim_config_dir}.bak-${backup_suffix}" || return 1
+        if [ -f "$nvim_config_dir/lua/config/lazy.lua" ] || [ -f "$nvim_config_dir/lazyvim.json" ]; then
+            did_clone=""
+        else
+            mv "$nvim_config_dir" "${nvim_config_dir}.bak-${backup_suffix}" || return 1
+            git clone https://github.com/LazyVim/starter.git "$nvim_config_dir" || return 1
+            rm -rf "$nvim_config_dir/.git" 2>/dev/null || true
+            did_clone="true"
+        fi
+    else
+        git clone https://github.com/LazyVim/starter.git "$nvim_config_dir" || return 1
+        rm -rf "$nvim_config_dir/.git" 2>/dev/null || true
+        did_clone="true"
     fi
 
-    git clone git@github.com:LazyVim/starter.git "$nvim_config_dir" || return 1
-    rm -rf "$nvim_config_dir/.git" 2>/dev/null || true
-
-    rm -rf "$HOME/.local/share/nvim" \
-        "$HOME/.local/state/nvim" \
-        "$HOME/.cache/nvim" 2>/dev/null || true
+    if [ -n "$did_clone" ]; then
+        rm -rf "$HOME/.local/share/nvim" \
+            "$HOME/.local/state/nvim" \
+            "$HOME/.cache/nvim" 2>/dev/null || true
+    fi
 
     if command -v nvim >/dev/null 2>&1; then
-        if ! nvim --headless "+Lazy! sync" +qa; then
-            printf '%s\n' "LazyVim sync failed. Open Neovim once to finish setup." >&2
+        if [ -n "$did_clone" ] || [ ! -d "$HOME/.local/share/nvim/lazy" ]; then
+            if ! nvim --headless "+Lazy! sync" +qa; then
+                printf '%s\n' "LazyVim sync failed. Open Neovim once to finish setup." >&2
+            fi
         fi
     fi
 
