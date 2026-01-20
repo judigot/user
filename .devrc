@@ -525,16 +525,33 @@ useSSHKey() {
 }
 
 installAWS() {
-    # Ubuntu/Debian - awscli package was replaced by aws-cli
-    if sudo apt show aws-cli >/dev/null 2>&1; then
-        sudo apt install -y aws-cli
-    elif sudo apt show awscli >/dev/null 2>&1; then
-        sudo apt install -y awscli
-    else
-        echo "✗ Neither aws-cli nor awscli package found. Please install AWS CLI manually." >&2
-        echo "  Visit: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" >&2
-        return 1
+    # Ubuntu/Debian - AWS CLI installation
+    if command -v aws >/dev/null 2>&1; then
+        echo "✓ AWS CLI is already installed: $(aws --version)"
+        return 0
     fi
+
+    # Install using official method
+    if command -v curl >/dev/null 2>&1 && command -v unzip >/dev/null 2>&1; then
+        echo "Installing AWS CLI using official method..."
+        local aws_cli_version="2.15.0"
+        local arch="x86_64"
+        [ "$(uname -m)" = "aarch64" ] && arch="aarch64"
+        
+        cd /tmp || return 1
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${aws_cli_version}.zip" -o "awscliv2.zip" >/dev/null 2>&1
+        if unzip -q awscliv2.zip && sudo ./aws/install --update >/dev/null 2>&1; then
+            rm -rf aws awscliv2.zip
+            echo "✓ AWS CLI installed via official method: $(aws --version)"
+            return 0
+        else
+            rm -rf aws awscliv2.zip 2>/dev/null || true
+        fi
+    fi
+
+    echo "✗ Failed to install AWS CLI. Please install manually:" >&2
+    echo "  https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" >&2
+    return 1
 }
 
 copySSHDefaultKey() {
