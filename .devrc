@@ -525,8 +525,16 @@ useSSHKey() {
 }
 
 installAWS() {
-    # Ubuntu/Debian
-    sudo apt install -y awscli
+    # Ubuntu/Debian - awscli package was replaced by aws-cli
+    if sudo apt show aws-cli >/dev/null 2>&1; then
+        sudo apt install -y aws-cli
+    elif sudo apt show awscli >/dev/null 2>&1; then
+        sudo apt install -y awscli
+    else
+        echo "✗ Neither aws-cli nor awscli package found. Please install AWS CLI manually." >&2
+        echo "  Visit: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" >&2
+        return 1
+    fi
 }
 
 copySSHDefaultKey() {
