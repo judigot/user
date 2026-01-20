@@ -1231,6 +1231,33 @@ useSSH() {
         done
     }
 
+    generateAWSSSHKey() {
+        local key_file="$HOME/.ssh/id_ed25519_aws"
+        
+        if [ -f "$key_file" ]; then
+            echo "✓ AWS SSH key already exists: ~/.ssh/id_ed25519_aws"
+            return 0
+        fi
+
+        echo "Generating AWS SSH key..."
+        mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" 2>/dev/null || true
+        
+        if ssh-keygen -t ed25519 -f "$key_file" -N "" -C "aws-key-$(date +%Y-%m-%d)" >/dev/null 2>&1; then
+            chmod 600 "$key_file" 2>/dev/null || true
+            chmod 644 "${key_file}.pub" 2>/dev/null || true
+            echo "✓ AWS SSH key generated: ~/.ssh/id_ed25519_aws"
+            
+            # Add to ssh-agent if available
+            [ "$(uname -s | tr '[:upper:]' '[:lower:]')" = "linux" ] && eval "$(ssh-agent -s)" >/dev/null 2>&1 || true
+            ssh-add "$key_file" 2>/dev/null || true
+            
+            return 0
+        else
+            echo "✗ Failed to generate AWS SSH key" >&2
+            return 1
+        fi
+    }
+
     # Export PATH to ensure script sees ~/.local/bin
     export PATH="$HOME/.local/bin:$PATH"
 
@@ -1245,6 +1272,9 @@ useSSH() {
         setupSSHFromBitwarden "$@"
     fi
 
+    # Generate AWS SSH key
+    generateAWSSSHKey || return 1
+
     if [ ! -f "$HOME/.ssh/id_ed25519_personal" ]; then
         echo "✗ Personal SSH key not found: ~/.ssh/id_ed25519_personal" >&2
         return 1
@@ -1252,6 +1282,11 @@ useSSH() {
 
     if [ ! -f "$HOME/.ssh/id_ed25519_work" ]; then
         echo "✗ Work SSH key not found: ~/.ssh/id_ed25519_work" >&2
+        return 1
+    fi
+
+    if [ ! -f "$HOME/.ssh/id_ed25519_aws" ]; then
+        echo "✗ AWS SSH key not found: ~/.ssh/id_ed25519_aws" >&2
         return 1
     fi
 
@@ -1356,6 +1391,7 @@ $git_block_end"
     local gitconfig_work="$HOME/.gitconfig-work"
     printf '%s\n' "[core]" "  sshCommand = ssh -i $HOME/.ssh/id_ed25519_work -o IdentitiesOnly=yes" > "$gitconfig_work"
 
+    echo "✓ SSH setup complete with 3 keys: personal, work, AWS"
     echo "✓ Git configuration complete"
 }
 
