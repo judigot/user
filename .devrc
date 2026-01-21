@@ -2201,20 +2201,7 @@ termuxLoginUbuntu() {
 }
 #</TERMUX>
 
-#<CRITICAL_ALIASES>
-# High-priority functions that agents use frequently - converted to function wrappers for universal compatibility
-# Documentation: Works in all shells (interactive + non-interactive)
 
-updater() { updateUserEnv; }                                            # Environment updates - works in any shell
-testssh() { testSSH; }                                                  # SSH connection testing - works in any shell  
-syncdotfiles() { syncDotfiles; }                                          # Dotfile synchronization - works in any shell
-
-ai_status() { git status -sb; }                                           # Git status (short) - works in any shell
-ai_gc() { git add -A && git status && git commit -m "$1"; }                # Git commit: stage all, commit - works in any shell
-ai_diff() { git diff; }                                                   # Git diff (unstaged) - works in any shell
-ai_log() { git log -5 --oneline; }                                        # Git log (recent) - works in any shell
-ai_add() { git add -A; }                                                    # Git add all - works in any shell
-ai_pull() { git pull --rebase; }                                              # Git pull with rebase - works in any shell
 #</CRITICAL_ALIASES>
 
 #<AGENT_ALIASES>
