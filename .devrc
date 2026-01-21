@@ -2201,9 +2201,6 @@ termuxLoginUbuntu() {
 }
 #</TERMUX>
 
-
-#</CRITICAL_ALIASES>
-
 #<AGENT_ALIASES>
 # Remaining traditional aliases - require eval in non-interactive shells
 # Documentation: Requires eval in non-interactive shells for compatibility
