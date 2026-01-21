@@ -204,7 +204,8 @@ installjava
 setupjavaenv
 javaenv
 
-differ:
+gitDiffNavigator:
+differ
 diffnav
 prdiff
 gitdiff

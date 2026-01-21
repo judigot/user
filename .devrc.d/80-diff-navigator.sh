@@ -157,6 +157,15 @@ showDiffNavigator() {
 # Help function
 showDifferUsage() {
     cat << 'EOF'
+Examples:
+  gitDiffNavigator              # Show diff between main and current branch
+  gitDiffNavigator "develop"     # Show diff between develop and current branch
+  gitDiffNavigator --help        # Show this help
+
+Agent mode (raw output):
+  ai_diffnav           # Show raw diff between main and current branch
+  ai_diffnav "dev"    # Show raw diff between dev and current branch
+
 Usage: differ [base-branch]
 
 Shows interactive diff navigator between base branch and current branch.
@@ -174,7 +183,7 @@ EOF
 }
 
 # Entry point: Human interactive mode
-differ() {
+gitDiffNavigator() {
     local base_branch="${1:-main}"
     local current_branch
     
@@ -205,4 +214,9 @@ ai_diffnav() {
     
     # Output raw diff to stdout
     getPlainDiff "origin/$base_branch" "$current_branch"
+}
+
+# Alias for human convenience
+differ() {
+    gitDiffNavigator "$@"
 }
