@@ -2227,4 +2227,18 @@ ai_copy() { cp -R "$1" "$2"; }                                   # Copy file/dir
 ai_move() { mv "$1" "$2"; }                                      # Move/rename file/dir
 #</AGENT_ALIASES>
 
+#<PROMPT_ALIASES>
+promptinit() { prompt_init; }
+promptproject() { prompt_project; }
+promptagent() { prompt_agent; }
+promptcontext() { prompt_context; }
+#</PROMPT_ALIASES>
+
+#<PROMPT_ALIASES>
+promptinit() { prompt_init; }
+promptproject() { prompt_project; }
+promptagent() { prompt_agent; }
+promptcontext() { prompt_context; }
+#</PROMPT_ALIASES>
+
 loadAliasFile
