@@ -123,9 +123,9 @@ installterraform
 terraforminstall
 tfinstall
 
-clone:
+cloneGithubRepository:
+clone
 cloner
-gitclone
 
 cloneUserRepo:
 cloneuserrepo

@@ -998,7 +998,7 @@ cloneUserRepo() {
     git clone git@github.com:judigot/user.git "$HOME/.apportable/user"
 }
 
-clone() {
+cloneGithubRepository() {
     local repo="$1"
     local target="$2"
     local repo_name="${repo#*/}"
