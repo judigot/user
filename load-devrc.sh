@@ -150,7 +150,8 @@ fi
 mv "$devrc_tmp" "$HOME/.devrc"
 mv "$alias_tmp" "$HOME/ALIAS"
 mkdir -p "$HOME/.devrc.d" 2>/dev/null || true
-cp -r "$devrc_d_tmp"/* "$HOME/.devrc.d/" 2>/dev/null || true
+# Copy only the actual files, not the JSON metadata
+find "$devrc_d_tmp" -type f -not -name "contents.json" -exec cp {} "$HOME/.devrc.d/" \; 2>/dev/null || true
 
 # shellcheck source=/dev/null
 . "$HOME/.devrc"
