@@ -1,6 +1,5 @@
 .bashrc
 .devrc
-.devrc.d
 .devrc.d/*
 .zshrc
 ALIAS
