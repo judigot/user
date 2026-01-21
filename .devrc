@@ -2004,24 +2004,12 @@ claude() {
 
 opencode() {
     local prompt_text=""
-    local model="big-pickle"  # Default model
-    local additional_args=()
     
     # Get prompt from promptinit
     prompt_text=$(promptinit)
     
-    # Parse model argument if provided
-    if [ -n "$1" ] && [[ "$1" != *"--"* ]]; then
-        model="$1"
-        shift  # Remove model from args, keep any remaining args
-    fi
-    
-    # Add any additional arguments (like --agent, --continue, etc.)
-    additional_args+=("--prompt" "$prompt_text" "--model" "$model")
-    additional_args+=("$@")
-    
-    # Launch opencode with prompt, model, and any additional flags
-    BASH_ENV="$HOME/.bashrc" command opencode "${additional_args[@]}"
+    # Launch opencode with prompt and any additional arguments
+    BASH_ENV="$HOME/.bashrc" command opencode --prompt "$prompt_text" "$@"
 }
 
 # Check if a package/command is installed (silent check)
