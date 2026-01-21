@@ -998,6 +998,37 @@ cloneUserRepo() {
     git clone git@github.com:judigot/user.git "$HOME/.apportable/user"
 }
 
+clone() {
+    local repo="$1"
+    local target="$2"
+    local repo_name="${repo#*/}"
+    
+    if [ -z "$repo" ]; then
+        echo "Usage: clone <user/repo> [target_dir]"
+        return 1
+    fi
+    
+    # Default target is repo name
+    if [ -z "$target" ]; then
+        target="$repo_name"
+    fi
+    
+    # Use SSH URLs (per rules in .devrc)
+    local git_url="git@github.com:$repo.git"
+    
+    git clone "$git_url" "$target"
+    
+    if [ $? -eq 0 ]; then
+        if [ "$target" = "." ]; then
+            echo "Cloned $repo to current directory"
+        else
+            echo "Cloned $repo to $target/"
+        fi
+    else
+        return $?
+    fi
+}
+
 cloneTerraformRepo() {
     git clone git@github.com:judigot/terraform.git "$HOME/terraform"
     cd "$HOME/terraform"
