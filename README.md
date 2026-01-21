@@ -412,6 +412,9 @@ curl -sL "https://raw.githubusercontent.com/judigot/user/main/.zshrc" -o ~/.zshr
 | `generatessh` | Create new SSH key |
 | `testssh` | Test GitHub SSH connection |
 | `deleteall` | Delete all files in cwd (with confirmation) |
+| `differ` | Interactive PR diff navigator (human mode) |
+| `diffnav` | Interactive PR diff navigator |
+| `ai_diffnav` | Raw PR diff output (agent mode) |
 
 See `ALIAS` for full list of 81 aliases.
 

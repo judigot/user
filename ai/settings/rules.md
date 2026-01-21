@@ -203,6 +203,9 @@ Examples: `feat: add user auth`, `fix: null check in parser`, `chore: update dep
 | `ai_replace "file" "old" "new"` | Replace string in file |
 | `ai_mkdir "dir"` | Make directory (parents) |
 | `ai_touch "file"` | Touch file |
+| `ai_diffnav [branch]` | Show raw PR diff between main/current branch |
+| `ai_prdiff [branch]` | Alternative alias for ai_diffnav |
+| `ai_gitdiff [branch]` | Alternative alias for ai_diffnav |
 | `ai_copy "src" "dest"` | Copy file/dir |
 | `ai_move "src" "dest"` | Move/rename file/dir |
 
