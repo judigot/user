@@ -926,6 +926,43 @@ loginUbuntu() {
     fi
 }
 
+installTmux() {
+    if command -v tmux >/dev/null 2>&1; then
+        echo "✓ tmux is already installed: $(tmux -V)"
+        return 0
+    fi
+
+    if ! command -v apt-get >/dev/null 2>&1; then
+        echo "tmux install requires apt-get (Debian/Ubuntu)." >&2
+        return 1
+    fi
+
+    local sudo_cmd=""
+    if [ "$(id -u)" -eq 0 ]; then
+        sudo_cmd=""
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo_cmd="sudo"
+    else
+        echo "sudo is required to install system packages." >&2
+        return 1
+    fi
+
+    $sudo_cmd apt-get update -y || return 1
+    if ! $sudo_cmd apt-get install -y tmux; then
+        $sudo_cmd dpkg --configure -a >/dev/null 2>&1 || true
+        $sudo_cmd apt-get -f install -y || return 1
+        $sudo_cmd apt-get install -y tmux || return 1
+    fi
+
+    if command -v tmux >/dev/null 2>&1; then
+        echo "✓ tmux installed: $(tmux -V)"
+        return 0
+    else
+        echo "✗ Failed to install tmux." >&2
+        return 1
+    fi
+}
+
 installTerraform() {
     if command -v terraform >/dev/null 2>&1; then
         terraform version

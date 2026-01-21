@@ -114,6 +114,10 @@ installNeovim:
 installneovim
 installlazyvim
 
+installTmux:
+installtmux
+tmuxinstall
+
 installTerraform:
 installterraform
 terraforminstall
