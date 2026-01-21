@@ -1,2 +1,4 @@
 .devrc
+.devrc.d
+.devrc.d/*
 $HOME\.ssh
