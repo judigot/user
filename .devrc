@@ -2008,7 +2008,7 @@ opencode() {
 
 openCodeWithPrompt() {
     local prompt_text=""
-    local model="bigpickle"  # Default model
+    local model="big-pickle"  # Default model
     local additional_args=()
     
     # Get prompt from promptinit
