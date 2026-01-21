@@ -81,22 +81,21 @@ if ! curl -fsSL "$devrc_d_url" -o "${devrc_d_tmp}/contents.json"; then
 fi
 
 # Parse JSON and download each file using pure shell
-while IFS= read -r line; do
-    case "$line" in
-        *"\"name\":"*)
-            filename=$(echo "$line" | sed 's/.*"name":"\([^"]*\)".*/\1/')
-            ;;
-        *"\"download_url\":"*)
-            download_url=$(echo "$line" | sed 's/.*"download_url":"\([^"]*\)".*/\1/')
-            if [ "$download_url" != "null" ] && [ -n "$filename" ]; then
-                if ! curl -fsSL "$download_url" -o "${devrc_d_tmp}/${filename}"; then
-                    printf '%s\n' "Failed to download .devrc.d/$filename" >&2
-                fi
-                filename=""
+# Extract entries between { and } for each file
+awk '/^{/{if (entry) {print entry}; entry=""; entry=$0; next} /^}$/{entry=entry $0; print entry; entry=""; next} {entry=entry $0}' "${devrc_d_tmp}/contents.json" | while IFS= read -r entry; do
+    if [ -n "$entry" ]; then
+        # Extract name
+        filename=$(echo "$entry" | sed -n 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+        # Extract download_url
+        download_url=$(echo "$entry" | sed -n 's/.*"download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+        
+        if [ -n "$filename" ] && [ -n "$download_url" ] && [ "$download_url" != "null" ]; then
+            if ! curl -fsSL "$download_url" -o "${devrc_d_tmp}/${filename}"; then
+                printf '%s\n' "Failed to download .devrc.d/$filename" >&2
             fi
-            ;;
-    esac
-done < "${devrc_d_tmp}/contents.json"
+        fi
+    fi
+done
 
 if [ ! -s "$devrc_tmp" ] || [ ! -s "$alias_tmp" ]; then
     printf '%s\n' "Downloaded files are empty" >&2
