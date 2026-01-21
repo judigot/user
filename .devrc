@@ -58,16 +58,20 @@ loadAliasFile() {
         shopt -s expand_aliases
     fi
 
+    # Get directory of this script
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
     local alias_file=""
     
-    if [ -f "$HOME/ALIAS" ]; then
+    if [ -f "$script_dir/ALIAS" ]; then
+        alias_file="$script_dir/ALIAS"
+    elif [ -f "$HOME/ALIAS" ]; then
         alias_file="$HOME/ALIAS"
     elif [ -n "${USER:-}" ] && [ -f "/c/Users/$USER/ALIAS" ]; then
         alias_file="/c/Users/$USER/ALIAS"
     elif [ -n "${USERNAME:-}" ] && [ -f "/c/Users/$USERNAME/ALIAS" ]; then
         alias_file="/c/Users/$USERNAME/ALIAS"
     else
-        printf '%s\n' "ALIAS file not found. Expected $HOME/ALIAS or Windows user ALIAS file." >&2
+        printf '%s\n' "ALIAS file not found. Expected $script_dir/ALIAS or $HOME/ALIAS or Windows user ALIAS file." >&2
         return 1
     fi
 
@@ -98,7 +102,9 @@ loadAliasFile() {
 }
 
 loadDevrcModules() {
-    local modules_dir="$HOME/.devrc.d"
+    # Get directory of this script
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+    local modules_dir="$script_dir/.devrc.d"
 
     if [ ! -d "$modules_dir" ]; then
         return 0

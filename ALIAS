@@ -209,4 +209,19 @@ differ
 prdiff
 gitdiff
 
+prompt_init:
+promptinit
+
+prompt_project:
+promptproject
+
+prompt_agent:
+promptagent
+
+prompt_context:
+promptcontext
+
+prompt_context:
+promptcontext
+
 
