@@ -209,8 +209,5 @@ differ
 diffnav
 prdiff
 gitdiff
-d
 
-ai_diffnav:
-ai_prdiff
-ai_gitdiff
+

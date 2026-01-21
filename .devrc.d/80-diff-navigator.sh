@@ -216,7 +216,4 @@ ai_diffnav() {
     getPlainDiff "origin/$base_branch" "$current_branch"
 }
 
-# Alias for human convenience
-differ() {
-    gitDiffNavigator "$@"
-}
+# Note: differ alias is defined in ALIAS file
