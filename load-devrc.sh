@@ -60,13 +60,15 @@ devrc_d_tmp="$(mktemp -d "${TMPDIR:-/tmp}/devrc-d.XXXXXX")" || {
 
 if ! curl -fsSL "$devrc_url" -o "$devrc_tmp"; then
     printf '%s\n' "Failed to download .devrc" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -rf "$devrc_d_tmp" 2>/dev/null || true
     finish 1
 fi
 
 if ! curl -fsSL "$alias_url" -o "$alias_tmp"; then
     printf '%s\n' "Failed to download ALIAS" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -rf "$devrc_d_tmp" 2>/dev/null || true
     finish 1
 fi
 
@@ -99,38 +101,6 @@ done < "${devrc_d_tmp}/contents.json"
 if [ ! -s "$devrc_tmp" ] || [ ! -s "$alias_tmp" ]; then
     printf '%s\n' "Downloaded files are empty" >&2
     rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
-    rm -rf "$devrc_d_tmp" 2>/dev/null || true
-    finish 1
-fi
-
-# Download all files in .devrc.d directory
-if ! curl -fsSL "$devrc_d_url" -o "${devrc_d_tmp}/contents.json"; then
-    printf '%s\n' "Failed to download .devrc.d directory listing" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
-    rm -rf "$devrc_d_tmp" 2>/dev/null || true
-    finish 1
-fi
-
-# Download each file in .devrc.d
-if command -v jq >/dev/null 2>&1; then
-    while IFS= read -r file; do
-        if [ -n "$file" ]; then
-            filename=$(echo "$file" | jq -r '.name')
-            download_url=$(echo "$file" | jq -r '.download_url')
-            if [ "$download_url" != "null" ] && [ "$filename" != "null" ]; then
-                if ! curl -fsSL "$download_url" -o "${devrc_d_tmp}/${filename}"; then
-                    printf '%s\n' "Failed to download .devrc.d/$filename" >&2
-                fi
-            fi
-        fi
-    done < <(jq -c '.[]' "${devrc_d_tmp}/contents.json")
-else
-    printf '%s\n' "Warning: jq not found, skipping .devrc.d directory contents download" >&2
-fi
-
-if [ ! -s "$devrc_tmp" ] || [ ! -s "$alias_tmp" ] || [ ! -s "$devrc_module_tmp" ]; then
-    printf '%s\n' "Downloaded files are empty" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" "$devrc_module_tmp" 2>/dev/null || true
     rm -rf "$devrc_d_tmp" 2>/dev/null || true
     finish 1
 fi
