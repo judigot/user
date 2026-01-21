@@ -2003,10 +2003,6 @@ claude() {
 }
 
 opencode() {
-    BASH_ENV="$HOME/.bashrc" command opencode "$@"
-}
-
-openCodeWithPrompt() {
     local prompt_text=""
     local model="big-pickle"  # Default model
     local additional_args=()
@@ -2025,7 +2021,7 @@ openCodeWithPrompt() {
     additional_args+=("$@")
     
     # Launch opencode with prompt, model, and any additional flags
-    opencode "${additional_args[@]}"
+    BASH_ENV="$HOME/.bashrc" command opencode "${additional_args[@]}"
 }
 
 # Check if a package/command is installed (silent check)

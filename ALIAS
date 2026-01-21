@@ -106,11 +106,6 @@ installclaudecode
 installOpenCode:
 installopencode
 
-openCodeWithPrompt:
-op
-opencodeinit
-promptopencode
-
 installCodexCLI:
 installcodex
 installcodexcli
