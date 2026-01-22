@@ -370,6 +370,56 @@ syncSnippetsrcAndAliasFromRemote() {
         -o "$HOME/.devrc.d/opencode.sh"
 }
 
+syncOpenCodeConfig() {
+    local src="$1"
+    local config_file="$HOME/.config/opencode/opencode.json"
+    local template="$src/.config/opencode/opencode.json"
+    
+    # Only proceed if template exists
+    if [ ! -f "$template" ]; then
+        echo "OpenCode template not found, skipping..."
+        return 0
+    fi
+    
+    # Extract API key from existing config
+    local api_key=""
+    if [ -f "$config_file" ]; then
+        api_key=$(node -e "
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('$config_file', 'utf-8'));
+            
+            const key = config.mcp.context7.headers.CONTEXT7_API_KEY;
+            if (key && key.startsWith('ctx7sk-') && key.length > 20) {
+                console.log(key);
+            }
+        " 2>/dev/null)
+    fi
+    
+    # If no valid API key found, create config with placeholder (will need Bitwarden setup later)
+    if [ -z "$api_key" ]; then
+        echo "No valid OpenCode API key found, installing with placeholder..."
+        mkdir -p "$(dirname "$config_file")"
+        cp "$template" "$config_file"
+        return 0
+    fi
+    
+    # Copy template and replace placeholder with actual API key
+    local placeholder="<@@CONTEXT7_API_KEY@@>"
+    mkdir -p "$(dirname "$config_file")"
+    cp "$template" "$config_file"
+    
+    # Replace placeholder with actual key
+    sed -i "s/$placeholder/$api_key/g" "$config_file"
+    
+    # Validate result
+    if jq empty "$config_file" >/dev/null 2>&1; then
+        echo "✓ OpenCode config updated (API key preserved)"
+    else
+        echo "✗ Failed to update OpenCode config (invalid JSON)" >&2
+        return 1
+    fi
+}
+
 updateUserEnv() {
     isWindowsLikeShell() {
         case "$(uname -s 2>/dev/null)" in
@@ -463,6 +513,7 @@ updateUserEnv() {
     fi
     syncIDEFiles "$src"
     syncUbuntu "UBUNTU" "$src"
+    syncOpenCodeConfig "$src"
 
     rm -rf "$(dirname "$src")"
 
@@ -686,7 +737,7 @@ installOpenCodeConfigFromBitwarden() {
         const template = fs.readFileSync(process.argv[1], 'utf-8');
         const key = process.env.CONTEXT7_API_KEY || '';
         if (!key) process.exit(1);
-        process.stdout.write(template.replace('__CONTEXT7_API_KEY__', key));
+        process.stdout.write(template.replace('<@@CONTEXT7_API_KEY@@>', key));
     " "$template" > "$tmp_file" 2>/dev/null || {
         rm -f "$tmp_file" 2>/dev/null || true
         [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
@@ -695,7 +746,7 @@ installOpenCodeConfigFromBitwarden() {
     }
 
     mkdir -p "$HOME/.config/opencode" 2>/dev/null || true
-    mv "$tmp_file" "$target"
+    mv "$tmp_file" "$HOME/.config/opencode/opencode.json"
 
     [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
 
