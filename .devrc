@@ -2116,7 +2116,7 @@ apt() {
 }
 
 useAI() {
-    local choices=("Claude Code" "Codex CLI" "Open Code")
+    local choices=("Open Code" "Claude Code" "Codex CLI")
     local selected
 
     selected=$(arrowKeySelect "Select AI (↑↓ arrows, Enter to select, q to quit):" "${choices[@]}")
@@ -2126,17 +2126,6 @@ useAI() {
     fi
 
     case "$selected" in
-        "Claude Code")
-            if ! installPackage "claude"; then
-                printf '%s\n' "Claude Code is not installed, installing..." >&2
-                installClaudeCode
-                if ! installPackage "claude"; then
-                    printf '%s\n' "Failed to install Claude Code" >&2
-                    return 1
-                fi
-            fi
-            claude "$@"
-            ;;
         "Open Code")
             if ! installPackage "opencode"; then
                 printf '%s\n' "Open Code is not installed, installing..." >&2
@@ -2147,6 +2136,17 @@ useAI() {
                 fi
             fi
             opencode "$@"
+            ;;
+        "Claude Code")
+            if ! installPackage "claude"; then
+                printf '%s\n' "Claude Code is not installed, installing..." >&2
+                installClaudeCode
+                if ! installPackage "claude"; then
+                    printf '%s\n' "Failed to install Claude Code" >&2
+                    return 1
+                fi
+            fi
+            claude "$@"
             ;;
         "Codex CLI")
             if ! installPackage "codex"; then
