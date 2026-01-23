@@ -2227,7 +2227,24 @@ useAI() {
                     return 1
                 fi
             fi
-            opencode "$@"
+            
+            # Show Open Code submenu
+            local opencode_choices=("Load Default" "Load with Init Prompt")
+            local opencode_selected
+            opencode_selected=$(arrowKeySelect "Select Open Code mode (↑↓ arrows, Enter to select, q to quit):" "${opencode_choices[@]}")
+            
+            if [ -z "$opencode_selected" ]; then
+                return 130
+            fi
+            
+            case "$opencode_selected" in
+                "Load Default")
+                    opencode "$@"
+                    ;;
+                "Load with Init Prompt")
+                    opencode_init "$@"
+                    ;;
+            esac
             ;;
         "Claude Code")
             if ! installPackage "claude"; then
