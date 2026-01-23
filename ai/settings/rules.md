@@ -101,6 +101,25 @@ Skip permission only if the user explicitly requested the destructive action bef
 | `git reflog expire`, `gc --prune` | Registry edits (`reg delete`) |
 | `git filter-branch`, `filter-repo` | `takeown`, `icacls` (permissions) |
 
+### Pre-Flight Checklist (MANDATORY before any destructive git command)
+
+Even with explicit user approval, you MUST complete these steps IN ORDER before running any destructive git command:
+
+1. Run `git status` — if there are uncommitted changes, STOP and stash them first (`git stash push -m "backup before <command>"`)
+2. Run `git log --oneline -5` — confirm which commits exist and will be affected
+3. Run `git stash list` — note existing stashes so they aren't accidentally dropped
+4. Show the user exactly what will be lost/changed and get final confirmation
+5. ONLY THEN execute the destructive command
+
+**If `git reset --hard` is requested:**
+- ALWAYS run `git stash push -u -m "backup before reset"` FIRST (includes untracked files)
+- Record the current HEAD SHA in the conversation so it can be recovered via reflog
+- Prefer `git reset --soft` or `git reset --mixed` when the goal is just to uncommit (not discard changes)
+
+**If `git clean` is requested:**
+- Run `git clean -nd` (dry run) first and show the user what will be deleted
+- Never run `git clean -fx` without showing dry run output first
+
 ### Why This Rule Exists
 
 - Prevent accidental deletion of git history
