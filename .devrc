@@ -2054,13 +2054,54 @@ claude() {
 }
 
 opencode() {
+    # Check if init prompt should be used (default: false)
+    if [ "${OPENCODE_USE_INIT_PROMPT:-false}" = "true" ]; then
+        local prompt_text=""
+        # Get prompt from promptinit
+        prompt_text=$(promptinit)
+        # Launch opencode with prompt and any additional arguments
+        BASH_ENV="$HOME/.bashrc" command opencode --prompt "$prompt_text" "$@"
+    else
+        # Launch opencode without init prompt
+        BASH_ENV="$HOME/.bashrc" command opencode "$@"
+    fi
+}
+
+opencode_raw() {
+    # Launch opencode without any prompt (explicit)
+    BASH_ENV="$HOME/.bashrc" command opencode "$@"
+}
+
+opencode_init() {
     local prompt_text=""
-    
     # Get prompt from promptinit
     prompt_text=$(promptinit)
-    
     # Launch opencode with prompt and any additional arguments
     BASH_ENV="$HOME/.bashrc" command opencode --prompt "$prompt_text" "$@"
+}
+
+opencode_toggle() {
+    if [ "${OPENCODE_USE_INIT_PROMPT:-false}" = "true" ]; then
+        export OPENCODE_USE_INIT_PROMPT=false
+        printf '%s\n' "OpenCode init prompt DISABLED (default behavior)"
+    else
+        export OPENCODE_USE_INIT_PROMPT=true
+        printf '%s\n' "OpenCode init prompt ENABLED"
+    fi
+    printf '%s\n' "Current setting: OPENCODE_USE_INIT_PROMPT=${OPENCODE_USE_INIT_PROMPT}"
+    printf '%s\n' "To make permanent, add 'export OPENCODE_USE_INIT_PROMPT=${OPENCODE_USE_INIT_PROMPT}' to ~/.bashrc"
+}
+
+opencode_config() {
+    printf '%s\n' "OpenCode Configuration:"
+    printf '%s\n' "  OPENCODE_USE_INIT_PROMPT: ${OPENCODE_USE_INIT_PROMPT:-false} (default: false)"
+    printf '%s\n' ""
+    printf '%s\n' "Commands:"
+    printf '%s\n' "  opencode          - Use default behavior (no init prompt)"
+    printf '%s\n' "  opencode_init     - Run with init prompt"
+    printf '%s\n' "  opencode_raw      - Run without any prompt"
+    printf '%s\n' "  opencodetoggle    - Toggle default behavior"
+    printf '%s\n' "  opencodeconfig    - Show this configuration"
 }
 
 # Check if a package/command is installed (silent check)

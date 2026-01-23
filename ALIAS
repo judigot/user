@@ -229,7 +229,16 @@ promptagent
 prompt_context:
 promptcontext
 
-prompt_context:
-promptcontext
+opencode_raw:
+opencoderaw
+
+opencode_init:
+opencodeinit
+
+opencode_toggle:
+opencodetoggle
+
+opencode_config:
+opencodeconfig
 
 
