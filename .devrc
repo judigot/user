@@ -550,13 +550,13 @@ updaterFull() {
 bigBangVite() {
     local cache_bust=""
     cache_bust=$(date +%s 2>/dev/null || echo "0")
-    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangVite.sh?cachebust=$cache_bust" | bash
+    curl -L "https://raw.githubusercontent.com/judigot/user/main/scripts/BigBangVite.sh?cachebust=$cache_bust" | bash
 }
 
 bigBangLaravel() {
     local cache_bust=""
     cache_bust=$(date +%s 2>/dev/null || echo "0")
-    curl -L "https://raw.githubusercontent.com/judigot/user/main/BigBangLaravel.sh?cachebust=$cache_bust" | bash
+    curl -L "https://raw.githubusercontent.com/judigot/user/main/scripts/BigBangLaravel.sh?cachebust=$cache_bust" | bash
 }
 
 logSSH() {
