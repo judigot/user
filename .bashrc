@@ -110,8 +110,8 @@ export SDKMAN_DIR="/c/apportable/Programming/sdkman"
 # Start the SSH agent and add the appropriate SSH key
 if [[ "$IS_VS_CODE_FOR_WORK" == "true" ]]; then
     useworkssh
-# else
-    # usepersonalssh
+else
+    usepersonalssh
 fi
 
 if [[ "$IS_UBUNTU" == "true" ]]; then
