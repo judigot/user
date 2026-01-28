@@ -6,15 +6,26 @@ readonly PROJECT_DIRECTORY=$(cd "$(dirname "$0")" || exit 1; pwd)
 
 main() {
     commit_message="${1:-chore: update user files}"
+    
+    # Update submodules to latest from remote
+    update_submodules
+    
+    # Commit and push user repo (including submodule pointer updates)
     commit_user_repo "$commit_message"
+    
+    # Sync dotfiles and settings to local machine
     sync_to_home "DOTFILES"
-    sync_ai_repo "$commit_message"
-    # sync_opencode_assets
-    sync_cursor_repo "PROJECT_CORE" "$commit_message"
-    sync_ide_repo "$commit_message"
     sync_ubuntu "UBUNTU"
     sync_zed_settings
     sync_cursor_settings
+}
+
+update_submodules() {
+    cd "$PROJECT_DIRECTORY" || exit 1
+    
+    printf '%s\n' "Updating submodules to latest..."
+    git submodule update --remote --merge
+    printf '%s\n' "Submodules updated"
 }
 
 commit_user_repo() {
@@ -70,209 +81,6 @@ sync_to_home() {
     done < "$manifest"
     
     printf '%s\n' "Dotfiles sync complete"
-}
-
-sync_ai_repo() {
-    local commit_message="$1"
-
-    cd "$PROJECT_DIRECTORY" || exit 1
-    
-    printf '%s\n' "Syncing ai folder to ~/ai..."
-    
-    # Fresh install: ~/ai doesn't exist
-    if [ ! -d "$HOME/ai" ]; then
-        cp -r ai "$HOME/ai"
-        cd "$HOME/ai" || exit 1
-        git init
-        git remote add origin git@github.com:judigot/ai.git
-        git add -A
-        git commit -m "chore: initial sync from user repo"
-        git branch -M main
-        git push -u origin main --force
-        printf '%s\n' "AI repo created and pushed"
-        return 0
-    fi
-    
-    # Preserve .git if it exists
-    if [ -d "$HOME/ai/.git" ]; then
-        mv "$HOME/ai/.git" "$HOME/ai-git-tmp"
-    fi
-    
-    rm -rf "$HOME/ai"
-    cp -r ai "$HOME/ai"
-    rm -rf "$HOME/ai/.git" 2>/dev/null
-    
-    # Restore .git if it was preserved
-    if [ -d "$HOME/ai-git-tmp" ]; then
-        mv "$HOME/ai-git-tmp" "$HOME/ai/.git"
-    fi
-    
-    # Commit and push
-    cd "$HOME/ai" || exit 1
-    
-    if [ ! -d ".git" ]; then
-        git init
-        git remote add origin git@github.com:judigot/ai.git
-        git add -A
-        git commit -m "chore: initial sync from user repo"
-        git branch -M main
-        git push -u origin main --force
-        printf '%s\n' "AI repo initialized and pushed"
-        return 0
-    fi
-    
-    if [ -z "$(git status --porcelain)" ]; then
-        printf '%s\n' "No changes to commit in ai repo"
-        return 0
-    fi
-    
-    git add -A
-    git commit -m "$commit_message"
-    git push
-    
-    printf '%s\n' "AI repo synced and pushed"
-}
-
-sync_opencode_assets() {
-    cd "$PROJECT_DIRECTORY" || exit 1
-
-    printf '%s\n' "Syncing OpenCode agents and skills..."
-
-    mkdir -p "$HOME/.config/opencode/agents" 2>/dev/null || true
-    mkdir -p "$HOME/.config/opencode/skills" 2>/dev/null || true
-
-    if [ -d "$PROJECT_DIRECTORY/ai/agents" ]; then
-        cp -r "$PROJECT_DIRECTORY/ai/agents/." "$HOME/.config/opencode/agents/" 2>/dev/null || true
-    fi
-
-    if [ -d "$PROJECT_DIRECTORY/ai/skills" ]; then
-        cp -r "$PROJECT_DIRECTORY/ai/skills/." "$HOME/.config/opencode/skills/" 2>/dev/null || true
-    fi
-}
-
-sync_cursor_repo() {
-    local manifest="$1"
-    local commit_message="$2"
-
-    cd "$PROJECT_DIRECTORY" || exit 1
-    
-    if [ ! -f "$manifest" ]; then
-        printf '%s\n' "Manifest file not found: $manifest" >&2
-        return 1
-    fi
-    
-    printf '%s\n' "Syncing files from $manifest to judigot/project-core..."
-    
-    cursor_local="$HOME/.apportable/cursor"
-    
-    # Fresh install: doesn't exist
-    if [ ! -d "$cursor_local" ]; then
-        mkdir -p "$HOME/.apportable"
-        git clone git@github.com:judigot/project-core.git "$cursor_local"
-    fi
-    
-    # Preserve .git, sync files
-    if [ -d "$cursor_local/.git" ]; then
-        mv "$cursor_local/.git" "$HOME/.apportable/cursor-git-tmp"
-    fi
-    
-    rm -rf "$cursor_local"
-    mkdir -p "$cursor_local"
-    
-    # Sync only what's listed in the manifest (handle files without trailing newline)
-    # If the manifest points to a directory (e.g., project-core), copy its contents.
-    while read -r item || [ -n "$item" ]; do
-        [ -n "$item" ] || continue
-        src="$PROJECT_DIRECTORY/$item"
-        if [ -d "$src" ]; then
-            cp -r "$src/." "$cursor_local/" 2>/dev/null || true
-        else
-            cp -r "$src" "$cursor_local/" 2>/dev/null || true
-        fi
-    done < "$manifest"
-    
-    if [ -d "$HOME/.apportable/cursor-git-tmp" ]; then
-        mv "$HOME/.apportable/cursor-git-tmp" "$cursor_local/.git"
-    fi
-    
-    # Commit and push
-    cd "$cursor_local" || exit 1
-    
-    if [ ! -d ".git" ]; then
-        git init
-        git remote add origin git@github.com:judigot/project-core.git
-        git add -A
-        git commit -m "chore: initial sync from user repo"
-        git branch -M main
-        git push -u origin main --force
-        printf '%s\n' "Cursor repo initialized and pushed"
-        return 0
-    fi
-    
-    if [ -z "$(git status --porcelain)" ]; then
-        printf '%s\n' "No changes to commit in cursor repo"
-        return 0
-    fi
-    
-    git add -A
-    git commit -m "$commit_message"
-    git push
-    
-    printf '%s\n' "Cursor repo synced and pushed"
-}
-
-sync_ide_repo() {
-    local commit_message="$1"
-
-    cd "$PROJECT_DIRECTORY" || exit 1
-    
-    printf '%s\n' "Syncing ide folder to judigot/ide..."
-    
-    ide_local="$HOME/.apportable/ide"
-    
-    # Fresh install: doesn't exist
-    if [ ! -d "$ide_local" ]; then
-        mkdir -p "$HOME/.apportable"
-        git clone git@github.com:judigot/ide.git "$ide_local"
-    fi
-    
-    # Preserve .git, sync files
-    if [ -d "$ide_local/.git" ]; then
-        mv "$ide_local/.git" "$HOME/.apportable/ide-git-tmp"
-    fi
-    
-    rm -rf "$ide_local"
-    cp -r "$PROJECT_DIRECTORY/ide" "$ide_local"
-    rm -rf "$ide_local/.git" 2>/dev/null
-    
-    if [ -d "$HOME/.apportable/ide-git-tmp" ]; then
-        mv "$HOME/.apportable/ide-git-tmp" "$ide_local/.git"
-    fi
-    
-    # Commit and push
-    cd "$ide_local" || exit 1
-    
-    if [ ! -d ".git" ]; then
-        git init
-        git remote add origin git@github.com:judigot/ide.git
-        git add -A
-        git commit -m "chore: initial sync from user repo"
-        git branch -M main
-        git push -u origin main --force
-        printf '%s\n' "IDE repo initialized and pushed"
-        return 0
-    fi
-    
-    if [ -z "$(git status --porcelain)" ]; then
-        printf '%s\n' "No changes to commit in ide repo"
-        return 0
-    fi
-    
-    git add -A
-    git commit -m "$commit_message"
-    git push
-    
-    printf '%s\n' "IDE repo synced and pushed"
 }
 
 sync_cursor_settings() {
