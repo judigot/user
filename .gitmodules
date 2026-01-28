@@ -1,0 +1,9 @@
+[submodule "ai"]
+	path = ai
+	url = git@github.com:judigot/ai.git
+[submodule "ide"]
+	path = ide
+	url = git@github.com:judigot/ide.git
+[submodule "project-core"]
+	path = project-core
+	url = git@github.com:judigot/project-core.git
