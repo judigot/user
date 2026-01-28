@@ -1,4 +1,5 @@
 .bashrc
+.profile
 .devrc
 .devrc.d
 .devrc.d/*
