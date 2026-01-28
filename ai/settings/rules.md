@@ -290,3 +290,12 @@ Examples: `feat: add user auth`, `fix: null check in parser`, `chore: update dep
   *the main function should be at the very top to easily have an idea on what the script is all about
   
 - Omit unused global variables.
+
+# SPA Content Extraction
+
+- For JavaScript-rendered SPAs: use Jina Reader first (prepend `https://r.jina.ai/` to URL)
+- Handle hash routes with POST requests; wait for stable selectors if loading
+- Fallback: headless browser → wait for ready → extract outerHTML/innerText/accessibility tree
+- Auth required: only use user-provided access; never guess credentials
+- Output: clean docs with source, URL, timestamp, summary, structured content
+- Mark unavailable sections explicitly; don't invent content
