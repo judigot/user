@@ -4,6 +4,9 @@
 [[ -n "${BASHRC_SOURCED}" ]] && return
 export BASHRC_SOURCED=1
 
+# Ensure .bashrc is sourced in non-interactive shells (e.g., bash -c "command")
+export BASH_ENV="$HOME/.bashrc"
+
 # Load aliases
 #<DEVRC>
 [[ -f "$HOME/.devrc" ]] && source "$HOME/.devrc"
