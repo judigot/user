@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# Prevent multiple sourcing within the same shell (but allow in subshells)
-[[ -n "${BASHRC_SOURCED}" ]] && [[ "${BASH_SUBSHELL:-0}" -eq 0 ]] && return
-export BASHRC_SOURCED=1
+# Prevent multiple sourcing within the same shell process
+# Allow sourcing in new shells (bash -c, subshells, etc.)
+if [[ -n "${BASHRC_SOURCED}" ]] && [[ "${BASHRC_SOURCED}" == "$$" ]]; then
+    return
+fi
+export BASHRC_SOURCED="$$"
 
 # Load aliases
 #<DEVRC>
