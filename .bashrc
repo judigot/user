@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Prevent multiple sourcing
-[[ -n "${BASHRC_SOURCED}" ]] && return
+# Prevent multiple sourcing within the same shell (but allow in subshells)
+[[ -n "${BASHRC_SOURCED}" ]] && [[ "${BASH_SUBSHELL:-0}" -eq 0 ]] && return
 export BASHRC_SOURCED=1
 
 # Load aliases
