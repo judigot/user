@@ -25,6 +25,7 @@ Read rules, agents, and skills in the current folder.
 
 If any current-folder item conflicts with a global item, stop and report.
 Otherwise, follow global items and use current-folder items only to add details.
+Say "Done." once finished.
 EOF
 }
 
