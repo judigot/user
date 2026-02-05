@@ -241,4 +241,16 @@ opencodetoggle
 opencode_config:
 opencodeconfig
 
+createAMI:
+createami
+exportcurrentami
+savecurrentami
+exportami
+saveami
+exportdevenvironment
+exportdevenv
+savedevenvironment
+savedevenv
+snapshotec2
+ec2snapshot
 

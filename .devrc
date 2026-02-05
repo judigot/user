@@ -2384,6 +2384,54 @@ termuxLoginUbuntu() {
 }
 #</TERMUX>
 
+createAMI() {
+  prefix=${1:?Usage: createAMI <prefix> [no_reboot_1_or_0]}
+  no_reboot=${2:-1}
+  profile="admin"
+
+  IMDS_HOST=${IMDS_HOST:-169.254.169.254}
+
+  token=$(
+    curl -fsS -X PUT "http://$IMDS_HOST/latest/api/token" \
+      -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
+  ) || { echo "ERROR: IMDSv2 token failed" >&2; return 1; }
+
+  instance_id=$(
+    curl -fsS -H "X-aws-ec2-metadata-token: $token" \
+      "http://$IMDS_HOST/latest/meta-data/instance-id"
+  ) || { echo "ERROR: instance-id fetch failed" >&2; return 1; }
+
+  region=$(
+    curl -fsS -H "X-aws-ec2-metadata-token: $token" \
+      "http://$IMDS_HOST/latest/dynamic/instance-identity/document" \
+    | sed -n 's/.*"region"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+  )
+
+  [ -n "$region" ] || { echo "ERROR: region fetch failed" >&2; return 1; }
+
+  date_ymd=$(date +%Y%m%d)
+  name="${prefix}-${date_ymd}"
+
+  nr_arg=""
+  if [ "$no_reboot" -eq 1 ] 2>/dev/null; then
+    nr_arg="--no-reboot"
+  fi
+
+  ami_id=$(
+    aws ec2 create-image \
+      --region "$region" \
+      --instance-id "$instance_id" \
+      --name "$name" \
+      $nr_arg \
+      --tag-specifications "ResourceType=image,Tags=[{Key=Name,Value=$name},{Key=CreatedBy,Value=createAMI},{Key=SourceInstance,Value=$instance_id}]" \
+      --profile "$profile" \
+      --query 'ImageId' \
+      --output text
+  ) || { echo "ERROR: create-image failed" >&2; return 1; }
+
+  echo "$ami_id"
+}
+
 #<AGENT_ALIASES>
 # Remaining traditional aliases - require eval in non-interactive shells
 # Documentation: Requires eval in non-interactive shells for compatibility
