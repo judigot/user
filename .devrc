@@ -958,10 +958,14 @@ installNeovim() {
 }
 
 initUbuntu() {
-    set -eu
-    sudo apt-get update -y
-    sudo apt-get upgrade -y
-    sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf
+    # Keep strict mode scoped to this function invocation so it does not
+    # leak into the interactive shell and break prompt hooks.
+    (
+        set -eu
+        sudo apt-get update -y
+        sudo apt-get upgrade -y
+        sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf
+    )
 }
 
 loginUbuntu() {
