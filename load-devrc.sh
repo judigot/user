@@ -43,25 +43,7 @@ while [ $# -gt 0 ]; do
  done
 
 cachebustkey="$(date +%s 2>/dev/null || echo 0)"
-resolve_user_ref() {
-    local sha=""
-    local api_url="https://api.github.com/repos/judigot/user/commits/main?cachebustkey=$cachebustkey"
-
-    if sha="$(curl -fsSL "$api_url" 2>/dev/null | sed -n 's/.*"sha"[[:space:]]*:[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' | head -n1)"; then
-        if [ -n "$sha" ]; then
-            printf '%s\n' "$sha"
-            return 0
-        fi
-    fi
-
-    printf '%s\n' "main"
-    return 0
-}
-
-user_ref="$(resolve_user_ref)"
-base_url="https://raw.githubusercontent.com/judigot/user/$user_ref"
-devrc_url="$base_url/.devrc?cachebustkey=$cachebustkey"
-alias_url="$base_url/ALIAS?cachebustkey=$cachebustkey"
+archive_url="https://codeload.github.com/judigot/user/tar.gz/refs/heads/main?cachebustkey=$cachebustkey"
 
 devrc_tmp="$(mktemp "${TMPDIR:-/tmp}/devrc.XXXXXX")" || finish 1
 alias_tmp="$(mktemp "${TMPDIR:-/tmp}/alias.XXXXXX")" || {
@@ -69,43 +51,63 @@ alias_tmp="$(mktemp "${TMPDIR:-/tmp}/alias.XXXXXX")" || {
     finish 1
 }
 
-if ! curl -fsSL "$devrc_url" -o "$devrc_tmp"; then
-    printf '%s\n' "Failed to download .devrc" >&2
+repo_tmp_root="$(mktemp -d "${TMPDIR:-/tmp}/userrepo.XXXXXX")" || {
     rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    finish 1
+}
+repo_tar="$repo_tmp_root/user.tar.gz"
+repo_dir="$repo_tmp_root/user-main"
+
+if ! curl -fsSL "$archive_url" -o "$repo_tar"; then
+    printf '%s\n' "Failed to download user archive" >&2
+    rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+    rm -rf "$repo_tmp_root" 2>/dev/null || true
     finish 1
 fi
 
-if ! curl -fsSL "$alias_url" -o "$alias_tmp"; then
+if ! tar -xzf "$repo_tar" -C "$repo_tmp_root"; then
+    printf '%s\n' "Failed to extract user archive" >&2
+    rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+    rm -rf "$repo_tmp_root" 2>/dev/null || true
+    finish 1
+fi
+
+if ! cp "$repo_dir/.devrc" "$devrc_tmp"; then
+    printf '%s\n' "Failed to download .devrc" >&2
+    rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+    rm -rf "$repo_tmp_root" 2>/dev/null || true
+    finish 1
+fi
+
+if ! cp "$repo_dir/ALIAS" "$alias_tmp"; then
     printf '%s\n' "Failed to download ALIAS" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+    rm -rf "$repo_tmp_root" 2>/dev/null || true
     finish 1
 fi
 
 tmp_devrc_dir="$(dirname "$devrc_tmp")/.devrc.d"
 mkdir -p "$tmp_devrc_dir" 2>/dev/null || true
 
-download_devrc_module() {
-    local module_name="$1"
-    local module_url="$base_url/.devrc.d/$module_name?cachebustkey=$cachebustkey"
-    curl -fsSL "$module_url" -o "$tmp_devrc_dir/$module_name"
-}
-
-# Download .devrc.d files without sourcing .devrc first.
-# Sourcing before ALIAS exists can cause noisy first-run errors.
-if ! download_devrc_module "80-diff-navigator.sh" || \
-   ! download_devrc_module "opencode.sh" || \
-   ! download_devrc_module "prompts.sh"; then
+if ! cp "$repo_dir/.devrc.d/80-diff-navigator.sh" "$tmp_devrc_dir/80-diff-navigator.sh" || \
+   ! cp "$repo_dir/.devrc.d/opencode.sh" "$tmp_devrc_dir/opencode.sh" || \
+   ! cp "$repo_dir/.devrc.d/prompts.sh" "$tmp_devrc_dir/prompts.sh"; then
     printf '%s\n' "Failed to download .devrc.d files" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+    rm -rf "$repo_tmp_root" 2>/dev/null || true
     rm -rf "$tmp_devrc_dir" 2>/dev/null || true
     finish 1
 fi
 
 if [ ! -s "$devrc_tmp" ] || [ ! -s "$alias_tmp" ]; then
     printf '%s\n' "Downloaded files are empty" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+    rm -rf "$repo_tmp_root" 2>/dev/null || true
     finish 1
 fi
+
+rm -f "$repo_tar" 2>/dev/null || true
+rm -rf "$repo_tmp_root" 2>/dev/null || true
 
 load_aliases_from_content() {
     local alias_file="$1"
