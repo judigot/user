@@ -46,9 +46,6 @@ initubuntu
 installnodeenv
 usessh
 cloner judigot/workspace ~/workspace
-sudo apt-get update
-sudo apt-get install -y nginx certbot python3-certbot-nginx
-sudo systemctl enable --now nginx
 cd ~/workspace
 cp .env.example .env
 ./scripts/init.sh

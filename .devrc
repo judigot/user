@@ -964,7 +964,13 @@ initUbuntu() {
         set -eu
         sudo apt-get update -y
         sudo apt-get upgrade -y
-        sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf
+        sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf nginx certbot python3-certbot-nginx
+
+        # On first-time Ubuntu cloud hosts, nginx may be installed but inactive.
+        # Best effort start/enable keeps workspace bootstrap fully pipeline-driven.
+        if command -v systemctl >/dev/null 2>&1; then
+            sudo systemctl enable --now nginx >/dev/null 2>&1 || true
+        fi
     )
 }
 
