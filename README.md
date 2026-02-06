@@ -39,7 +39,7 @@ termuxloginubuntu
 
 Setup EC2 Workspace Workflow
 
-```
+```sh
 . <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebustkey=$(date +%s)")
 
 initubuntu
