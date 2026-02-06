@@ -65,14 +65,23 @@ if ! curl -fsSL "$alias_url" -o "$alias_tmp"; then
     finish 1
 fi
 
-# Source .devrc to get access to downloadGithubFiles function
-# shellcheck source=/dev/null
-. "$devrc_tmp"
+tmp_devrc_dir="$(dirname "$devrc_tmp")/.devrc.d"
+mkdir -p "$tmp_devrc_dir" 2>/dev/null || true
 
-# Download all files in .devrc.d directory using the existing downloadGithubFiles function
-if ! downloadGithubFiles judigot/user ".devrc.d/80-diff-navigator.sh" ".devrc.d/opencode.sh" ".devrc.d/prompts.sh" --dest "$(dirname "$devrc_tmp")" --branch "main" >/dev/null 2>&1; then
+download_devrc_module() {
+    local module_name="$1"
+    local module_url="$base_url/.devrc.d/$module_name?cachebustkey=$cachebustkey"
+    curl -fsSL "$module_url" -o "$tmp_devrc_dir/$module_name"
+}
+
+# Download .devrc.d files without sourcing .devrc first.
+# Sourcing before ALIAS exists can cause noisy first-run errors.
+if ! download_devrc_module "80-diff-navigator.sh" || \
+   ! download_devrc_module "opencode.sh" || \
+   ! download_devrc_module "prompts.sh"; then
     printf '%s\n' "Failed to download .devrc.d files" >&2
     rm -f "$devrc_tmp" "$alias_tmp" 2>/dev/null || true
+    rm -rf "$tmp_devrc_dir" 2>/dev/null || true
     finish 1
 fi
 
