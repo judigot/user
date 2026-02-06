@@ -45,11 +45,15 @@ Setup EC2 Workspace Workflow
 initubuntu
 installnodeenv
 usessh
+
+# Preserve .env across re-clone (holds domain, creds, API keys)
+[ -f ~/workspace/.env ] && cp ~/workspace/.env /tmp/workspace-env-backup
+rm -rf ~/workspace
 cloner judigot/workspace ~/workspace
+[ -f /tmp/workspace-env-backup ] && mv /tmp/workspace-env-backup ~/workspace/.env
 cd ~/workspace
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 ./scripts/init.sh
-./scripts/deploy-nginx.sh
 ```
 
 Setup Mobile Workflow
