@@ -43,7 +43,23 @@ while [ $# -gt 0 ]; do
  done
 
 cachebustkey="$(date +%s 2>/dev/null || echo 0)"
-base_url="https://raw.githubusercontent.com/judigot/user/main"
+resolve_user_ref() {
+    local sha=""
+    local api_url="https://api.github.com/repos/judigot/user/commits/main?cachebustkey=$cachebustkey"
+
+    if sha="$(curl -fsSL "$api_url" 2>/dev/null | sed -n 's/.*"sha"[[:space:]]*:[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' | head -n1)"; then
+        if [ -n "$sha" ]; then
+            printf '%s\n' "$sha"
+            return 0
+        fi
+    fi
+
+    printf '%s\n' "main"
+    return 0
+}
+
+user_ref="$(resolve_user_ref)"
+base_url="https://raw.githubusercontent.com/judigot/user/$user_ref"
 devrc_url="$base_url/.devrc?cachebustkey=$cachebustkey"
 alias_url="$base_url/ALIAS?cachebustkey=$cachebustkey"
 
