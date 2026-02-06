@@ -37,6 +37,21 @@ termuxubuntu
 termuxloginubuntu
 ```
 
+Setup EC2 Workspace Workflow
+
+```
+. <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebustkey=$(date +%s)")
+
+initubuntu
+installnodeenv
+usessh
+cloner judigot/workspace ~/workspace
+cd ~/workspace
+cp .env.example .env
+./scripts/init.sh
+./scripts/deploy-nginx.sh
+```
+
 Setup Mobile Workflow
 
 ```sh
