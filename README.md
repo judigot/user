@@ -48,8 +48,8 @@ usessh
 
 # Preserve .env across re-clone (holds domain, creds, API keys)
 [ -f ~/workspace/.env ] && cp ~/workspace/.env /tmp/workspace-env-backup
-rm -rf ~/workspace
-cloner judigot/workspace ~/workspace
+cd ~ && rm -rf ~/workspace
+git clone https://github.com/judigot/workspace.git ~/workspace
 [ -f /tmp/workspace-env-backup ] && mv /tmp/workspace-env-backup ~/workspace/.env
 cd ~/workspace
 [ -f .env ] || cp .env.example .env
