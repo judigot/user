@@ -954,7 +954,45 @@ installNeovim() {
         fi
     fi
 
-    printf '%s\n' "Neovim + LazyVim installed."
+    local dotfiles_plugin_dir="$nvim_config_dir/lua/plugins"
+    local dotfiles_plugin_file="$dotfiles_plugin_dir/zz-dotfiles-visible.lua"
+
+    mkdir -p "$dotfiles_plugin_dir" || return 1
+    cat > "$dotfiles_plugin_file" <<'EOF'
+-- managed-by-installNeovim
+return {
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    opts = {
+      filesystem = {
+        filtered_items = {
+          hide_dotfiles = false,
+        },
+      },
+    },
+  },
+  {
+    "folke/snacks.nvim",
+    opts = {
+      picker = {
+        sources = {
+          files = {
+            hidden = true,
+          },
+          grep = {
+            hidden = true,
+          },
+          live_grep = {
+            hidden = true,
+          },
+        },
+      },
+    },
+  },
+}
+EOF
+
+    printf '%s\n' "Neovim + LazyVim installed (dotfiles visible)."
 }
 
 initUbuntu() {
