@@ -973,17 +973,37 @@ return {
   },
   {
     "folke/snacks.nvim",
+    keys = {
+      {
+        "<leader>e",
+        function()
+          Snacks.picker.explorer({
+            cwd = vim.fn.getcwd(),
+            hidden = true,
+            ignored = true,
+          })
+        end,
+        desc = "Explorer Snacks (cwd, show dotfiles)",
+      },
+    },
     opts = {
       picker = {
         sources = {
+          explorer = {
+            hidden = true,
+            ignored = true,
+          },
           files = {
             hidden = true,
+            ignored = true,
           },
           grep = {
             hidden = true,
+            ignored = true,
           },
           live_grep = {
             hidden = true,
+            ignored = true,
           },
         },
       },
