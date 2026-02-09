@@ -546,6 +546,14 @@ Command:
 ```sh
 curl -o script.sh https://raw.githubusercontent.com/judestp/alpha-tokyo-dev-env-setup/main/script.sh && sh script.sh
 ```
+
+## Enable Docker Integration
+
+- Open Docker Desktop
+- Settings → Resources → WSL Integration
+- Enable Ubuntu and Ubuntu-Work
+- Apply & Restart
+
 ## Install Ubuntu Personal and Ubuntu Work
 Terminal: `Ubuntu`
 
@@ -697,13 +705,6 @@ Write-Host "Personal (default): wsl"
 Write-Host "Work:               wsl -d $workDistro"
 Write-Host "List distros:       wsl --list --verbose"
 ```
-
-## Enable Docker Integration
-
-- Open Docker Desktop
-- Settings → Resources → WSL Integration
-- Enable Ubuntu and Ubuntu-Work
-- Apply & Restart
 
 ## Delete Ubuntu Personal and Ubuntu Work
 
