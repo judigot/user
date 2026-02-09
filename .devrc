@@ -2164,6 +2164,29 @@ installPackage() {
     command -v "$package" >/dev/null 2>&1
 }
 
+refreshAICliPath() {
+    local npm_prefix=""
+
+    if command -v npm >/dev/null 2>&1; then
+        npm_prefix=$(npm config get prefix 2>/dev/null || true)
+    fi
+
+    case ":$PATH:" in
+        *":$HOME/.local/bin:"*) ;;
+        *) PATH="$HOME/.local/bin:$PATH" ;;
+    esac
+
+    if [ -n "$npm_prefix" ] && [ "$npm_prefix" != "undefined" ] && [ "$npm_prefix" != "null" ]; then
+        case ":$PATH:" in
+            *":$npm_prefix/bin:"*) ;;
+            *) PATH="$npm_prefix/bin:$PATH" ;;
+        esac
+    fi
+
+    export PATH
+    hash -r 2>/dev/null || true
+}
+
 msysInstallPackage() {
     local package="$1"
 
@@ -2259,6 +2282,8 @@ useAI() {
     local choices=("Open Code" "Claude Code" "Codex CLI")
     local selected
 
+    refreshAICliPath
+
     selected=$(arrowKeySelect "Select AI (↑↓ arrows, Enter to select, q to quit):" "${choices[@]}")
 
     if [ -z "$selected" ]; then
@@ -2269,7 +2294,8 @@ useAI() {
         "Open Code")
             if ! installPackage "opencode"; then
                 printf '%s\n' "Open Code is not installed, installing..." >&2
-                installOpenCode
+                installOpenCode || return 1
+                refreshAICliPath
                 if ! installPackage "opencode"; then
                     printf '%s\n' "Failed to install Open Code" >&2
                     return 1
@@ -2297,7 +2323,8 @@ useAI() {
         "Claude Code")
             if ! installPackage "claude"; then
                 printf '%s\n' "Claude Code is not installed, installing..." >&2
-                installClaudeCode
+                installClaudeCode || return 1
+                refreshAICliPath
                 if ! installPackage "claude"; then
                     printf '%s\n' "Failed to install Claude Code" >&2
                     return 1
@@ -2308,7 +2335,8 @@ useAI() {
         "Codex CLI")
             if ! installPackage "codex"; then
                 printf '%s\n' "Codex CLI is not installed, installing..." >&2
-                installCodexCLI
+                installCodexCLI || return 1
+                refreshAICliPath
                 if ! installPackage "codex"; then
                     printf '%s\n' "Failed to install Codex CLI" >&2
                     return 1
