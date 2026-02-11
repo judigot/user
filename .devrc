@@ -1961,10 +1961,55 @@ setupNodeEnv() {
             ;;
     esac
 
-    # Install global packages (matching Apportable.sh) - only if not already installed
-    command -v bun >/dev/null 2>&1 || npm install -g bun >/dev/null 2>&1 || true
-    command -v pnpm >/dev/null 2>&1 || npm install -g pnpm >/dev/null 2>&1 || true
-    command -v pnpm >/dev/null 2>&1 && pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || true
+    # Ensure npm global bin is on PATH
+    local npm_prefix=""
+    npm_prefix=$(npm config get prefix 2>/dev/null || true)
+    if [ -n "$npm_prefix" ] && [ "$npm_prefix" != "undefined" ]; then
+        export PATH="$npm_prefix/bin:$PATH"
+        hash -r 2>/dev/null || true
+    fi
+
+    # Install global packages (matching Apportable.sh) and fail if required tools are unavailable
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "Installing bun..." >&2
+        npm install -g bun >/dev/null 2>&1 || {
+            echo "Failed to install bun via npm." >&2
+            echo "Try checking npm permissions/prefix: npm config get prefix" >&2
+            return 1
+        }
+    fi
+
+    if ! command -v pnpm >/dev/null 2>&1; then
+        echo "Installing pnpm..." >&2
+        npm install -g pnpm >/dev/null 2>&1 || {
+            echo "Failed to install pnpm via npm." >&2
+            echo "Try checking npm permissions/prefix: npm config get prefix" >&2
+            return 1
+        }
+    fi
+
+    # Refresh PATH in case npm installed binaries to a non-exported prefix
+    npm_prefix=$(npm config get prefix 2>/dev/null || true)
+    if [ -n "$npm_prefix" ] && [ "$npm_prefix" != "undefined" ]; then
+        export PATH="$npm_prefix/bin:$PATH"
+        hash -r 2>/dev/null || true
+    fi
+
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "bun is still not available on PATH after install." >&2
+        echo "Try: export PATH=\"$npm_prefix/bin:$PATH\"" >&2
+        return 1
+    fi
+
+    if ! command -v pnpm >/dev/null 2>&1; then
+        echo "pnpm is still not available on PATH after install." >&2
+        echo "Try: export PATH=\"$npm_prefix/bin:$PATH\"" >&2
+        return 1
+    fi
+
+    pnpm config set store-dir ~/.pnpm-store >/dev/null 2>&1 || {
+        echo "Warning: failed to set pnpm store-dir (~/.pnpm-store)." >&2
+    }
 
     # Display final versions only if we installed something
     if [ "$installed_something" = true ]; then
