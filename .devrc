@@ -1020,8 +1020,17 @@ initUbuntu() {
     # leak into the interactive shell and break prompt hooks.
     (
         set -eu
+
+        # Make apt/needrestart non-interactive for first-run automation.
+        export DEBIAN_FRONTEND=noninteractive
+        export NEEDRESTART_MODE=a
+        export APT_LISTCHANGES_FRONTEND=none
+
+        sudo mkdir -p /etc/needrestart/conf.d
+        printf '%s\n' '\$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/99-auto-restart.conf >/dev/null
+
         sudo apt-get update -y
-        sudo apt-get upgrade -y
+        sudo apt-get -y upgrade
         sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf nginx certbot python3-certbot-nginx
 
         # On first-time Ubuntu cloud hosts, nginx may be installed but inactive.
