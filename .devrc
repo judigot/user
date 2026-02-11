@@ -1988,12 +1988,21 @@ setupNodeEnv() {
 
     # Install global packages (matching Apportable.sh) and fail if required tools are unavailable
     if ! command -v bun >/dev/null 2>&1; then
-        echo "Installing bun..." >&2
-        npm install -g bun >/dev/null 2>&1 || {
-            echo "Failed to install bun via npm." >&2
-            echo "Try checking npm permissions/prefix: npm config get prefix" >&2
-            return 1
-        }
+        echo "Installing bun via npm..." >&2
+        if ! npm install -g bun >/dev/null 2>&1; then
+            echo "bun npm install failed; trying official bun installer..." >&2
+            if ! command -v curl >/dev/null 2>&1; then
+                echo "curl is required for bun fallback install." >&2
+                return 1
+            fi
+            if ! curl -fsSL https://bun.sh/install | bash >/dev/null 2>&1; then
+                echo "Failed to install bun via npm and bun.sh installer." >&2
+                return 1
+            fi
+            export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+            hash -r 2>/dev/null || true
+        fi
     fi
 
     if ! command -v pnpm >/dev/null 2>&1; then
@@ -2014,7 +2023,7 @@ setupNodeEnv() {
 
     if ! command -v bun >/dev/null 2>&1; then
         echo "bun is still not available on PATH after install." >&2
-        echo "Try: export PATH=\"$npm_prefix/bin:$PATH\"" >&2
+        echo "Try: export PATH=\"$npm_prefix/bin:$HOME/.bun/bin:$PATH\"" >&2
         return 1
     fi
 
