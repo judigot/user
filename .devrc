@@ -1027,7 +1027,7 @@ initUbuntu() {
         export APT_LISTCHANGES_FRONTEND=none
 
         sudo mkdir -p /etc/needrestart/conf.d
-        printf '%s\n' '\$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/99-auto-restart.conf >/dev/null
+        printf '%s\n' '$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/99-auto-restart.conf >/dev/null
 
         sudo apt-get update -y
         sudo apt-get -y upgrade
@@ -1761,6 +1761,23 @@ EOF
 
 setupNodeEnv() {
     local installed_something=false
+    local restore_nounset=false
+
+    # nvm scripts are not strict-nounset safe. Temporarily disable -u inside
+    # this function, then restore caller state on return.
+    case "$-" in
+        *u*)
+            restore_nounset=true
+            set +u
+            ;;
+    esac
+
+    setupNodeEnv_restore_shell_state() {
+        if [ "$restore_nounset" = true ]; then
+            set -u
+        fi
+    }
+    trap setupNodeEnv_restore_shell_state RETURN
 
     # Load nvm if it exists (needed for version display)
     case "$(uname -s 2>/dev/null)" in
