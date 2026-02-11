@@ -1031,7 +1031,7 @@ initUbuntu() {
 
         sudo apt-get update -y
         sudo apt-get -y upgrade
-        sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf nginx certbot python3-certbot-nginx
+        sudo apt-get install -y ca-certificates curl git openssh-client zip unzip vim make fzf build-essential nginx certbot python3-certbot-nginx
 
         # On first-time Ubuntu cloud hosts, nginx may be installed but inactive.
         # Best effort start/enable keeps workspace bootstrap fully pipeline-driven.
