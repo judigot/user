@@ -119,6 +119,11 @@ loadDevrcModules() {
 
     for module in "$modules_dir"/*.sh; do
         [ -f "$module" ] || continue
+        case "$(basename "$module")" in
+            create-custom-ami.sh)
+                continue
+                ;;
+        esac
         # shellcheck source=/dev/null
         . "$module"
     done
@@ -2561,7 +2566,8 @@ termuxLoginUbuntu() {
 #</TERMUX>
 
 createAMI() {
-  local custom_script="$HOME/create-custom-ami.sh"
+  local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+  local custom_script="$script_dir/.devrc.d/create-custom-ami.sh"
   local mode="interactive"
   local wait_flag=0
   local dry_run=0

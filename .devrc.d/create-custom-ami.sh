@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  return 0 2>/dev/null || exit 0
+fi
+
 BASE_NAME="dev-environment-work"
 PROFILE="${AWS_PROFILE:-admin}"
 REGION=""
