@@ -2562,13 +2562,91 @@ termuxLoginUbuntu() {
 
 createAMI() {
   local custom_script="$HOME/create-custom-ami.sh"
+  local mode="interactive"
+  local wait_flag=0
+  local dry_run=0
+  local base_name=""
 
-  # Interactive mode (no args): use the custom exact-name replacement script.
-  if [ "$#" -eq 0 ]; then
+  local show_usage
+  show_usage() {
+    cat <<'EOF'
+Usage:
+  createAMI
+  createAMI --now|--wait [--dry-run] [--base-name <name>]
+  createAMI --legacy <prefix> [no_reboot_1_or_0]
+  createAMI <prefix> [no_reboot_1_or_0]
+
+Modes:
+  - No args: interactive selector (exact-name replacement script)
+  - --now/--wait: non-interactive exact-name replacement script
+  - --legacy or positional args: dated legacy mode (<prefix>-YYYYMMDD)
+EOF
+  }
+
+  # Parse long flags for agent-friendly non-interactive usage.
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --now)
+        mode="script"
+        wait_flag=0
+        shift
+        ;;
+      --wait)
+        mode="script"
+        wait_flag=1
+        shift
+        ;;
+      --dry-run)
+        mode="script"
+        dry_run=1
+        shift
+        ;;
+      --base-name)
+        mode="script"
+        [ -n "${2:-}" ] || { echo "ERROR: --base-name requires a value" >&2; return 1; }
+        base_name="$2"
+        shift 2
+        ;;
+      --legacy)
+        mode="legacy"
+        shift
+        break
+        ;;
+      -h|--help)
+        show_usage
+        return 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        echo "ERROR: unknown option: $1" >&2
+        show_usage >&2
+        return 1
+        ;;
+      *)
+        mode="legacy"
+        break
+        ;;
+    esac
+  done
+
+  # Interactive or flag-driven mode: use exact-name replacement script.
+  if [ "$mode" = "interactive" ] || [ "$mode" = "script" ]; then
     if [ ! -x "$custom_script" ]; then
       echo "ERROR: $custom_script not found or not executable" >&2
       echo "Tip: chmod +x $custom_script" >&2
       return 1
+    fi
+
+    if [ "$mode" = "script" ]; then
+      local cmd=("$custom_script")
+      [ "$wait_flag" -eq 1 ] && cmd+=("--wait")
+      [ "$dry_run" -eq 1 ] && cmd+=("--dry-run")
+      [ -n "$base_name" ] && cmd+=("--base-name" "$base_name")
+      "${cmd[@]}"
+      return $?
     fi
 
     local choices=("Create now (no wait)" "Create and wait until available" "Cancel")
@@ -2592,7 +2670,9 @@ createAMI() {
   fi
 
   # Legacy mode compatibility:
+  # createAMI --legacy <prefix> [no_reboot_1_or_0]
   # createAMI <prefix> [no_reboot_1_or_0]
+  [ -n "${1:-}" ] || { echo "ERROR: missing prefix for legacy mode" >&2; show_usage >&2; return 1; }
   local prefix="$1"
   local no_reboot="${2:-1}"
   local profile="admin"
