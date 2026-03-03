@@ -2568,6 +2568,9 @@ termuxLoginUbuntu() {
 createAMI() {
   local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
   local custom_script="$script_dir/.devrc.d/create-custom-ami.sh"
+  if [ ! -x "$custom_script" ] && [ -x "$script_dir/.devrc.d/.devrc.d/create-custom-ami.sh" ]; then
+    custom_script="$script_dir/.devrc.d/.devrc.d/create-custom-ami.sh"
+  fi
   local mode="interactive"
   local wait_flag=0
   local dry_run=0
