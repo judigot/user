@@ -2566,46 +2566,125 @@ createAMI() {
   local wait_flag=0
   local dry_run=0
   local base_name=""
+  local keep_count=""
+  local yes_flag=0
 
   local show_usage
   show_usage() {
     cat <<'EOF'
 Usage:
   createAMI
-  createAMI --now|--wait [--dry-run] [--base-name <name>]
+  createAMI --safe|--replace|--cleanup [flags]
   createAMI --legacy <prefix> [no_reboot_1_or_0]
-  createAMI <prefix> [no_reboot_1_or_0]
 
-Modes:
-  - No args: interactive selector (exact-name replacement script)
-  - --now/--wait: non-interactive exact-name replacement script
-  - --legacy or positional args: dated legacy mode (<prefix>-YYYYMMDD)
+Main modes:
+  --safe                Safe create with versioned name (default)
+  --replace             Replace exact name (deletes old same-name AMIs/snapshots)
+  --cleanup             Cleanup older versioned AMIs/snapshots
+
+Flags:
+  --base-name <name>    Base AMI name (default: dev-environment-work)
+  --wait                Wait for AMI to become available (create modes)
+  --dry-run             Preview only
+  --keep <n>            Keep newest n AMIs (cleanup mode)
+  --yes                 Skip confirmation prompts for destructive actions
+  --help                Show this help
+
+Legacy:
+  createAMI --legacy <prefix> [no_reboot_1_or_0]
 EOF
   }
 
-  # Parse long flags for agent-friendly non-interactive usage.
+  local run_legacy
+  run_legacy() {
+    [ -n "${1:-}" ] || { echo "ERROR: missing prefix for legacy mode" >&2; show_usage >&2; return 1; }
+    local prefix="$1"
+    local no_reboot="${2:-1}"
+    local profile="admin"
+
+    local IMDS_HOST="${IMDS_HOST:-169.254.169.254}"
+
+    local token
+    token=$(
+      curl -fsS -X PUT "http://$IMDS_HOST/latest/api/token" \
+        -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
+    ) || { echo "ERROR: IMDSv2 token failed" >&2; return 1; }
+
+    local instance_id
+    instance_id=$(
+      curl -fsS -H "X-aws-ec2-metadata-token: $token" \
+        "http://$IMDS_HOST/latest/meta-data/instance-id"
+    ) || { echo "ERROR: instance-id fetch failed" >&2; return 1; }
+
+    local region
+    region=$(
+      curl -fsS -H "X-aws-ec2-metadata-token: $token" \
+        "http://$IMDS_HOST/latest/dynamic/instance-identity/document" \
+      | sed -n 's/.*"region"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+    )
+
+    [ -n "$region" ] || { echo "ERROR: region fetch failed" >&2; return 1; }
+
+    local date_ymd
+    date_ymd=$(date +%Y%m%d)
+    local name="${prefix}-${date_ymd}"
+
+    local nr_arg=""
+    if [ "$no_reboot" -eq 1 ] 2>/dev/null; then
+      nr_arg="--no-reboot"
+    fi
+
+    local ami_id
+    ami_id=$(
+      aws ec2 create-image \
+        --region "$region" \
+        --instance-id "$instance_id" \
+        --name "$name" \
+        $nr_arg \
+        --tag-specifications "ResourceType=image,Tags=[{Key=Name,Value=$name},{Key=CreatedBy,Value=createAMI},{Key=SourceInstance,Value=$instance_id}]" \
+        --profile "$profile" \
+        --query 'ImageId' \
+        --output text
+    ) || { echo "ERROR: create-image failed" >&2; return 1; }
+
+    echo "$ami_id"
+  }
+
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      --now)
-        mode="script"
-        wait_flag=0
+      --safe)
+        mode="safe"
+        shift
+        ;;
+      --replace)
+        mode="replace"
+        shift
+        ;;
+      --cleanup)
+        mode="cleanup"
         shift
         ;;
       --wait)
-        mode="script"
         wait_flag=1
         shift
         ;;
       --dry-run)
-        mode="script"
         dry_run=1
         shift
         ;;
       --base-name)
-        mode="script"
         [ -n "${2:-}" ] || { echo "ERROR: --base-name requires a value" >&2; return 1; }
         base_name="$2"
         shift 2
+        ;;
+      --keep)
+        [ -n "${2:-}" ] || { echo "ERROR: --keep requires a value" >&2; return 1; }
+        keep_count="$2"
+        shift 2
+        ;;
+      --yes)
+        yes_flag=1
+        shift
         ;;
       --legacy)
         mode="legacy"
@@ -2615,10 +2694,6 @@ EOF
       -h|--help)
         show_usage
         return 0
-        ;;
-      --)
-        shift
-        break
         ;;
       -*)
         echo "ERROR: unknown option: $1" >&2
@@ -2632,97 +2707,70 @@ EOF
     esac
   done
 
-  # Interactive or flag-driven mode: use exact-name replacement script.
-  if [ "$mode" = "interactive" ] || [ "$mode" = "script" ]; then
-    if [ ! -x "$custom_script" ]; then
-      echo "ERROR: $custom_script not found or not executable" >&2
-      echo "Tip: chmod +x $custom_script" >&2
-      return 1
-    fi
+  if [ "$mode" = "legacy" ]; then
+    run_legacy "$@"
+    return $?
+  fi
 
-    if [ "$mode" = "script" ]; then
-      local cmd=("$custom_script")
-      [ "$wait_flag" -eq 1 ] && cmd+=("--wait")
-      [ "$dry_run" -eq 1 ] && cmd+=("--dry-run")
-      [ -n "$base_name" ] && cmd+=("--base-name" "$base_name")
-      "${cmd[@]}"
-      return $?
-    fi
+  if [ ! -x "$custom_script" ]; then
+    echo "ERROR: $custom_script not found or not executable" >&2
+    echo "Tip: chmod +x $custom_script" >&2
+    return 1
+  fi
 
-    local choices=("Create now (no wait)" "Create and wait until available" "Cancel")
+  if [ "$mode" = "interactive" ]; then
+    local choices=(
+      "Safe create now (recommended)"
+      "Safe create and wait"
+      "Replace exact name (destructive)"
+      "Cleanup old AMIs (keep latest 3)"
+      "Cancel"
+    )
     local selected
-    selected=$(arrowKeySelect "Create AMI using exact-name replacement (dev-environment-work)?" "${choices[@]}") || return 130
+    selected=$(arrowKeySelect "AMI workflow" "${choices[@]}") || return 130
 
     case "$selected" in
-      "Create now (no wait)")
-        "$custom_script"
+      "Safe create now (recommended)")
+        mode="safe"
         ;;
-      "Create and wait until available")
-        "$custom_script" --wait
+      "Safe create and wait")
+        mode="safe"
+        wait_flag=1
+        ;;
+      "Replace exact name (destructive)")
+        mode="replace"
+        ;;
+      "Cleanup old AMIs (keep latest 3)")
+        mode="cleanup"
+        keep_count="3"
         ;;
       *)
         echo "Cancelled."
         return 130
         ;;
     esac
-
-    return $?
   fi
 
-  # Legacy mode compatibility:
-  # createAMI --legacy <prefix> [no_reboot_1_or_0]
-  # createAMI <prefix> [no_reboot_1_or_0]
-  [ -n "${1:-}" ] || { echo "ERROR: missing prefix for legacy mode" >&2; show_usage >&2; return 1; }
-  local prefix="$1"
-  local no_reboot="${2:-1}"
-  local profile="admin"
+  local cmd=("$custom_script")
+  case "$mode" in
+    safe)
+      cmd+=("--safe")
+      ;;
+    replace)
+      cmd+=("--replace")
+      ;;
+    cleanup)
+      cmd+=("--cleanup")
+      ;;
+  esac
 
-  local IMDS_HOST="${IMDS_HOST:-169.254.169.254}"
+  [ "$wait_flag" -eq 1 ] && cmd+=("--wait")
+  [ "$dry_run" -eq 1 ] && cmd+=("--dry-run")
+  [ -n "$base_name" ] && cmd+=("--base-name" "$base_name")
+  [ -n "$keep_count" ] && cmd+=("--keep" "$keep_count")
+  [ "$yes_flag" -eq 1 ] && cmd+=("--yes")
 
-  local token
-  token=$(
-    curl -fsS -X PUT "http://$IMDS_HOST/latest/api/token" \
-      -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
-  ) || { echo "ERROR: IMDSv2 token failed" >&2; return 1; }
-
-  local instance_id
-  instance_id=$(
-    curl -fsS -H "X-aws-ec2-metadata-token: $token" \
-      "http://$IMDS_HOST/latest/meta-data/instance-id"
-  ) || { echo "ERROR: instance-id fetch failed" >&2; return 1; }
-
-  local region
-  region=$(
-    curl -fsS -H "X-aws-ec2-metadata-token: $token" \
-      "http://$IMDS_HOST/latest/dynamic/instance-identity/document" \
-    | sed -n 's/.*"region"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
-  )
-
-  [ -n "$region" ] || { echo "ERROR: region fetch failed" >&2; return 1; }
-
-  local date_ymd
-  date_ymd=$(date +%Y%m%d)
-  local name="${prefix}-${date_ymd}"
-
-  local nr_arg=""
-  if [ "$no_reboot" -eq 1 ] 2>/dev/null; then
-    nr_arg="--no-reboot"
-  fi
-
-  local ami_id
-  ami_id=$(
-    aws ec2 create-image \
-      --region "$region" \
-      --instance-id "$instance_id" \
-      --name "$name" \
-      $nr_arg \
-      --tag-specifications "ResourceType=image,Tags=[{Key=Name,Value=$name},{Key=CreatedBy,Value=createAMI},{Key=SourceInstance,Value=$instance_id}]" \
-      --profile "$profile" \
-      --query 'ImageId' \
-      --output text
-  ) || { echo "ERROR: create-image failed" >&2; return 1; }
-
-  echo "$ami_id"
+  "${cmd[@]}"
 }
 
 #<AGENT_ALIASES>
