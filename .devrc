@@ -2561,22 +2561,57 @@ termuxLoginUbuntu() {
 #</TERMUX>
 
 createAMI() {
-  prefix=${1:?Usage: createAMI <prefix> [no_reboot_1_or_0]}
-  no_reboot=${2:-1}
-  profile="admin"
+  local custom_script="$HOME/create-custom-ami.sh"
 
-  IMDS_HOST=${IMDS_HOST:-169.254.169.254}
+  # Interactive mode (no args): use the custom exact-name replacement script.
+  if [ "$#" -eq 0 ]; then
+    if [ ! -x "$custom_script" ]; then
+      echo "ERROR: $custom_script not found or not executable" >&2
+      echo "Tip: chmod +x $custom_script" >&2
+      return 1
+    fi
 
+    local choices=("Create now (no wait)" "Create and wait until available" "Cancel")
+    local selected
+    selected=$(arrowKeySelect "Create AMI using exact-name replacement (dev-environment-work)?" "${choices[@]}") || return 130
+
+    case "$selected" in
+      "Create now (no wait)")
+        "$custom_script"
+        ;;
+      "Create and wait until available")
+        "$custom_script" --wait
+        ;;
+      *)
+        echo "Cancelled."
+        return 130
+        ;;
+    esac
+
+    return $?
+  fi
+
+  # Legacy mode compatibility:
+  # createAMI <prefix> [no_reboot_1_or_0]
+  local prefix="$1"
+  local no_reboot="${2:-1}"
+  local profile="admin"
+
+  local IMDS_HOST="${IMDS_HOST:-169.254.169.254}"
+
+  local token
   token=$(
     curl -fsS -X PUT "http://$IMDS_HOST/latest/api/token" \
       -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
   ) || { echo "ERROR: IMDSv2 token failed" >&2; return 1; }
 
+  local instance_id
   instance_id=$(
     curl -fsS -H "X-aws-ec2-metadata-token: $token" \
       "http://$IMDS_HOST/latest/meta-data/instance-id"
   ) || { echo "ERROR: instance-id fetch failed" >&2; return 1; }
 
+  local region
   region=$(
     curl -fsS -H "X-aws-ec2-metadata-token: $token" \
       "http://$IMDS_HOST/latest/dynamic/instance-identity/document" \
@@ -2585,14 +2620,16 @@ createAMI() {
 
   [ -n "$region" ] || { echo "ERROR: region fetch failed" >&2; return 1; }
 
+  local date_ymd
   date_ymd=$(date +%Y%m%d)
-  name="${prefix}-${date_ymd}"
+  local name="${prefix}-${date_ymd}"
 
-  nr_arg=""
+  local nr_arg=""
   if [ "$no_reboot" -eq 1 ] 2>/dev/null; then
     nr_arg="--no-reboot"
   fi
 
+  local ami_id
   ami_id=$(
     aws ec2 create-image \
       --region "$region" \
