@@ -147,6 +147,14 @@ useaws
 setupaws
 awscredentials
 
+useEnvironmentVariables:
+useenvironmentvariables
+useenvvars
+useenv
+loadenvironmentvariables
+loadenvvars
+loadenv
+
 setupNodeEnv:
 setupnodeenv
 nodeenv
@@ -253,4 +261,3 @@ savedevenvironment
 savedevenv
 snapshotec2
 ec2snapshot
-
