@@ -129,6 +129,35 @@ loadDevrcModules() {
     done
 }
 
+loadEnvVariables() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+    local env_file=""
+
+    if [ -f "$script_dir/.devrc.d/.env" ]; then
+        env_file="$script_dir/.devrc.d/.env"
+    elif [ -f "$HOME/.devrc.d/.env" ]; then
+        env_file="$HOME/.devrc.d/.env"
+    else
+        return 0
+    fi
+
+    local had_allexport=""
+    case "$-" in
+        *a*) had_allexport="true" ;;
+    esac
+
+    set -a
+    # shellcheck source=/dev/null
+    . "$env_file" >/dev/null 2>&1 || true
+
+    if [ -z "$had_allexport" ]; then
+        set +a
+    fi
+
+    return 0
+}
+
+loadEnvVariables
 loadDevrcModules
 
 helloWorld() {
