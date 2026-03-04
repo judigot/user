@@ -1,41 +1,80 @@
 #!/bin/sh
 
+ensureBitwardenCLI() {
+    local npm_prefix=""
+
+    if command -v bw >/dev/null 2>&1 && bw --version >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if ! command -v npm >/dev/null 2>&1; then
+        echo "✗ Node.js/npm is required to install Bitwarden CLI." >&2
+        return 1
+    fi
+
+    npm_prefix="$(npm config get prefix 2>/dev/null || echo "$HOME/.local")"
+    export PATH="$npm_prefix/bin:$HOME/.local/bin:$PATH"
+
+    echo "Installing Bitwarden CLI via npm..." >&2
+    if ! npm install -g @bitwarden/cli >/dev/null 2>&1; then
+        echo "✗ Failed to install Bitwarden CLI via npm." >&2
+        return 1
+    fi
+
+    hash -r 2>/dev/null || true
+
+    if ! command -v bw >/dev/null 2>&1 || ! bw --version >/dev/null 2>&1; then
+        echo "✗ Bitwarden CLI installation completed but 'bw' is not executable." >&2
+        return 1
+    fi
+
+    return 0
+}
+
 useEnvironmentVariables() {
     local note_name="Environment Variables"
     local env_file="$HOME/.devrc.d/.env"
     local env_dir
+    local items_json
+    local item_id
+    local item_json
+    local env_content
     env_dir="$(dirname "$env_file")"
 
-    if ! command -v bw >/dev/null 2>&1; then
-        echo "✗ Bitwarden CLI (bw) is required." >&2
-        return 1
-    fi
-
-    if ! bw --version >/dev/null 2>&1; then
-        echo "✗ Bitwarden CLI found but cannot execute. Please reinstall it." >&2
-        return 1
-    fi
+    ensureBitwardenCLI || return 1
 
     if ! command -v node >/dev/null 2>&1; then
         echo "✗ Node.js is required to parse Bitwarden responses." >&2
         return 1
     fi
 
-    bw login --check >/dev/null 2>&1 || bw login
+    if ! bw login --check >/dev/null 2>&1; then
+        if ! bw login; then
+            echo "✗ Bitwarden login failed." >&2
+            return 1
+        fi
+    fi
 
     if [ -z "${BW_SESSION:-}" ]; then
-        export BW_SESSION="$(bw unlock --raw)"
+        export BW_SESSION="$(bw unlock --raw 2>/dev/null)"
     fi
 
     [ -n "${BW_SESSION:-}" ] || {
-        echo "✗ Failed to unlock Bitwarden vault" >&2
+        echo "✗ Failed to unlock Bitwarden vault. Verify master password and account state." >&2
         return 1
     }
 
-    bw sync >/dev/null 2>&1
+    if ! bw sync >/dev/null 2>&1; then
+        echo "✗ Bitwarden sync failed. Run 'bw sync' and retry." >&2
+        return 1
+    fi
 
-    local item_id
-    item_id="$(bw list items --search "$note_name" 2>/dev/null | node -e "
+    if ! items_json="$(bw list items --search "$note_name" 2>/dev/null)"; then
+        echo "✗ Failed to query Bitwarden items (authentication/session issue)." >&2
+        return 1
+    fi
+
+    item_id="$(printf '%s' "$items_json" | node -e "
         const input = require('fs').readFileSync(0, 'utf-8').trim();
         if (!input) process.exit(1);
         const data = JSON.parse(input);
@@ -49,8 +88,12 @@ useEnvironmentVariables() {
         return 1
     }
 
-    local env_content
-    env_content="$(bw get item "$item_id" 2>/dev/null | node -e "
+    if ! item_json="$(bw get item "$item_id" 2>/dev/null)"; then
+        echo "✗ Failed to read Bitwarden secure note: $note_name" >&2
+        return 1
+    fi
+
+    env_content="$(printf '%s' "$item_json" | node -e "
         const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
         if (typeof data.notes === 'string') process.stdout.write(data.notes);
     " 2>/dev/null)"
