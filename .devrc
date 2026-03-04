@@ -385,23 +385,37 @@ syncSnippetsrcAndAliasFromRemote() {
         return 0
     fi
 
-    if command -v downloadGithubFiles >/dev/null 2>&1; then
-        if downloadGithubFiles judigot/user ".devrc" "ALIAS" ".devrc.d/opencode.sh" --dest "$HOME" --branch "main" >/dev/null 2>&1; then
-            return 0
-        fi
-    fi
+    local repo_dir=""
+    local cleanup_dir=""
 
-    if ! curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.devrc?cachebust=$cache_bust" -o "$HOME/.devrc"; then
+    repo_dir=$(downloadUserRepoTemp) || return 1
+    cleanup_dir=$(dirname "$repo_dir")
+
+    if ! cp "$repo_dir/.devrc" "$HOME/.devrc"; then
+        [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
         return 1
     fi
 
-    if ! curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/ALIAS?cachebust=$cache_bust" -o "$HOME/ALIAS"; then
+    if ! cp "$repo_dir/ALIAS" "$HOME/ALIAS"; then
+        [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
         return 1
     fi
 
     mkdir -p "$HOME/.devrc.d" 2>/dev/null || true
-    curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/.devrc.d/opencode.sh?cachebust=$cache_bust" \
-        -o "$HOME/.devrc.d/opencode.sh"
+    if [ -d "$repo_dir/.devrc.d" ]; then
+        local module_file=""
+        for module_file in "$repo_dir/.devrc.d"/*.sh; do
+            [ -f "$module_file" ] || continue
+            cp "$module_file" "$HOME/.devrc.d/" 2>/dev/null || true
+        done
+
+        if [ -f "$repo_dir/.devrc.d/.env.example" ]; then
+            cp "$repo_dir/.devrc.d/.env.example" "$HOME/.devrc.d/.env.example" 2>/dev/null || true
+        fi
+    fi
+
+    [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir" 2>/dev/null || true
+    return 0
 }
 
 syncOpenCodeConfig() {

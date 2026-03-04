@@ -89,14 +89,27 @@ fi
 tmp_devrc_dir="$(dirname "$devrc_tmp")/.devrc.d"
 mkdir -p "$tmp_devrc_dir" 2>/dev/null || true
 
-if ! cp "$repo_dir/.devrc.d/80-diff-navigator.sh" "$tmp_devrc_dir/80-diff-navigator.sh" || \
-   ! cp "$repo_dir/.devrc.d/opencode.sh" "$tmp_devrc_dir/opencode.sh" || \
-   ! cp "$repo_dir/.devrc.d/prompts.sh" "$tmp_devrc_dir/prompts.sh"; then
-    printf '%s\n' "Failed to download .devrc.d files" >&2
-    rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
-    rm -rf "$repo_tmp_root" 2>/dev/null || true
-    rm -rf "$tmp_devrc_dir" 2>/dev/null || true
-    finish 1
+if [ -d "$repo_dir/.devrc.d" ]; then
+    for module_file in "$repo_dir/.devrc.d"/*.sh; do
+        [ -f "$module_file" ] || continue
+        cp "$module_file" "$tmp_devrc_dir/" || {
+            printf '%s\n' "Failed to copy .devrc.d module: $(basename "$module_file")" >&2
+            rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+            rm -rf "$repo_tmp_root" 2>/dev/null || true
+            rm -rf "$tmp_devrc_dir" 2>/dev/null || true
+            finish 1
+        }
+    done
+
+    if [ -f "$repo_dir/.devrc.d/.env.example" ]; then
+        cp "$repo_dir/.devrc.d/.env.example" "$tmp_devrc_dir/.env.example" || {
+            printf '%s\n' "Failed to copy .devrc.d/.env.example" >&2
+            rm -f "$devrc_tmp" "$alias_tmp" "$repo_tar" 2>/dev/null || true
+            rm -rf "$repo_tmp_root" 2>/dev/null || true
+            rm -rf "$tmp_devrc_dir" 2>/dev/null || true
+            finish 1
+        }
+    fi
 fi
 
 if [ ! -s "$devrc_tmp" ] || [ ! -s "$alias_tmp" ]; then
@@ -155,7 +168,10 @@ fi
 mv "$devrc_tmp" "$HOME/.devrc"
 mv "$alias_tmp" "$HOME/ALIAS"
 mkdir -p "$HOME/.devrc.d" 2>/dev/null || true
-find "$(dirname "$devrc_tmp")" -path "*/.devrc.d/*.sh" -exec cp {} "$HOME/.devrc.d/" \; 2>/dev/null || true
+for module_file in "$(dirname "$devrc_tmp")/.devrc.d"/*; do
+    [ -f "$module_file" ] || continue
+    cp "$module_file" "$HOME/.devrc.d/" 2>/dev/null || true
+done
 
 # shellcheck source=/dev/null
 . "$HOME/.devrc"
