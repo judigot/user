@@ -37,25 +37,6 @@ termuxubuntu
 termuxloginubuntu
 ```
 
-Setup EC2 Workspace Workflow
-
-```sh
-. <(curl -fsSL "https://raw.githubusercontent.com/judigot/user/main/load-devrc.sh?cachebustkey=$(date +%s)")
-
-initubuntu
-installnodeenv
-usessh
-
-# Preserve .env across re-clone (holds domain, creds, API keys)
-[ -f ~/workspace/.env ] && cp ~/workspace/.env /tmp/workspace-env-backup
-cd ~ && rm -rf ~/workspace
-git clone https://github.com/judigot/workspace.git ~/workspace
-[ -f /tmp/workspace-env-backup ] && mv /tmp/workspace-env-backup ~/workspace/.env
-cd ~/workspace
-[ -f .env ] || cp .env.example .env
-./scripts/init.sh
-```
-
 Setup Mobile Workflow
 
 ```sh
