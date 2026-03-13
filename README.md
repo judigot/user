@@ -44,6 +44,7 @@ Setup Mobile Workflow
 
 initubuntu
 installnodeenv
+installgithub
 usessh
 cloneuserrepo
 installterraform
@@ -112,6 +113,10 @@ These files act as single sources of truth for file lists. Each manifest file li
 | `ALIAS` | Centralized aliases | `.devrc`, `profile.ps1` |
 
 **To add/remove a file from sync:** Edit the manifest file - scripts pick up changes automatically.
+
+## Handy Commands
+
+- `installgithub` installs the GitHub CLI (`gh`) on Debian/Ubuntu systems.
 
 ### How Syncing Works
 
