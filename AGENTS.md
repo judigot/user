@@ -4,9 +4,12 @@
 
 This repository (`judigot/user`) is the source of truth for personal dotfiles, AI tooling, and IDE scaffolding. It also contains the `project-core/` template that is synced to other projects.
 
+## Global rules
+
+@~/ai/settings/rules.md
+
 ## Agent Guidance
 
-- Follow coding standards from `~/ai/settings/rules.md`.
 - After making changes, run `./commit-and-sync.sh "<message>"`.
 - Never run `git commit` directly in this repo; always use `./commit-and-sync.sh` for committing.
 - Keep `README.md` updated when repo structure or workflows change.
@@ -20,10 +23,6 @@ This repository (`judigot/user`) is the source of truth for personal dotfiles, A
 - Do not modify guest-mode behavior to write to `~/.bashrc` unless explicitly requested.
 - Make minimal, request-scoped changes (avoid unrelated refactors).
 - Keep root `AGENTS.md` repo-specific; template guidance belongs in `project-core/`.
-
-## Global Rules
-
-Always load and follow `~/ai/settings/rules.md` as the single canonical ruleset for all CLI agents and IDEs. Treat its instructions as mandatory for every task.
 
 ## More Context
 
