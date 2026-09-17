@@ -2464,7 +2464,7 @@ apt() {
 }
 
 useAI() {
-    local choices=("Open Code" "Claude Code" "Codex CLI" "Cursor CLI")
+    local choices=("Codex CLI" "Cursor CLI" "Claude Code" "Open Code")
     local selected
 
     refreshAICliPath
