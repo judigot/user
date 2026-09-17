@@ -803,7 +803,7 @@ installOpenCodeConfigFromBitwarden() {
 
 installOpenCode() {
     if ! command -v npm >/dev/null 2>&1; then
-        echo "npm is required to install Open Code (opencode-ai)." >&2
+        echo "npm is required to install OpenCode (opencode-ai)." >&2
         return 1
     fi
 
@@ -2464,7 +2464,7 @@ apt() {
 }
 
 useAI() {
-    local choices=("Codex CLI" "Cursor CLI" "Claude Code" "Open Code")
+    local choices=("Codex CLI" "Cursor CLI" "Claude Code" "OpenCode")
     local selected
 
     refreshAICliPath
@@ -2476,21 +2476,21 @@ useAI() {
     fi
 
     case "$selected" in
-        "Open Code")
+        "OpenCode")
             if ! installPackage "opencode"; then
-                printf '%s\n' "Open Code is not installed, installing..." >&2
+                printf '%s\n' "OpenCode is not installed, installing..." >&2
                 installOpenCode || return 1
                 refreshAICliPath
                 if ! installPackage "opencode"; then
-                    printf '%s\n' "Failed to install Open Code" >&2
+                    printf '%s\n' "Failed to install OpenCode" >&2
                     return 1
                 fi
             fi
             
-            # Show Open Code submenu
+            # Show OpenCode submenu
             local opencode_choices=("Load Default" "Load with Init Prompt")
             local opencode_selected
-            opencode_selected=$(arrowKeySelect "Select Open Code mode (↑↓ arrows, Enter to select, q to quit):" "${opencode_choices[@]}")
+            opencode_selected=$(arrowKeySelect "Select OpenCode mode (↑↓ arrows, Enter to select, q to quit):" "${opencode_choices[@]}")
             
             if [ -z "$opencode_selected" ]; then
                 return 130
