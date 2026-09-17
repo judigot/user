@@ -2341,7 +2341,7 @@ installPackage() {
         return 1
     fi
 
-    command -v "$package" >/dev/null 2>&1
+    type -P "$package" >/dev/null 2>&1
 }
 
 refreshAICliPath() {
