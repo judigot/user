@@ -846,6 +846,11 @@ installCodexCLI() {
     npm i -g @openai/codex
 }
 
+installCursorCLI() {
+    curl -fsSL https://cursor.com/install | bash || return 1
+    refreshAICliPath
+}
+
 installGitHub() {
     if command -v gh >/dev/null 2>&1; then
         echo "✓ GitHub CLI is already installed: $(gh --version | head -n1)"
@@ -2459,7 +2464,7 @@ apt() {
 }
 
 useAI() {
-    local choices=("Open Code" "Claude Code" "Codex CLI")
+    local choices=("Open Code" "Claude Code" "Codex CLI" "Cursor CLI")
     local selected
 
     refreshAICliPath
@@ -2523,6 +2528,18 @@ useAI() {
                 fi
             fi
             codex "$@"
+            ;;
+        "Cursor CLI")
+            if ! installPackage "cursor-agent"; then
+                printf '%s\n' "Cursor CLI is not installed, installing..." >&2
+                installCursorCLI || return 1
+                refreshAICliPath
+                if ! installPackage "cursor-agent"; then
+                    printf '%s\n' "Failed to install Cursor CLI" >&2
+                    return 1
+                fi
+            fi
+            cursor-agent "$@"
             ;;
     esac
 }

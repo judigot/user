@@ -110,6 +110,10 @@ installCodexCLI:
 installcodex
 installcodexcli
 
+installCursorCLI:
+installcursor
+installcursorcli
+
 installGitHub:
 installgithub
 installgh
