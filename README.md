@@ -50,7 +50,7 @@ usessh
 cloneuserrepo
 installterraform
 cloneterraformrepo
-installAWS
+installaws
 useaws
 ```
 

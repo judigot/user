@@ -118,6 +118,9 @@ installGitHub:
 installgithub
 installgh
 
+installAWS:
+installaws
+
 useGitHub:
 usegithub
 usegh
