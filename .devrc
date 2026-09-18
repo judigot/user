@@ -899,13 +899,11 @@ installBitwarden() {
 
 authBitwarden() {
     command -v bw >/dev/null 2>&1 || {
-        echo "Bitwarden CLI is not installed. Run installbitwarden first." >&2
-        return 1
+        installBitwarden || return 1
     }
 
     bw --version >/dev/null 2>&1 || {
-        echo "Bitwarden CLI cannot execute. Run installbitwarden again." >&2
-        return 1
+        installBitwarden || return 1
     }
 
     bw login --check >/dev/null 2>&1 || bw login || return 1
@@ -919,8 +917,7 @@ authBitwarden() {
 
 useGitHub() {
     if ! command -v gh >/dev/null 2>&1; then
-        echo "GitHub CLI is not installed. Run installgithub first." >&2
-        return 1
+        installGitHub || return 1
     fi
 
     # Prefer the stored browser login over an injected, restricted app token.
@@ -1782,13 +1779,11 @@ useAWS() {
     
     # Check if bw exists and is executable
     if ! command -v bw >/dev/null 2>&1; then
-        echo "✗ Bitwarden CLI (bw) is required. Please run 'installbitwarden' first." >&2
-        return 1
+        installBitwarden || return 1
     fi
     
     if ! bw --version >/dev/null 2>&1; then
-        echo "✗ Bitwarden CLI found but cannot execute. Please run 'installbitwarden' again." >&2
-        return 1
+        installBitwarden || return 1
     fi
     
     # Check if logged in

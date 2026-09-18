@@ -120,10 +120,10 @@ These files act as single sources of truth for file lists. Each manifest file li
 ## Handy Commands
 
 - `installgithub` installs the GitHub CLI (`gh`) on Debian/Ubuntu systems.
-- `usegithub` authenticates `gh` through GitHub's browser/device login for agent/API operations; Git SSH remains independent.
+- `authgithub` authenticates `gh` through GitHub's browser/device login for agent/API operations; it automatically runs `installgithub` when needed. Git SSH remains independent.
 - `authgithub` is the explicit authentication alias for `usegithub`.
-- `authaws` is the explicit authentication alias for `useaws`.
-- `installbitwarden` installs the Bitwarden CLI; `authbitwarden` logs in and unlocks the vault for credential-backed helpers.
+- `authaws` authenticates AWS credentials through Bitwarden and automatically installs the Bitwarden CLI when needed.
+- `installbitwarden` installs the Bitwarden CLI; `authbitwarden` logs in and unlocks the vault, automatically installing the CLI when needed.
 
 ### How Syncing Works
 
