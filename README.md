@@ -45,13 +45,13 @@ Setup Mobile Workflow
 initubuntu
 installnodeenv
 installgithub
-usegithub
+authgithub
 usessh
 cloneuserrepo
 installterraform
 cloneterraformrepo
 installaws
-useaws
+authaws
 ```
 
 Windows Setup (PowerShell as Administrator)
@@ -119,6 +119,8 @@ These files act as single sources of truth for file lists. Each manifest file li
 
 - `installgithub` installs the GitHub CLI (`gh`) on Debian/Ubuntu systems.
 - `usegithub` authenticates `gh` through GitHub's browser/device login for agent/API operations; Git SSH remains independent.
+- `authgithub` is the explicit authentication alias for `usegithub`.
+- `authaws` is the explicit authentication alias for `useaws`.
 
 ### How Syncing Works
 

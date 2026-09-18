@@ -124,6 +124,7 @@ installaws
 useGitHub:
 usegithub
 usegh
+authgithub
 
 installNeovim:
 installneovim
@@ -161,6 +162,7 @@ useAWS:
 useaws
 setupaws
 awscredentials
+authaws
 
 useEnvironmentVariables:
 useenvironmentvariables
