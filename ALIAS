@@ -121,6 +121,14 @@ installgh
 installAWS:
 installaws
 
+installBitwarden:
+installbitwarden
+installbw
+
+authBitwarden:
+authbitwarden
+authbw
+
 useGitHub:
 usegithub
 usegh

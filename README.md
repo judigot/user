@@ -46,6 +46,8 @@ initubuntu
 installnodeenv
 installgithub
 authgithub
+installbitwarden
+authbitwarden
 usessh
 cloneuserrepo
 installterraform
@@ -121,6 +123,7 @@ These files act as single sources of truth for file lists. Each manifest file li
 - `usegithub` authenticates `gh` through GitHub's browser/device login for agent/API operations; Git SSH remains independent.
 - `authgithub` is the explicit authentication alias for `usegithub`.
 - `authaws` is the explicit authentication alias for `useaws`.
+- `installbitwarden` installs the Bitwarden CLI; `authbitwarden` logs in and unlocks the vault for credential-backed helpers.
 
 ### How Syncing Works
 
