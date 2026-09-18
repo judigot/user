@@ -45,6 +45,7 @@ Setup Mobile Workflow
 initubuntu
 installnodeenv
 installgithub
+usegithub
 usessh
 cloneuserrepo
 installterraform
@@ -117,6 +118,7 @@ These files act as single sources of truth for file lists. Each manifest file li
 ## Handy Commands
 
 - `installgithub` installs the GitHub CLI (`gh`) on Debian/Ubuntu systems.
+- `usegithub` authenticates `gh` through GitHub's browser/device login for agent/API operations; Git SSH remains independent.
 
 ### How Syncing Works
 

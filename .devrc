@@ -883,6 +883,24 @@ installGitHub() {
     return 1
 }
 
+useGitHub() {
+    if ! command -v gh >/dev/null 2>&1; then
+        echo "GitHub CLI is not installed. Run installgithub first." >&2
+        return 1
+    fi
+
+    # Prefer the stored browser login over an injected, restricted app token.
+    if env -u GITHUB_TOKEN -u GH_TOKEN gh auth status --hostname github.com >/dev/null 2>&1; then
+        echo "✓ GitHub CLI is already authenticated."
+        return 0
+    fi
+
+    env -u GITHUB_TOKEN -u GH_TOKEN gh auth login \
+        --hostname github.com \
+        --git-protocol https \
+        --web
+}
+
 installNeovim() {
     if ! command -v apt-get >/dev/null 2>&1; then
         printf '%s\n' "apt-get is required to install Neovim." >&2

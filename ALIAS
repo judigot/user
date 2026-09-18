@@ -118,6 +118,10 @@ installGitHub:
 installgithub
 installgh
 
+useGitHub:
+usegithub
+usegh
+
 installNeovim:
 installneovim
 installlazyvim
