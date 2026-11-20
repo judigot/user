@@ -1892,11 +1892,7 @@ EOF
 }
 
 setupNodeEnv() {
-    local installed_something=false
     local restore_nounset=false
-
-    # nvm scripts are not strict-nounset safe. Temporarily disable -u inside
-    # this function, then restore caller state on return.
     case "$-" in
         *u*)
             restore_nounset=true
@@ -1904,12 +1900,17 @@ setupNodeEnv() {
             ;;
     esac
 
-    setupNodeEnv_restore_shell_state() {
-        if [ "$restore_nounset" = true ]; then
-            set -u
-        fi
-    }
-    trap setupNodeEnv_restore_shell_state RETURN
+    local status=0
+    _setupNodeEnv_impl "$@" || status=$?
+
+    if [ "$restore_nounset" = true ]; then
+        set -u
+    fi
+    return "$status"
+}
+
+_setupNodeEnv_impl() {
+    local installed_something=false
 
     # Load nvm if it exists (needed for version display)
     case "$(uname -s 2>/dev/null)" in
