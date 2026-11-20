@@ -185,7 +185,7 @@ jobs:
           test_home="$(mktemp -d)"
           export HOME="$test_home"
           mkdir -p "$HOME/.nvm"
-          printf '%s\n' 'nvm() { : "${PROVIDED_VERSION}"; }' > "$HOME/.nvm/nvm.sh"
+          printf '%s\n' "nvm() { : \"\${PROVIDED_VERSION}\"; }" > "$HOME/.nvm/nvm.sh"
 
           source "$GITHUB_WORKSPACE/.devrc"
           bun() { :; }
