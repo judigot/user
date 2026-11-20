@@ -1648,8 +1648,8 @@ useSSH() {
         return 1
     fi
 
-    if [ ! -f "$HOME/.ssh/id_ed25519_work" ]; then
-        echo "✗ Work SSH key not found: ~/.ssh/id_ed25519_work" >&2
+    if [ "$selected" = "SSH Work" ] && [ ! -f "$HOME/.ssh/id_ed25519_work" ]; then
+        echo "✗ Requested work SSH key not found: ~/.ssh/id_ed25519_work" >&2
         return 1
     fi
 
@@ -1734,32 +1734,35 @@ $ssh_block_end"
     fi
     chmod 600 "$ssh_config" 2>/dev/null || true
 
-    local gitconfig="$HOME/.gitconfig"
-    local git_block_start="# BEGIN JUDIGOT INCLUDEIF"
-    local git_block_end="# END JUDIGOT INCLUDEIF"
-    local git_block="$git_block_start
+    if [ -f "$HOME/.ssh/id_ed25519_work" ]; then
+        local gitconfig="$HOME/.gitconfig"
+        local git_block_start="# BEGIN JUDIGOT INCLUDEIF"
+        local git_block_end="# END JUDIGOT INCLUDEIF"
+        local git_block="$git_block_start
 [includeIf \"gitdir:$work_dir/\"]
   path = $HOME/.gitconfig-work
 $git_block_end"
 
-    if [ -f "$gitconfig" ]; then
-        if grep -q "$git_block_start" "$gitconfig" 2>/dev/null; then
-            awk -v start="$git_block_start" -v end="$git_block_end" -v block="$git_block" '
-                $0 == start { print block; inblock=1; next }
-                inblock && $0 == end { inblock=0; next }
-                !inblock { print }
-            ' "$gitconfig" > "${gitconfig}.tmp" && mv "${gitconfig}.tmp" "$gitconfig"
+        if [ -f "$gitconfig" ]; then
+            if grep -q "$git_block_start" "$gitconfig" 2>/dev/null; then
+                awk -v start="$git_block_start" -v end="$git_block_end" -v block="$git_block" '
+                    $0 == start { print block; inblock=1; next }
+                    inblock && $0 == end { inblock=0; next }
+                    !inblock { print }
+                ' "$gitconfig" > "${gitconfig}.tmp" && mv "${gitconfig}.tmp" "$gitconfig"
+            else
+                printf '\n%s\n' "$git_block" >> "$gitconfig"
+            fi
         else
-            printf '\n%s\n' "$git_block" >> "$gitconfig"
+            printf '%s\n' "$git_block" > "$gitconfig"
         fi
+
+        local gitconfig_work="$HOME/.gitconfig-work"
+        printf '%s\n' "[core]" "  sshCommand = ssh -i $HOME/.ssh/id_ed25519_work -o IdentitiesOnly=yes" > "$gitconfig_work"
+        echo "✓ SSH setup complete with personal, work, and AWS keys"
     else
-        printf '%s\n' "$git_block" > "$gitconfig"
+        echo "✓ SSH setup complete with personal and AWS keys (work key optional)"
     fi
-
-    local gitconfig_work="$HOME/.gitconfig-work"
-    printf '%s\n' "[core]" "  sshCommand = ssh -i $HOME/.ssh/id_ed25519_work -o IdentitiesOnly=yes" > "$gitconfig_work"
-
-    echo "✓ SSH setup complete with 3 keys: personal, work, AWS"
     echo "✓ Git configuration complete"
 }
 
