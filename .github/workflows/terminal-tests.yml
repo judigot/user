@@ -175,6 +175,51 @@ jobs:
             exit 1
           fi
 
+  test-node-env-strict-bash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify strict-mode Node setup and shell state restoration
+        shell: bash
+        run: |
+          test_home="$(mktemp -d)"
+          export HOME="$test_home"
+          mkdir -p "$HOME/.nvm"
+          printf '%s\n' "nvm() { : \"\${PROVIDED_VERSION}\"; }" > "$HOME/.nvm/nvm.sh"
+
+          source "$GITHUB_WORKSPACE/.devrc"
+          bun() { :; }
+          pnpm() { :; }
+          trap ':' RETURN
+          original_trap="$(trap -p RETURN)"
+
+          set -euo pipefail
+          setupNodeEnv
+          [[ "$-" == *u* ]]
+          [[ "$(trap -p RETURN)" == "$original_trap" ]]
+
+          _setupNodeEnv_impl() { return 17; }
+          if setupNodeEnv; then
+            printf '%s\n' 'Expected setupNodeEnv failure to propagate' >&2
+            exit 1
+          else
+            status=$?
+          fi
+          [[ "$status" -eq 17 ]]
+          [[ "$-" == *u* ]]
+          [[ "$(trap -p RETURN)" == "$original_trap" ]]
+
+          set +u
+          if setupNodeEnv; then
+            printf '%s\n' 'Expected setupNodeEnv failure to propagate without nounset' >&2
+            exit 1
+          else
+            status=$?
+          fi
+          [[ "$status" -eq 17 ]]
+          [[ "$-" != *u* ]]
+          [[ "$(trap -p RETURN)" == "$original_trap" ]]
+
   test-ubuntu-unzip-missing-fallback:
     runs-on: ubuntu-latest
     steps:
