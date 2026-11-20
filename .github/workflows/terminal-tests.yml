@@ -227,7 +227,8 @@ jobs:
       - name: Allow personal-only SSH setup under strict Bash mode
         shell: bash
         run: |
-          export HOME="$(mktemp -d)"
+          HOME="$(mktemp -d)"
+          export HOME
           mkdir -p "$HOME/.ssh"
           printf '%s\n' 'aws-test-key' > "$HOME/.ssh/id_ed25519_aws"
           source "$GITHUB_WORKSPACE/.devrc"
@@ -254,7 +255,10 @@ jobs:
           [[ -s "$HOME/.ssh/id_ed25519_personal" ]]
           [[ ! -e "$HOME/.ssh/id_ed25519_work" ]]
           [[ ! -e "$HOME/.gitconfig-work" ]]
-          ! grep -q 'BEGIN JUDIGOT INCLUDEIF' "$HOME/.gitconfig"
+          if grep -q 'BEGIN JUDIGOT INCLUDEIF' "$HOME/.gitconfig"; then
+            printf '%s\n' 'Work-only Git configuration must not be created without a work key' >&2
+            exit 1
+          fi
 
           if useSSH "SSH Work"; then
             printf '%s\n' 'Explicitly requested missing work key should fail' >&2
