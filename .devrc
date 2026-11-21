@@ -1806,22 +1806,50 @@ useAWS() {
     }
     export BW_SESSION="$bw_session"
 
-    printf '%s\n' 'Fetching AWS Config from Bitwarden...' >&2
-    item_id="$(bw list items 2>/dev/null | node -e '
+    printf '%s\n' 'Synchronizing Bitwarden vault...' >&2
+    if ! bw sync >/dev/null; then
+        printf '%s\n' 'Bitwarden vault sync failed. Check your connection and account.' >&2
+        return 1
+    fi
+
+    local items_json
+    printf '%s\n' 'Searching Bitwarden for AWS Config...' >&2
+    items_json="$(bw list items --search 'AWS Config')" || {
+        printf '%s\n' 'Bitwarden item search failed. Check your vault session.' >&2
+        return 1
+    }
+
+    item_id="$(printf '%s' "$items_json" | node -e '
         let items;
         try {
             items = JSON.parse(require("fs").readFileSync(0, "utf8"));
         } catch {
+            console.error("Bitwarden item search returned invalid JSON.");
             process.exit(1);
         }
-        if (!Array.isArray(items)) process.exit(1);
+        if (!Array.isArray(items)) {
+            console.error("Bitwarden item search returned an unexpected response.");
+            process.exit(1);
+        }
         const matches = items.filter(item => item && item.name === "AWS Config");
-        if (matches.length !== 1 || !matches[0].id) process.exit(1);
+        if (matches.length === 0) {
+            console.error("AWS Config was not found in this Bitwarden account. Check bw status and the exact item title.");
+            process.exit(1);
+        }
+        if (matches.length > 1) {
+            console.error("Multiple AWS Config items exist; rename or remove duplicates before retrying.");
+            process.exit(1);
+        }
+        if (!matches[0].id) {
+            console.error("AWS Config item has no usable ID.");
+            process.exit(1);
+        }
         process.stdout.write(matches[0].id);
     ')" || {
-        printf '%s\n' 'Expected exactly one Bitwarden item named AWS Config.' >&2
+        unset items_json
         return 1
     }
+    unset items_json
 
     notes_script="$(bw get item "$item_id" 2>/dev/null | node -e '
         let item;
