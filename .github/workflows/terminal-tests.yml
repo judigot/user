@@ -189,6 +189,9 @@ jobs:
 
           export MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"}]'
           MOCK_UNLOCK_FAILURE=0
+          MOCK_SYNC_FAILURE=0
+          MOCK_LIST_FAILURE=0
+          MOCK_SYNC_CALLED=0
           MOCK_AWS_NOTES="$(cat <<'AWS_SCRIPT'
           #!/bin/sh
           set -eu
@@ -213,7 +216,23 @@ jobs:
                 fi
                 printf '%s\n' 'mock-session'
                 ;;
-              "list items") printf '%s\n' "$MOCK_AWS_ITEMS" ;;
+              sync)
+                if [ "$MOCK_SYNC_FAILURE" = 1 ]; then
+                  return 4
+                fi
+                MOCK_SYNC_CALLED=1
+                ;;
+              "list items") return 6 ;;
+              "list items --search AWS Config")
+                if [ "$MOCK_LIST_FAILURE" = 1 ]; then
+                  return 5
+                fi
+                if [ "$MOCK_SYNC_CALLED" != 1 ]; then
+                  printf '%s\n' '[]'
+                else
+                  printf '%s\n' "$MOCK_AWS_ITEMS"
+                fi
+                ;;
               "get item aws-config-item")
                 node -e 'process.stdout.write(JSON.stringify({ notes: process.env.MOCK_AWS_NOTES }))'
                 ;;
@@ -222,6 +241,10 @@ jobs:
           }
 
           useAWS
+          [ "$MOCK_SYNC_CALLED" = 1 ] || {
+            printf '%s\n' 'authaws must synchronize the Bitwarden vault first.' >&2
+            exit 1
+          }
           grep -q 'region = us-east-2' "$HOME/.aws/config"
           grep -q 'mock-credentials' "$HOME/.aws/credentials"
 
@@ -247,6 +270,27 @@ jobs:
           MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"}]'
           if useAWS; then
             printf '%s\n' 'A failed Bitwarden unlock must stop execution.' >&2
+            exit 1
+          fi
+
+          MOCK_UNLOCK_FAILURE=0
+          MOCK_SYNC_FAILURE=1
+          if useAWS; then
+            printf '%s\n' 'A failed vault sync must stop execution.' >&2
+            exit 1
+          fi
+
+          MOCK_SYNC_FAILURE=0
+          MOCK_LIST_FAILURE=1
+          if useAWS; then
+            printf '%s\n' 'A failed vault search must stop execution.' >&2
+            exit 1
+          fi
+
+          MOCK_LIST_FAILURE=0
+          MOCK_AWS_ITEMS='[]'
+          if useAWS; then
+            printf '%s\n' 'Missing AWS Config must not silently succeed.' >&2
             exit 1
           fi
 

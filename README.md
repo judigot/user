@@ -122,7 +122,7 @@ These files act as single sources of truth for file lists. Each manifest file li
 - `installgithub` installs the GitHub CLI (`gh`) on Debian/Ubuntu systems.
 - `authgithub` authenticates `gh` through GitHub's browser/device login for agent/API operations; it automatically runs `installgithub` when needed. Git SSH remains independent.
 - `authgithub` is the explicit authentication alias for `usegithub`.
-- `authaws` retrieves the Bitwarden item named `AWS Config` and runs its Notes content as a POSIX shell script in a child process. The script manages `~/.aws/config` and `~/.aws/credentials` and may refuse to overwrite existing files. The Bitwarden CLI is installed automatically when needed.
+- `authaws` synchronizes the Bitwarden CLI vault, searches for exactly one item titled `AWS Config`, and runs its Notes content as a POSIX shell script in a child process. Sync, lookup, and duplicate-item failures are reported separately. The script manages `~/.aws/config` and `~/.aws/credentials` and may refuse to overwrite existing files. The Bitwarden CLI is installed automatically when needed.
 - `installbitwarden` installs the Bitwarden CLI; `authbitwarden` logs in and unlocks the vault, automatically installing the CLI when needed.
 
 ### How Syncing Works
