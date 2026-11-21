@@ -193,16 +193,16 @@ jobs:
           mkdir -p "$HOME/.aws"
           [ ! -e "$HOME/.aws/config" ] || exit 7
           [ ! -e "$HOME/.aws/credentials" ] || exit 8
-          printf "%s\\n" "[profile admin]" "region = us-east-2" > "$HOME/.aws/config"
-          printf "%s\\n" "mock-credentials" > "$HOME/.aws/credentials"
+          printf "%s\n" "[profile admin]" "region = us-east-2" > "$HOME/.aws/config"
+          printf "%s\n" "mock-credentials" > "$HOME/.aws/credentials"
           '
 
           bw() {
             case "$*" in
-              --version) printf '%s\\n' '2026.1.0' ;;
+              --version) printf '%s\n' '2026.1.0' ;;
               "login --check"|"unlock --check") return 0 ;;
-              "unlock --raw") printf '%s\\n' 'mock-session' ;;
-              "list items") printf '%s\\n' "$MOCK_AWS_ITEMS" ;;
+              "unlock --raw") printf '%s\n' 'mock-session' ;;
+              "list items") printf '%s\n' "$MOCK_AWS_ITEMS" ;;
               "get item aws-config-item")
                 node -e 'process.stdout.write(JSON.stringify({ notes: process.env.MOCK_AWS_NOTES }))'
                 ;;
@@ -215,20 +215,20 @@ jobs:
           grep -q 'mock-credentials' "$HOME/.aws/credentials"
 
           if useAWS; then
-            printf '%s\\n' 'The AWS Config note should refuse to overwrite existing files.' >&2
+            printf '%s\n' 'The AWS Config note should refuse to overwrite existing files.' >&2
             exit 1
           fi
           grep -q 'mock-credentials' "$HOME/.aws/credentials"
 
           MOCK_AWS_NOTES=''
           if useAWS; then
-            printf '%s\\n' 'An empty AWS Config note must fail.' >&2
+            printf '%s\n' 'An empty AWS Config note must fail.' >&2
             exit 1
           fi
 
           MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"},{"id":"other","name":"AWS Config"}]'
           if useAWS; then
-            printf '%s\\n' 'Duplicate AWS Config items must fail.' >&2
+            printf '%s\n' 'Duplicate AWS Config items must fail.' >&2
             exit 1
           fi
 
