@@ -1798,13 +1798,14 @@ useAWS() {
     if ! bw unlock --check >/dev/null 2>&1; then
         printf '%s\n' 'Unlock Bitwarden to retrieve AWS Config.' >&2
     fi
-    export BW_SESSION="$(bw unlock --raw)" || return 1
-    [ -n "$BW_SESSION" ] || {
+    local bw_session item_id notes_script
+    bw_session="$(bw unlock --raw)" || return 1
+    [ -n "$bw_session" ] || {
         printf '%s\n' 'Could not unlock Bitwarden.' >&2
         return 1
     }
+    export BW_SESSION="$bw_session"
 
-    local item_id notes_script
     printf '%s\n' 'Fetching AWS Config from Bitwarden...' >&2
     item_id="$(bw list items 2>/dev/null | node -e '
         let items;
