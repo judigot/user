@@ -222,7 +222,8 @@ jobs:
                 fi
                 MOCK_SYNC_CALLED=1
                 ;;
-              "list items"|"list items --search AWS Config")
+              "list items") return 6 ;;
+              "list items --search AWS Config")
                 if [ "$MOCK_LIST_FAILURE" = 1 ]; then
                   return 5
                 fi
