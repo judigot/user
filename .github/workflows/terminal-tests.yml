@@ -188,6 +188,7 @@ jobs:
           source "$GITHUB_WORKSPACE/.devrc"
 
           export MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"}]'
+          MOCK_UNLOCK_FAILURE=0
           MOCK_AWS_NOTES="$(cat <<'AWS_SCRIPT'
           #!/bin/sh
           set -eu
@@ -205,7 +206,13 @@ jobs:
             case "$*" in
               --version) printf '%s\n' '2026.1.0' ;;
               "login --check"|"unlock --check") return 0 ;;
-              "unlock --raw") printf '%s\n' 'mock-session' ;;
+              "unlock --raw")
+                if [ "$MOCK_UNLOCK_FAILURE" = 1 ]; then
+                  printf '%s\n' 'invalid-session'
+                  return 3
+                fi
+                printf '%s\n' 'mock-session'
+                ;;
               "list items") printf '%s\n' "$MOCK_AWS_ITEMS" ;;
               "get item aws-config-item")
                 node -e 'process.stdout.write(JSON.stringify({ notes: process.env.MOCK_AWS_NOTES }))'
@@ -233,6 +240,13 @@ jobs:
           MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"},{"id":"other","name":"AWS Config"}]'
           if useAWS; then
             printf '%s\n' 'Duplicate AWS Config items must fail.' >&2
+            exit 1
+          fi
+
+          MOCK_UNLOCK_FAILURE=1
+          MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"}]'
+          if useAWS; then
+            printf '%s\n' 'A failed Bitwarden unlock must stop execution.' >&2
             exit 1
           fi
 
