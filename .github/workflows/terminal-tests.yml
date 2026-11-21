@@ -183,11 +183,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          export HOME="$(mktemp -d)"
+          HOME="$(mktemp -d)"
+          export HOME
           source "$GITHUB_WORKSPACE/.devrc"
 
           export MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"}]'
-          export MOCK_AWS_NOTES='#!/bin/sh
+          MOCK_AWS_NOTES="$(cat <<'AWS_SCRIPT'
+          #!/bin/sh
           set -eu
           umask 077
           mkdir -p "$HOME/.aws"
@@ -195,7 +197,9 @@ jobs:
           [ ! -e "$HOME/.aws/credentials" ] || exit 8
           printf "%s\n" "[profile admin]" "region = us-east-2" > "$HOME/.aws/config"
           printf "%s\n" "mock-credentials" > "$HOME/.aws/credentials"
-          '
+          AWS_SCRIPT
+          )"
+          export MOCK_AWS_NOTES
 
           bw() {
             case "$*" in
