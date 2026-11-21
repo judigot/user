@@ -175,6 +175,81 @@ jobs:
             exit 1
           fi
 
+  test-aws-config-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run AWS Config note through mocked Bitwarden
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOME="$(mktemp -d)"
+          export HOME
+          source "$GITHUB_WORKSPACE/.devrc"
+
+          export MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"}]'
+          MOCK_UNLOCK_FAILURE=0
+          MOCK_AWS_NOTES="$(cat <<'AWS_SCRIPT'
+          #!/bin/sh
+          set -eu
+          umask 077
+          mkdir -p "$HOME/.aws"
+          [ ! -e "$HOME/.aws/config" ] || exit 7
+          [ ! -e "$HOME/.aws/credentials" ] || exit 8
+          printf "%s\n" "[profile admin]" "region = us-east-2" > "$HOME/.aws/config"
+          printf "%s\n" "mock-credentials" > "$HOME/.aws/credentials"
+          AWS_SCRIPT
+          )"
+          export MOCK_AWS_NOTES
+
+          bw() {
+            case "$*" in
+              --version) printf '%s\n' '2026.1.0' ;;
+              "login --check"|"unlock --check") return 0 ;;
+              "unlock --raw")
+                if [ "$MOCK_UNLOCK_FAILURE" = 1 ]; then
+                  printf '%s\n' 'invalid-session'
+                  return 3
+                fi
+                printf '%s\n' 'mock-session'
+                ;;
+              "list items") printf '%s\n' "$MOCK_AWS_ITEMS" ;;
+              "get item aws-config-item")
+                node -e 'process.stdout.write(JSON.stringify({ notes: process.env.MOCK_AWS_NOTES }))'
+                ;;
+              *) return 1 ;;
+            esac
+          }
+
+          useAWS
+          grep -q 'region = us-east-2' "$HOME/.aws/config"
+          grep -q 'mock-credentials' "$HOME/.aws/credentials"
+
+          if useAWS; then
+            printf '%s\n' 'The AWS Config note should refuse to overwrite existing files.' >&2
+            exit 1
+          fi
+          grep -q 'mock-credentials' "$HOME/.aws/credentials"
+
+          MOCK_AWS_NOTES=''
+          if useAWS; then
+            printf '%s\n' 'An empty AWS Config note must fail.' >&2
+            exit 1
+          fi
+
+          MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"},{"id":"other","name":"AWS Config"}]'
+          if useAWS; then
+            printf '%s\n' 'Duplicate AWS Config items must fail.' >&2
+            exit 1
+          fi
+
+          MOCK_UNLOCK_FAILURE=1
+          MOCK_AWS_ITEMS='[{"id":"aws-config-item","name":"AWS Config"}]'
+          if useAWS; then
+            printf '%s\n' 'A failed Bitwarden unlock must stop execution.' >&2
+            exit 1
+          fi
+
   test-node-env-strict-bash:
     runs-on: ubuntu-latest
     steps:
