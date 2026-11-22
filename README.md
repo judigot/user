@@ -38,55 +38,21 @@ termuxubuntu
 termuxloginubuntu
 ```
 
-If Ubuntu is already installed, **do not rerun `termuxubuntu`**. Use
-`termuxloginubuntu` or the direct login below. The complete Grok Bot Linux
-workflow lives in [Agent Workspace's Grok T3 runbook](https://github.com/judigot/agent-workspace/blob/main/docs/grok-t3-runtime.md);
-**Termux is the local fallback**, not the primary Grok-host T3 machine.
-
-### Local T3 Code fallback on Android
-
-These steps assume Termux, `proot-distro` Ubuntu, and the `t3` CLI are
-already installed. They do **not** create a durable cloud workstation.
-
-**Step 1 (Android, once):** Open Settings > Apps > Termux > Battery and select
-**Unrestricted**. The exact wording varies by Android version. This reduces
-background termination but does not guarantee that Android will preserve the
-process.
-
-**Step 2 (Termux, each time you enter Ubuntu):** Keep the CPU awake and log
-into the existing Ubuntu container:
+Run `termuxubuntu` only for the initial Ubuntu installation. For an
+existing installation, use `termuxloginubuntu` or enter Ubuntu with:
 
 ```sh
 termux-wake-lock && proot-distro login ubuntu
 ```
 
-**Step 3 (inside Ubuntu):** Install `tmux` if missing (on a root Ubuntu
-session: `apt update && apt install -y tmux`; with a non-root user, use
-`sudo`), then start T3 only if its tmux session is not already running:
+**Separate guides:**
 
-```sh
-tmux has-session -t t3 2>/dev/null || tmux new-session -d -s t3 't3 serve'
-tmux attach -t t3
-```
-
-To detach without stopping T3, press **Ctrl+B**, then **D**. Reattach later
-with:
-
-```sh
-tmux attach -t t3
-```
-
-`t3 serve` is T3 Code's **foreground server** and suits a tmux session.
-The previously used `t3 up` command configures a **background service** on
-supported hosts; do not assume it will stay in a tmux pane or that service
-management works under Termux/proot Ubuntu. Use `t3 status` to check for a
-separately running service before starting another server.
-
-Closing the Termux UI may leave tmux running while Android preserves the
-process, but a reboot, forced stop, or memory/battery management can still
-terminate it. The wake lock is not an auto-restart mechanism; release it in
-Termux with `termux-wake-unlock` when no longer needed. Avoid exposing the
-local T3 server to the public internet without compatible authentication.
+- [Android phone, Termux, wake locks, and Ubuntu](docs/android-termux.md)
+  (device setup and Ubuntu usage only).
+- [T3 Code on Termux Ubuntu](https://github.com/judigot/agent-workspace/blob/main/docs/termux-t3.md)
+  (T3 startup, tmux, T3 Connect, and best-effort boot recovery).
+- [Other development workflows](https://github.com/judigot/agent-workspace/blob/main/README.md#available-development-workflows)
+  (Grok Bot Linux, T3 Chat, Codex/Cursor clouds, GitHub Actions, and EC2).
 
 Setup Mobile Workflow
 
